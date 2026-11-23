@@ -131,7 +131,7 @@ class Test_VisualizationPage:
         show_data_ids = _collect_component_ids(show_data)
         assert {page.ids.plot_type, page.ids.graph, page.ids.axis_scale_toggle, page.ids.max_events} <= show_data_ids
         axis_control = _find_component_by_id(show_data, page.ids.axis_scale_toggle)
-        assert [option["label"] for option in axis_control.kwargs["options"]] == ["x log", "y log", "color log"]
+        assert [option["label"] for option in axis_control.kwargs["options"]] == ["X axis", "Y axis", "Color"]
         assert "Configure plot" not in text_nodes
         assert "Inspect metadata and plot" not in text_nodes
         assert "File summary" not in text_nodes

@@ -9,7 +9,10 @@ from .rosetta_mix_diagnostics import (  # noqa: F401
     _build_warning_graph_payload,
     build_marker_anchor_warning,
 )
-from .rosetta_mix_models import RosettaAssignmentState, RosettaSizeAssignment
+from .rosetta_mix_models import (
+    RosettaAssignmentState,
+    RosettaSizeAssignment,
+)
 from .rosetta_mix_sizing import (
     build_rosetta_peak_lines_payload,
     resolve_rosetta_table_sizes,

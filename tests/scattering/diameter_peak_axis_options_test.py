@@ -1,4 +1,4 @@
-"""Axis controls for the measured peak position graph."""
+"""Shared axis controls for the scattering diameter plots."""
 
 if __name__ == "__main__":
     import pytest
@@ -19,8 +19,8 @@ from types import SimpleNamespace
     (["y_log"], "linear", "log"),
     (["x_log", "y_log"], "log", "log"),
 ])
-def test_diameter_peak_graph_uses_its_axis_options(monkeypatch, options, expected_x, expected_y):
-    """Rebuild the saved graph with independent axes while retaining its data."""
+def test_diameter_graphs_share_axis_options(monkeypatch, options, expected_x, expected_y):
+    """Apply the same scale settings while retaining each saved graph’s data."""
     callbacks = {}
     specifications = {}
 
@@ -34,14 +34,19 @@ def test_diameter_peak_graph_uses_its_axis_options(monkeypatch, options, expecte
 
     monkeypatch.setattr(dash, "callback", capture)
     section = Calibration(page=SimpleNamespace(ids=Ids()), section_number=5)
+    section._register_right_graph_callback()
     section._register_diameter_peak_position_graph_callback()
-    dependencies = specifications["update_diameter_peak_position_graph"]
-    assert any(item.component_id == section.ids.diameter_peak_position_plot_options for item in dependencies)
-    stored = go.Figure(data=[go.Scatter(x=[100, 200], y=[10, 100])]).to_dict()
-    figure = callbacks["update_diameter_peak_position_graph"](
-        {"calibration_diameter_peak_graph_payload": stored}, options, {},
-    )
-    assert figure.layout.xaxis.type == expected_x
-    assert figure.layout.yaxis.type == expected_y
-    assert list(figure.data[0].x) == [100, 200]
-    assert list(figure.data[0].y) == [10, 100]
+
+    graph_payloads = {
+        "update_right_graph": ("calibration_model_graph_payload", [0.1, 0.2]),
+        "update_diameter_peak_position_graph": ("calibration_diameter_peak_graph_payload", [10, 100]),
+    }
+    for callback_name, (payload_key, y_values) in graph_payloads.items():
+        dependencies = specifications[callback_name]
+        assert any(item.component_id == section.ids.mie_relation_plot_options for item in dependencies)
+        stored = go.Figure(data=[go.Scatter(x=[100, 200], y=y_values)]).to_dict()
+        figure = callbacks[callback_name]({payload_key: stored}, options, {})
+        assert figure.layout.xaxis.type == expected_x
+        assert figure.layout.yaxis.type == expected_y
+        assert list(figure.data[0].x) == [100, 200]
+        assert list(figure.data[0].y) == y_values

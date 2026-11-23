@@ -6,7 +6,7 @@ from dash import html
 from typing import Any
 
 
-def build_rosetta_result_panel(*, status: str, peak_lines_payload: Any) -> html.Section | None:
+def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = None) -> html.Section:
     """Show the current Rosetta outcome and the status of the calibration table.
 
     Parameters
@@ -18,78 +18,87 @@ def build_rosetta_result_panel(*, status: str, peak_lines_payload: Any) -> html.
 
     Returns
     -------
-    dash.html.Section or None
-        Inline feedback for a Rosetta result, or None for other payloads.
+    dash.html.Section
+        The ready state or the current detection outcome.
     """
-    if not isinstance(peak_lines_payload, dict):
-        return None
-
+    peak_lines_payload = peak_lines_payload if isinstance(peak_lines_payload, dict) else {}
     preview = bool(peak_lines_payload.get("rosetta_settings_preview"))
     detection_issue = peak_lines_payload.get("rosetta_detection_issue")
     sizing = peak_lines_payload.get("rosetta_sizing")
     event_counts = peak_lines_payload.get("rosetta_event_counts", {})
-    if not preview and not detection_issue and not isinstance(sizing, dict):
-        return None
+    ready = not status and not preview and not detection_issue and not isinstance(sizing, dict)
 
     assigned_count = sizing.get("assigned_row_count", 0) if isinstance(sizing, dict) else 0
     measured_count = sizing.get("measured_row_count", 0) if isinstance(sizing, dict) else 0
     unassigned_count = max(0, measured_count - assigned_count)
     needs_confirmation = isinstance(sizing, dict) and sizing.get("needs_confirmation")
 
-    if preview:
+    review_detail = ""
+    if ready:
+        title, tone = "Rosetta ready", "preview"
+        summary = "Select Detect peaks to begin."
+    elif preview:
         title, tone = "Rosetta preview", "preview"
         summary = "Select Detect peaks to update the calibration table."
-    elif detection_issue:
+    elif detection_issue or (status and not isinstance(sizing, dict)):
         title, tone = "Rosetta detection stopped", "error"
-        summary = status
+        summary = "Table unchanged."
     elif assigned_count == 0:
         title, tone = "No diameters assigned", "review"
-        summary = "Review the peaks and fit details before running detection again."
+        summary = "Review the measured peaks."
     elif needs_confirmation or unassigned_count:
         title, tone = "Review Rosetta assignments", "review"
-        summary = (
+        summary = "Table filled with provisional results."
+        review_detail = (
             "Use Compute model to check provisional sizes against the detector model."
             if peak_lines_payload.get("rosetta_assignment_evidence")
             else "Check the assigned sizes against the detected peaks."
         )
     else:
         title, tone = "Rosetta detection complete", "complete"
-        summary = ""
+        summary = "Calibration table updated."
 
-    metrics = []
-    if isinstance(sizing, dict):
-        metrics.append(("Sized peaks" if preview else "Calibration rows", assigned_count))
-        if unassigned_count:
-            metrics.append(("Peaks without a diameter", unassigned_count))
     excluded_count = len(peak_lines_payload.get("saturation_guard_excluded_positions") or [])
     if peak_lines_payload.get("rosetta_lowest_peak_exclusion"):
         excluded_count += 1
-    if excluded_count:
-        metrics.append(("Excluded peaks", excluded_count))
     analyzed_count = event_counts.get("retained") if isinstance(event_counts, dict) else None
-    if isinstance(analyzed_count, int):
-        metrics.append(("Events analyzed", analyzed_count))
+    valley = "—"
+    gate_interval = peak_lines_payload.get("rosetta_gate_interval")
+    if (
+        isinstance(gate_interval, list) and len(gate_interval) == 2
+        and all(isinstance(bound, (int, float)) for bound in gate_interval)
+    ):
+        lower, upper = gate_interval
+        valley = f"{lower:.3g}–{upper:.3g} a.u."
 
+    metrics = (
+        ("Sized peaks", assigned_count if isinstance(sizing, dict) else "—"),
+        ("Excluded peaks", "—" if ready else excluded_count),
+        ("Events analyzed", analyzed_count if isinstance(analyzed_count, int) else "—"),
+        ("Fluorescence valley", valley),
+    )
+    metric_list = html.Dl(
+        [
+            html.Div([html.Dt(label, title=label), html.Dd(f"{value:,}" if isinstance(value, int) else value, title=str(value))])
+            for label, value in metrics
+        ],
+        className="peak-result-metrics",
+    )
+    unassigned_detail = f"Peaks without a diameter: {unassigned_count}." if unassigned_count else ""
+    detail_message = " ".join(filter(None, (summary, status, review_detail, unassigned_detail)))
     details = build_rosetta_debug_panel(
         peak_lines_payload=peak_lines_payload,
-        status=status if status != summary else "",
+        status=detail_message,
     )
     return html.Section(
         [
             html.Div(
                 [
-                    html.H6(title, className="peak-result-title"),
-                    html.P(summary, className="peak-result-summary") if summary else None,
+                    html.H6(title, className="peak-result-title", title=title),
                 ],
                 role="alert" if tone == "error" else "status",
             ),
-            html.Dl(
-                [
-                    html.Div([html.Dt(label), html.Dd(f"{count:,}")])
-                    for label, count in metrics
-                ],
-                className="peak-result-metrics",
-            ) if metrics else None,
+            metric_list,
             details,
         ],
         className=f"app-diagnostics-inline peak-result peak-result--{tone}",
@@ -97,25 +106,22 @@ def build_rosetta_result_panel(*, status: str, peak_lines_payload: Any) -> html.
     )
 
 
-def build_rosetta_debug_panel(*, peak_lines_payload: Any, status: str = "") -> Any:
+def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str = "") -> html.Details:
     """Build a collapsed Custom Rosetta diagnostic section.
 
     Parameters
     ----------
     peak_lines_payload : Any
         Peak result payload containing ``rosetta_debug_diagnostics``.
+    status : str, optional
+        Detailed explanation of the result.
 
     Returns
     -------
-    Any
-        A collapsed details panel, or ``None`` when there are no diagnostics.
+    html.Details
+        A collapsed details panel.
     """
-    if not isinstance(peak_lines_payload, dict):
-        return None
     diagnostics = peak_lines_payload.get("rosetta_debug_diagnostics")
-    if not isinstance(diagnostics, dict) and not status:
-        return None
-
     diagnostics = diagnostics if isinstance(diagnostics, dict) else {}
     sections: list[Any] = [html.P(status, className="peak-result-detail-message")] if status else []
     thresholds = diagnostics.get("thresholds", {})
@@ -199,6 +205,9 @@ def build_rosetta_debug_panel(*, peak_lines_payload: Any, status: str = "") -> A
                 rows=scatter_rows,
             )
         )
+
+    if not sections:
+        sections.append(html.P("No additional fit details were recorded."))
 
     return html.Details(
         [html.Summary("Fit details"), html.Div(sections, className="peak-result-details-content")],

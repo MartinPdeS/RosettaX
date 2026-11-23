@@ -50,6 +50,78 @@ def find_separated_fluorescence_gate(
     return float(10 ** ((edges[start] + edges[stop]) / 2))
 
 
+def find_fluorescence_valley(
+    *, values: np.ndarray, baseline_position: float, marker_position: float,
+) -> float | None:
+    """Find a resolved histogram valley between baseline and marker intensities."""
+    if not 0 < baseline_position < marker_position:
+        return None
+
+    positive = values[np.isfinite(values) & (values > 0)]
+    if positive.size < 2:
+        return None
+
+    counts, edges = np.histogram(
+        np.log10(positive), bins=min(256, max(64, int(np.sqrt(positive.size)))),
+    )
+    centers = (edges[:-1] + edges[1:]) / 2
+    smoothed = smooth_counts(counts=counts.astype(float), window_size=7)
+    left, right = np.searchsorted(centers, np.log10([baseline_position, marker_position]))
+    if right >= centers.size or right - left < 3:
+        return None
+
+    valley = left + 1 + int(np.argmin(smoothed[left + 1:right]))
+    # A broad shoulder between overlapping populations is insufficient.
+    band_height = min(smoothed[left], smoothed[right])
+    if band_height <= 0 or smoothed[valley] > 0.1 * band_height:
+        return None
+
+    return float(10 ** centers[valley])
+
+
+def resolve_stable_fluorescence_valley(
+    *, values: np.ndarray, baseline_position: float, marker_position: float, minimum_events: int,
+) -> tuple[float, float] | None:
+    """Return the common low-density interval in fluorescence channel units."""
+    if not 0 < baseline_position < marker_position:
+        return None
+    positive = values[np.isfinite(values) & (values > 0)]
+    if positive.size < 4 * minimum_events:
+        return None
+
+    log_values = np.log10(positive)
+    anchors = np.log10([baseline_position, marker_position])
+    histogram_range = (float(log_values.min()), float(log_values.max()))
+    bins = min(256, max(64, int(np.sqrt(log_values.size))))
+    shuffled = np.random.default_rng(0).permutation(log_values)
+    sample_sets = [(log_values, bins * 3 // 4), (log_values, bins), (log_values, bins * 5 // 4)]
+    sample_sets.extend((sample, bins) for sample in np.array_split(shuffled, 2))
+    common_lower, common_upper = anchors
+    for sample, bin_count in sample_sets:
+        counts, edges = np.histogram(sample, bins=bin_count, range=histogram_range)
+        centers = (edges[:-1] + edges[1:]) / 2
+        smoothed = smooth_counts(counts=counts.astype(float), window_size=7)
+        left, right = np.searchsorted(centers, anchors).clip(0, centers.size - 1)
+        if right - left < 3:
+            return None
+        threshold = 0.1 * min(smoothed[left], smoothed[right])
+        valley = left + 1 + int(np.argmin(smoothed[left + 1:right]))
+        if threshold <= 0 or smoothed[valley] > threshold:
+            return None
+        above = np.flatnonzero(smoothed[left:right + 1] > threshold) + left
+        lower = int(above[above < valley][-1]) + 1
+        upper = int(above[above > valley][0])
+        common_lower = max(common_lower, edges[lower])
+        common_upper = min(common_upper, edges[upper])
+
+    if common_upper <= common_lower:
+        return None
+    lower, upper = (float(10 ** bound) for bound in (common_lower, common_upper))
+    if np.count_nonzero(positive < lower) < minimum_events or np.count_nonzero(positive > upper) < minimum_events:
+        return None
+    return lower, upper
+
+
 def build_peak_analysis_diagnostic_text(
     *,
     analysis: dict[str, Any] | None,

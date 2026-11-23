@@ -19,11 +19,9 @@ logger = logging.getLogger(__name__)
 
 PROFILE_DESCRIPTIONS = {
     DEFAULT_PROFILE_FILENAME: "Start here for routine calibration.",
-    "Rosetta_Mix_Standards.json": "Sets up scattering calibration for Rosetta Mix beads.",
     "Diagnostic.json": "Shows preset details and analyzes up to 250,000 events.",
     "Minimal.json": "Hides graphs and limits analysis to 25,000 events.",
 }
-ADDITIONAL_PROFILE = "Minimal.json"
 
 
 def get_available_profiles(*, browser_payload: Any) -> BrowserProfileLibrary:
@@ -40,22 +38,14 @@ def get_available_profiles(*, browser_payload: Any) -> BrowserProfileLibrary:
 def build_profile_picker_options(
     *,
     library: BrowserProfileLibrary,
-    show_more: bool = False,
-    active_profile: str | None = None,
 ) -> list[dict[str, str]]:
-    """Keep hosted presets in task order and reveal Minimal on demand."""
+    """Keep hosted presets in task order."""
     options = library.build_options()
     if not is_hosted():
         return options
 
     preset_order = {name: index for index, name in enumerate(PROFILE_DESCRIPTIONS)}
-    return sorted(
-        (
-            option for option in options
-            if option["value"] != ADDITIONAL_PROFILE or show_more or active_profile == ADDITIONAL_PROFILE
-        ),
-        key=lambda option: preset_order.get(option["value"], len(preset_order)),
-    )
+    return sorted(options, key=lambda option: preset_order.get(option["value"], len(preset_order)))
 
 
 FOLDER_DISPLAY_ORDER: list[tuple[str, str]] = [

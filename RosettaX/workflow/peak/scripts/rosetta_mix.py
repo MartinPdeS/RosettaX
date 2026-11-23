@@ -24,12 +24,14 @@ from .rosetta_mix_fitting import (  # noqa: F401
     estimate_peak_prominences,
     filter_candidate_peak_indices_by_prominence,
     find_fit_validate_peaks_1d,
+    find_fluorescence_valley,
     find_left_valley_minimum,
     find_local_maxima_indices,
     find_right_valley_minimum,
     find_separated_fluorescence_gate,
     fit_gaussian_from_values,
     resolve_baseline_peak,
+    resolve_stable_fluorescence_valley,
     select_well_separated_peak_indices,
     smooth_counts,
 )
@@ -130,6 +132,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
     )
     graph_type = "2d_scatter"
     sort_order = 20
+    require_stable_fluorescence_gate = False
 
     supports_manual_click = False
     supports_clear = True
@@ -215,6 +218,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 event_counts=events.event_counts(),
             )
         fluorescence = analyze_rosetta_fluorescence(events=events, settings=settings)
+        fluorescence_gate_values = events.fluorescence_values
         if (
             recover_clipped_marker and len(fluorescence.marker_peaks) == 1
             and events.fluorescence_with_scatter_edges is not None
@@ -229,7 +233,29 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 for candidate in inclusive_fluorescence.marker_peaks
             ):
                 fluorescence = inclusive_fluorescence
+                fluorescence_gate_values = events.fluorescence_with_scatter_edges
+        gate_interval = None
+        if self.require_stable_fluorescence_gate and fluorescence.stop_status is None:
+            gate_interval = resolve_stable_fluorescence_valley(
+                values=fluorescence_gate_values,
+                baseline_position=fluorescence.baseline_peak["mean"],
+                marker_position=min(peak["mean"] for peak in fluorescence.marker_peaks),
+                minimum_events=settings.minimum_events_per_peak,
+            )
+            if gate_interval is None or not gate_separates_scatter_regions(events=events, interval=gate_interval):
+                fluorescence = replace(
+                    fluorescence, baseline_upper_gate=None, baseline_lower_gate=None,
+                    issue=RosettaDetectionIssue.GATE_AMBIGUOUS,
+                    stop_status="No stable fluorescence valley separates baseline events from the first marker band across the scatter signal. The calibration table was kept for review.",
+                )
+            else:
+                fluorescence = replace(
+                    fluorescence, baseline_lower_gate=0.0,
+                    baseline_upper_gate=float(np.exp(np.mean(np.log(gate_interval)))),
+                )
         if fluorescence.stop_status is not None:
+            if self.require_stable_fluorescence_gate:
+                fluorescence = replace(fluorescence, baseline_upper_gate=None, baseline_lower_gate=None)
             return self._build_stop_result(
                 issue=fluorescence.issue,
                 event_counts=events.event_counts(),
@@ -312,8 +338,29 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 baseline_upper_gate=fluorescence.baseline_upper_gate,
                 marker_points=markers.points,
                 plot_events=events,
+                gate_interval=gate_interval,
             )
-        return build_rosetta_detection_result(
+        if gate_interval is not None:
+            validated_markers = [item for item in markers.diagnostics if item.get("validated")]
+            if not validated_markers or not scatter_is_stable_across_gate(
+                events=events, fluorescence=fluorescence, settings=settings, scatter=scatter,
+                interval=gate_interval, markers=validated_markers, fit_function=scatter_fit_function,
+            ):
+                return self._build_stop_result(
+                    issue=RosettaDetectionIssue.GATE_AMBIGUOUS,
+                    status=(
+                        "The scatter peak assignments are sensitive to the fluorescence gate."
+                        if validated_markers else "No fluorescent marker has a validated scatter peak."
+                    ) + " Review the plot before updating the calibration table.",
+                    event_counts=events.event_counts(),
+                    baseline_upper_gate=fluorescence.baseline_upper_gate,
+                    baseline_lower_gate=fluorescence.baseline_lower_gate,
+                    marker_points=markers.points,
+                    marker_scatter_diagnostics=markers.diagnostics,
+                    plot_events=events,
+                    gate_interval=gate_interval,
+                )
+        result = build_rosetta_detection_result(
             backend=backend,
             scattering_column=str(scattering_column),
             settings=settings,
@@ -322,6 +369,9 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             markers=markers,
             scatter=scatter,
         )
+        if gate_interval is not None:
+            result.peak_lines_payload["rosetta_gate_interval"] = list(gate_interval)
+        return result
 
     def _build_stop_result(
         self,
@@ -338,6 +388,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         baseline_upper_gate: float | None = None,
         marker_points: list[dict[str, float]] | None = None,
         plot_events: RosettaEventData | None = None,
+        gate_interval: tuple[float, float] | None = None,
     ) -> PeakProcessResult:
         """
         Build a stop result with optional diagnostic payload.
@@ -348,6 +399,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             payload["rosetta_detection_issue"] = issue.value
         if event_counts is not None:
             payload["rosetta_event_counts"] = event_counts
+        if gate_interval is not None:
+            payload["rosetta_gate_interval"] = list(gate_interval)
         if debug_diagnostics:
             payload["rosetta_debug_diagnostics"] = debug_diagnostics
 
@@ -637,6 +690,41 @@ def analyze_rosetta_fluorescence(
     marker_peaks = [
         peak for peak in fluorescence_validated_peaks if peak is not baseline_peak
     ]
+    # The lowest fitted band can fail a Gaussian shape check while still
+    # constituting the baseline. Only recover it when an observed valley
+    # separates it from all validated fluorescence peaks.
+    lowest_validated = min(fluorescence_validated_peaks, key=lambda peak: peak["mean"])
+    rejected_baseline = max(
+        (
+            peak for peak in fluorescence_analysis.get("all_peaks", [])
+            if not peak.get("validated")
+            and peak["mean"] < lowest_validated["mean"]
+            and peak["count"] > baseline_peak["count"]
+        ),
+        key=lambda peak: peak["count"],
+        default=None,
+    )
+    if rejected_baseline is not None and len(fluorescence_validated_peaks) <= 2:
+        cutoff = find_fluorescence_valley(
+            values=events.fluorescence_values,
+            baseline_position=rejected_baseline["mean"],
+            marker_position=lowest_validated["mean"],
+        )
+        if cutoff is not None:
+            baseline_values = events.fluorescence_values
+            baseline_values = baseline_values[(baseline_values > 0) & (baseline_values <= cutoff)]
+            baseline_peak = {
+                "mean": float(np.median(baseline_values)),
+                "count": int(baseline_values.size),
+                "validated": True,
+            }
+            baseline_lower_gate = 0.0
+            baseline_upper_gate = cutoff
+            marker_peaks = fluorescence_validated_peaks
+            fluorescence_analysis = {
+                **fluorescence_analysis,
+                "validated_peaks": [baseline_peak, *marker_peaks],
+            }
     marker_stop_status = resolve_marker_stop_status(
         len(marker_peaks), fluorescence_diagnostic
     )
@@ -862,6 +950,62 @@ def find_marker_scatter_points(
         guide_positions=marker_scatter_guide_positions,
         diagnostics=marker_scatter_diagnostics,
     )
+
+
+def gate_separates_scatter_regions(
+    *, events: RosettaEventData, interval: tuple[float, float],
+) -> bool:
+    """Check for a populated fluorescence bridge in local scatter regions."""
+    scatter = events.scattering_values
+    fluorescence = events.fluorescence_values
+    valid = np.isfinite(scatter) & (scatter > 0) & np.isfinite(fluorescence)
+    if not np.any(valid):
+        return False
+    edges = np.quantile(scatter[valid], [0.25, 0.5, 0.75])
+    region = np.searchsorted(edges, scatter[valid])
+    totals = np.bincount(region, minlength=4)
+    lower, upper = interval
+    in_valley = (fluorescence[valid] > lower) & (fluorescence[valid] <= upper)
+    valley_counts = np.bincount(region[in_valley], minlength=4)
+    return bool(np.all(valley_counts <= 0.05 * totals))
+
+
+def scatter_is_stable_across_gate(
+    *, events: RosettaEventData, fluorescence: RosettaFluorescenceAnalysis,
+    settings: RosettaRunSettings, scatter: RosettaScatterAnalysis,
+    interval: tuple[float, float], markers: list[dict[str, Any]],
+    fit_function: Callable[..., dict[str, Any]] | None,
+) -> bool:
+    """Check the scatter peaks and their order relative to the marker anchors."""
+    positions = np.sort(scatter.positions)
+    anchors = np.sort([float(marker["selected_peak"]["mean"]) for marker in markers])
+    bright_only = len(fluorescence.marker_peaks) == 1 and len(anchors) == 1
+    if bright_only:
+        positions = positions[positions > anchors[0]]
+    marker_regions = np.searchsorted(anchors, positions)
+    if any(marker.get("above_baseline_fraction", 0.0) < 0.95 for marker in markers):
+        return False
+    # Perturb the cutoff inside the trough rather than at its rising shoulders.
+    lower, upper = np.exp(np.interp([0.25, 0.75], [0.0, 1.0], np.log(interval)))
+    values = events.fluorescence_values
+    for cutoff in (lower, upper):
+        limits = sorted((cutoff, fluorescence.baseline_upper_gate))
+        if not np.any((values > limits[0]) & (values <= limits[1])):
+            continue
+        alternative = analyze_non_fluorescent_scatter(
+            events=events, fluorescence=replace(fluorescence, baseline_upper_gate=cutoff),
+            settings=settings, fit_function=fit_function,
+        )
+        alternate_positions = np.sort(alternative.positions)
+        if bright_only:
+            alternate_positions = alternate_positions[alternate_positions > anchors[0]]
+        if (
+            positions.shape != alternate_positions.shape
+            or not np.allclose(positions, alternate_positions, rtol=0.03, atol=0)
+            or not np.array_equal(marker_regions, np.searchsorted(anchors, alternate_positions))
+        ):
+            return False
+    return True
 
 
 def analyze_non_fluorescent_scatter(

@@ -17,7 +17,6 @@ from .rosetta_mix_sizing import (
     BRIGHT_MARKER_DIAMETER_NM,
     DIM_MARKER_DIAMETER_NM,
     MARKER_SATURATION_FLUORESCENCE_FRACTION,
-    ROSETTA_MIX_PARTICLE_DIAMETERS_NM,
     _as_positive_float,
     bright_marker_scatter_anchor_is_reliable,
     build_peak_metadata,
@@ -41,14 +40,14 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     process_label = "Rosetta"
     description = (
         "Uses fluorescence gates and a joint mixture fit of log scatter intensity. "
-        "Assigns sizes from two usable markers and reports measured scatter positions when only one marker is usable. "
+        "Assigns sizes only in scatter regions with the expected number of peaks. "
         "Experimental: compare against known standards before using calibration results."
     )
     sort_order = 1
     scatter_fit_function = staticmethod(find_mixture_scatter_peaks)
-    clear_table_on_warning = True
     always_show_process_settings = True
     recover_clipped_marker = True
+    require_stable_fluorescence_gate = True
     allow_unassigned_sizes = True
 
     def fit_marker_bounded_scatter(
@@ -132,18 +131,14 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
         )
         assignments = {}
         unresolved = []
-        assumed_missing_ends = []
-        for region_index, (label, positions, diameters) in enumerate(regions):
-            middle = region_index == 0
-            if len(positions) > len(diameters) or (middle and len(positions) != len(diameters)):
+        for label, positions, diameters in regions:
+            if len(positions) != len(diameters):
                 expected = ", ".join(str(size) for size in diameters)
                 unresolved.append(
-                    f"Found {len(positions)} validated scatter {'peak' if len(positions) == 1 else 'peaks'} {label}; "
-                    f"expected {'exactly' if middle else 'at most'} {len(diameters)} ({expected} nm)."
+                    f"Found {len(positions)} validated scatter peaks {label}. "
+                    f"Expected {len(diameters)} ({expected} nm), so this region was left unsized."
                 )
                 continue
-            if not middle and 0 < len(positions) < len(diameters):
-                assumed_missing_ends.append(label)
             assignments.update(
                 (position, float(diameter)) for position, diameter in zip(positions, diameters)
             )
@@ -165,10 +160,6 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             rows.append(row)
 
         notices = []
-        if assumed_missing_ends:
-            notices.append(
-                f"Outer assignments {' and '.join(assumed_missing_ends)} are provisional and assume missing beads occur at the ends."
-            )
         if bounded_marker:
             notices.append(
                 f"Used the {bounded_marker} nm marker at the scatter limit as an ordering boundary. "
@@ -186,7 +177,6 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             detail="No sizes assigned:" if unresolved and state is RosettaAssignmentState.UNRESOLVED else "",
             notices=tuple(notices),
             rejection_reasons=tuple(unresolved),
-            needs_confirmation=bool(unresolved or assumed_missing_ends or any(not row["particle_diameter_nm"] for row in rows)),
             clipped_marker_nm=bounded_marker,
         )
 
@@ -320,111 +310,37 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
         rows = [dict(row, particle_diameter_nm="") for row in result.table_prefill_rows or []]
         marker_warning = " ".join(assignment.rejection_reasons)
         marker_position = anchors[0]["selected_peak"]["mean"]
-        known_sizes = sorted(ROSETTA_MIX_PARTICLE_DIAMETERS_NM)
-        marker_sizes = {DIM_MARKER_DIAMETER_NM, BRIGHT_MARKER_DIAMETER_NM}
         scatter_positions = sorted({
             float(item["x"]) for item in metadata if item.get("kind") == "non_fluorescent"
         })
-        ordered_positions = sorted([*scatter_positions, marker_position])
+        positions_above = [position for position in scatter_positions if position > marker_position]
         if (
-            not any("scatter_boundary" in item for item in marker_diagnostics)
-            and len(scatter_positions) == len(known_sizes) - len(marker_sizes)
-            and marker_position not in scatter_positions
-            and all(row["measured_peak_position"] in ordered_positions for row in rows)
-        ):
-            marker_rank = ordered_positions.index(marker_position)
-            compatible = [
-                diameter for diameter in marker_sizes
-                if sum(size < diameter and size not in marker_sizes for size in known_sizes) == marker_rank
-            ]
-            if len(compatible) == 1:
-                marker_size = compatible[0]
-                other_size, = marker_sizes - {marker_size}
-                known_sizes.remove(other_size)
-                assignments = dict(zip(ordered_positions, known_sizes, strict=True))
-                for row in rows:
-                    row["particle_diameter_nm"] = assignments[row["measured_peak_position"]]
-                labels = [
-                    ("Dim marker" if marker_size == DIM_MARKER_DIAMETER_NM else "Bright marker")
-                    if point["kind"] == "marker" and point["x"] == marker_position
-                    else "Unresolved fluorescent marker" if point["kind"] == "marker" else label
-                    for point, label in zip(payload["points"], payload["labels"], strict=True)
-                ]
-                return (
-                    self._record_size_assignments(
-                        result=replace(result, peak_lines_payload=dict(payload, labels=labels)),
-                        rows=rows, method="One marker and all ten scatter populations",
-                        marker_diameters_nm=(marker_size,),
-                    ),
-                    RosettaSizeAssignment(
-                        rows=rows, needs_confirmation=True,
-                        detail=f"Assigned all ten scatter populations by rank using the {marker_size:g} nm marker.",
-                    ),
-                )
-        anchor = anchors[0]
-        assume_bright_marker = len(marker_diagnostics) == 1
-        marker_role = "Bright marker" if assume_bright_marker else anchor["marker_role"]
-        marker_ranges = {
-            "Dim marker": (DIM_MARKER_DIAMETER_NM, "Bright marker", (125, 100, 70), (147, 203, 296)),
-            "Bright marker": (BRIGHT_MARKER_DIAMETER_NM, "Dim marker", (296, 203, 147), (400, 600, 799, 994)),
-        }
-        marker_size, other_marker_role, sizes_below, sizes_above = marker_ranges[marker_role]
-        marker_confirmed = any(
-            item["marker_role"] == other_marker_role
-            and (
-                (item["fluorescence_position"] > anchor["fluorescence_position"])
-                if marker_role == "Dim marker"
-                else item["fluorescence_position"] < anchor["fluorescence_position"]
+            (
+                anchors[0]["marker_role"] == "Bright marker"
+                or len(marker_diagnostics) == 1
             )
-            for item in marker_diagnostics
-        )
-        if (
-            (marker_confirmed or assume_bright_marker)
-            and not any("scatter_boundary" in item for item in marker_diagnostics)
             and marker_position not in scatter_positions
+            and not any("scatter_boundary" in item for item in marker_diagnostics)
+            and len(positions_above) == 4
         ):
-            positions_above = [position for position in scatter_positions if position > marker_position]
-            positions_below = [position for position in reversed(scatter_positions) if position < marker_position]
-            above_assignments = dict(zip(positions_above, sizes_above, strict=False))
-            below_assignments = dict(zip(positions_below, sizes_below, strict=False))
-            assignments = above_assignments | below_assignments
-            table_positions = {row["measured_peak_position"] for row in rows}
-            if table_positions.intersection(assignments):
-                for row in rows:
-                    position = row["measured_peak_position"]
-                    row["particle_diameter_nm"] = (
-                        marker_size if position == marker_position else assignments.get(position, "")
-                    )
-                assignments_by_direction = []
-                for direction, direction_assignments in (("above", above_assignments), ("below", below_assignments)):
-                    sizes = ", ".join(
-                        str(diameter) for position, diameter in direction_assignments.items()
-                        if position in table_positions
-                    )
-                    if sizes:
-                        assignments_by_direction.append(f"{sizes} nm {direction}")
-                resolved_rows = sum(bool(row["particle_diameter_nm"]) for row in rows)
-                status = (
-                    f"Assigned {' and '.join(assignments_by_direction)} the {marker_size:g} nm marker at {marker_position:.4g} a.u. "
-                    "This assumes no intermediate populations were missed."
-                )
-                if resolved_rows < len(rows):
-                    status += f" {len(rows) - resolved_rows} measured peaks remain unsized."
-                method = "Estimated by rank from one marker"
-                if assume_bright_marker:
-                    status = "Assumed the only fluorescent marker is the 380 nm bright marker. " + status
-                    method = "Estimated by rank assuming the 380 nm marker"
-                    labels = [
-                        "Bright marker (assumed)" if point["kind"] == "marker" and point["x"] == marker_position else label
-                        for point, label in zip(payload["points"], payload["labels"], strict=True)
-                    ]
-                    result = replace(result, peak_lines_payload=dict(payload, labels=labels))
-                result = self._record_size_assignments(
-                    result=result, rows=rows, method=method,
-                    marker_diameters_nm=(marker_size,),
-                )
-                return result, RosettaSizeAssignment(rows=rows, detail=status, needs_confirmation=True)
-
+            assignments = dict(zip(positions_above, (400, 600, 799, 994), strict=False))
+            rows = [
+                dict(row, particle_diameter_nm=assignments[row["measured_peak_position"]])
+                for row in rows if row["measured_peak_position"] in assignments
+            ]
+            labels = [
+                "Bright marker (assumed)" if point["kind"] == "marker" and point["x"] == marker_position else label
+                for point, label in zip(payload["points"], payload["labels"], strict=True)
+            ]
+            result = self._record_size_assignments(
+                result=replace(result, peak_lines_payload=dict(payload, labels=labels)),
+                rows=rows, method="Rank above the assumed 380 nm marker",
+                marker_diameters_nm=(BRIGHT_MARKER_DIAMETER_NM,),
+            )
+            return result, RosettaSizeAssignment(
+                rows=rows, state=RosettaAssignmentState.PARTIAL,
+                detail="The dim fluorescent marker was not resolved. Sizes below the assumed 380 nm bright marker were excluded.",
+            )
         status = (
             f"Found one usable marker at {marker_position:.4g} a.u. and retained {len(rows)} measured scatter peaks. "
             "Diameters are blank because the missing marker's position or scatter limit could not establish a unique bead order. "
@@ -447,7 +363,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             replace(result, peak_lines_payload=dict(payload, labels=labels)),
             RosettaSizeAssignment(
                 rows=rows, state=RosettaAssignmentState.UNRESOLVED,
-                failure_code="unreliable_markers", rejection_reasons=(status,), needs_confirmation=True,
+                failure_code="unreliable_markers", rejection_reasons=(status,),
             ),
         )
 

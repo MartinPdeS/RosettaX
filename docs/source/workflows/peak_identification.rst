@@ -139,22 +139,25 @@ The algorithm follows the MATLAB-described approach from the Exometry method:
    position. If fluorescence clips above the dim marker gate, Rosetta can use
    a dominant, validated scatter population at the fluorescence ceiling to
    recover the bright anchor.
-5. **Non-fluorescent gate.** Events with fluorescence below the baseline mean
-   plus *baseline gate width* × σ are selected. This gate removes all
-   fluorescent marker beads from the scatter analysis.
+5. **Non-fluorescent gate.** The default Rosetta mode requires a low-density
+   valley between the baseline and first fluorescent band. It checks that
+   the valley persists across histogram resolutions and two event subsets,
+   and checks for a bridge of events within scatter regions. The cutoff is
+   chosen inside the shared valley. The older Rosetta modes use the fitted
+   baseline and the *baseline gate width* setting.
 6. **Non-fluorescent scatter peaks.** Rosetta fits the gated scatter distribution
    with a mixture model in log intensity. When both markers provide usable
    scatter positions, Rosetta fits three regions independently: below the
    140 nm marker, between the markers, and above the 380 nm marker. Each fit
    includes a small margin at the marker boundaries to account for nearby peak
-   tails. The middle fit must resolve three observed populations before Rosetta
-   assigns 147, 203 and 296 nm. If the middle region cannot be sized, Rosetta
-   still proposes sizes for usable peaks in the outer regions and reports the
-   partial result. Incomplete outer regions are sized outward from the nearest
-   marker, assuming the missing beads are at the extremes. With fewer than two usable scatter anchors,
-   Rosetta fits the full gated distribution. The lowest detected non-fluorescent
-   peak stays visible on the graph and is excluded from the calibration table
-   because acquisition limits and overlapping populations can distort it.
+   tails. With one usable scatter anchor, Rosetta fits the full gated
+   distribution. It checks that moving the fluorescence cutoff within the
+   valley does not materially change the relevant scatter peaks. With a
+   single fluorescence marker and one usable scatter anchor, this check
+   compares only peaks above that anchor. **Detect peaks** updates the
+   calibration table after the detection checks pass. The lowest detected
+   non-fluorescent peak is excluded from the table because acquisition limits
+   and overlapping populations can distort it.
 
 The script stops with an informative status message if:
 
@@ -181,12 +184,6 @@ The script stops with an informative status message if:
        (CV) for fluorescence peaks. At 0 the limits are R² ≥ 0.35 and CV ≤ 1.50.
        At 0.5 they are R² ≥ 0.70 and CV ≤ 0.60. At 1 they are R² ≥ 0.95
        and CV ≤ 0.30. Scatter and calibration checks are independent of this setting.
-   * - Baseline gate width (σ)
-     - 3.0
-     - Non-fluorescent events are those with fluorescence ≤ baseline mean +
-       this multiplier × baseline σ. Increasing this value widens the
-       non-fluorescent gate and may include dim marker events; decreasing it
-       tightens the gate at the risk of excluding small beads near the baseline.
 
 Changing Marker fit strictness previews the peak graph. Select **Detect peaks**
 to apply the current settings to the calibration table. The Rosetta result
@@ -197,24 +194,28 @@ rejected.
 When you replace the FCS file or change the Rosetta detector channels, run
 **Detect peaks** again to measure peak positions for the new selection.
 
-With both scatter anchors, Rosetta assigns diameters in scatter order. A
-fluorescent marker isolated at the scatter floor or ceiling can supply an
-ordering boundary for the three intermediate populations. The clipped value
-is excluded from calibration. With one measurable marker and all ten
-non-fluorescent populations, Rosetta can also assign diameters if the marker
-rank identifies it uniquely. If a separate bright fluorescence gate confirms
-the dim marker but has no usable scatter position, Rosetta assigns 147, 203,
-and 296 nm to the nearest resolved peaks above the 140 nm marker, and 125,
-100, and 70 nm to the nearest resolved peaks below it. This assumes that no
-intermediate populations were missed. Around a confirmed bright marker, the
-same rule assigns 296, 203, and 147 nm toward lower scatter and 400, 600, 799,
-and 994 nm toward higher scatter. If only one fluorescent marker is detected
-and the full scatter ladder cannot identify it, Rosetta assumes it is the
-380 nm marker and applies the same rank rule provisionally. Other unresolved
-peaks remain in the graph
-and table without diameters. Hover over a sized peak to see whether its
-diameter was estimated from one marker or assigned with more evidence. Detector
-geometry is configured after peak detection and is used for coupling.
+With two usable scatter anchors, Rosetta assigns diameters in scatter order
+within each region. Each region must contain exactly the expected number of
+validated peaks:
+
+* Below 140 nm: 70, 100, and 125 nm.
+* Between the markers: 147, 203, and 296 nm.
+* Above 380 nm: 400, 600, 799, and 994 nm.
+
+If a region has missing or extra peaks, its diameters are left blank and
+Rosetta reports a warning. Other regions can still supply sizes. A fluorescent
+marker isolated at the scatter floor or ceiling can supply an ordering
+boundary. Its clipped scatter value is excluded from calibration.
+
+If the dim marker is unresolved, Rosetta can assign 400, 600, 799, and
+994 nm when the bright anchor is usable and exactly four validated scatter
+peaks lie above it. If only one fluorescent band is found, Rosetta treats its usable scatter
+anchor as the 380 nm marker. Rosetta warns that the dim marker was unresolved
+and omits the smaller sizes from calibration. If the fallback conditions are
+unmet, diameters stay blank. A complete peak count supports the assignment
+but cannot identify a missing standard replaced by an unrelated peak.
+
+Detector geometry is configured after peak detection and is used for coupling.
 
 Overlapping or reversed fluorescent candidates are shown with their measured
 scatter positions. A gate is retained as a sizing candidate only if it has
@@ -224,11 +225,6 @@ unresolved.
 
 Select **Compute model** to calculate the expected coupling for the diameters
 in the table. **Create calibration** uses the diameters currently in the table.
-
-Rosetta Script V1 assigns Rosetta Mix sizes using both the 140 nm and 380 nm
-fluorescent marker anchors. If either anchor is unavailable or unreliable, or
-not all detected peaks can be assigned, it shows a warning and leaves the
-existing graph and calibration table unchanged.
 
 Purple dotted guides identify fluorescent markers. Teal dashed guides identify
 non-fluorescent peaks. The angled size labels sit above their guides. The legend

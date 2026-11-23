@@ -35,9 +35,9 @@ Settings
     **Discard changes** to restore the saved values. **Manage profiles**
     lets you copy or delete a profile.
 
-    On the hosted app, the sidebar offers **Default**, **Rosetta Mix
-    Standards**, and **Diagnostic**. Enable **More profiles** to see
-    **Minimal**, which hides graphs and lowers the analysis event limit.
+    On the hosted app, the sidebar offers **Default**, **Diagnostic**, and
+    **Minimal**. The Minimal profile hides
+    graphs and lowers the analysis event limit.
     Select a profile to read its description, then click **Load** to apply it.
     The Settings editor on the hosted app requires administrator sign-in.
 

@@ -3,6 +3,7 @@ import dash_bootstrap_components as dbc
 import json
 import logging
 from . import registry
+from .callbacks.debug_panel import build_rosetta_result_panel
 from .callbacks.shared import get_peak_processes
 from .models import PeakConfig
 from dash import dcc, html
@@ -113,9 +114,7 @@ class PeakLayout:
                         processes=processes,
                         label=self.config.process_dropdown_label,
                     ),
-                    self._build_graph_toggle_control(
-                        switch_id=self.ids.graph_toggle_switch,
-                    ),
+                    dbc.Checklist(id=self.ids.graph_toggle_switch, value=["enabled"], style={"display": "none"}),
                     self._build_graph_toggle_control(
                         switch_id=self.ids.advanced_mode_switch,
                         label="Advanced mode",
@@ -299,7 +298,7 @@ class PeakLayout:
         )
 
         children: list[Any] = [
-            ui_forms.build_title_with_info(
+            None if process_label == "Rosetta" else ui_forms.build_title_with_info(
                 title=process_label,
                 tooltip_target_id=self.ids.process_description_target(process_name=process_name),
                 tooltip_id=self.ids.process_description_tooltip(process_name=process_name),
@@ -400,20 +399,30 @@ class PeakLayout:
         """
         Build the shared process status area next to the detection controls.
         """
+        default_process = self._resolve_default_process_value(
+            explicit_value=None,
+            options=[{"value": ""}, *(process.get_process_option() for process in processes)],
+        )
         return dcc.Loading(
-            html.Div(
-                [
-                    html.Div(
-                        id=self.ids.process_status(
-                            process_name=self._get_process_name(process=process),
-                        ),
-                    )
-                    for process in (processes or [])
-                ],
-            ),
+            html.Div([
+                html.Div(
+                    [
+                        html.Div(id=self.ids.process_status(process_name=self._get_process_name(process=process)))
+                        for process in processes
+                    ],
+                    className="peak-status-output",
+                ),
+                html.Div(
+                    build_rosetta_result_panel(),
+                    id=self.ids.rosetta_ready_status,
+                    className="rosetta-ready-status",
+                    hidden=not str(default_process or "").startswith("Rosetta Script"),
+                ),
+            ]),
             id=self.ids.script_status,
             type="default",
             color="#0d6efd",
+            overlay_style={"visibility": "visible"},
         )
 
     def _build_detector_controls(
@@ -760,11 +769,11 @@ class PeakLayout:
         self,
         *,
         switch_id: str,
-        label: str = "Show graph",
+        label: str,
         value: list[str] | None = None,
     ) -> dbc.Checklist:
         """
-        Build the graph visibility toggle.
+        Build a workflow option switch.
         """
         return dbc.Checklist(
             id=switch_id,
@@ -799,7 +808,6 @@ class PeakLayout:
             label=label,
             value=value,
             input_mode="numeric",
-            width="110px",
         )
 
     def _build_graph_controls(
@@ -869,6 +877,7 @@ class PeakLayout:
             id=container_id,
             children=[
                 dcc.Store(id=self.ids.event_trace_store),
+                dcc.Store(id=self.ids.viewport_store),
                 dcc.Loading(
                     Scatter2DGraph.build_component(
                         component_ids=Scatter2DGraphIds(
@@ -916,7 +925,6 @@ class PeakLayout:
             label="Maximum events",
             value=max_events,
             input_mode="numeric",
-            width="150px",
         )
 
     def _build_marker_size_control(self) -> html.Div:
@@ -1221,7 +1229,10 @@ class PeakLayout:
         if supports_automatic_action:
             buttons.append(
                 dbc.Button(
-                    run_label,
+                    html.Span([
+                        html.Span(run_label, className="peak-action-idle-label"),
+                        html.Span("Detecting peaks…", className="peak-action-running-label", role="status"),
+                    ], className="peak-action-labels"),
                     id=self.ids.process_action_button(
                         process_name=process_name,
                         action_name="run",

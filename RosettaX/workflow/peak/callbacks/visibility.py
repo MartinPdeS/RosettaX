@@ -15,19 +15,11 @@ def register_visibility_callbacks(
         ids=ids,
     )
 
-    register_graph_toggle_control_visibility_callback(
-        ids=ids,
-    )
-
     register_advanced_mode_control_visibility_callback(
         ids=ids,
     )
 
     register_data_filter_control_visibility_callback(
-        ids=ids,
-    )
-
-    register_force_graph_visible_callback(
         ids=ids,
     )
 
@@ -353,14 +345,9 @@ def build_graph_helper_panel(
         dash.html.Div("1. Confirm the detector channels match the signal you want to calibrate.")
     )
 
-    if not graph_toggle_is_enabled(graph_toggle_value):
-        children.append(
-            dash.html.Div("2. Enable Show graph to inspect the event distribution before running or clicking peaks.")
-        )
-    else:
-        children.append(
-            dash.html.Div("2. Use the graph to verify the event cloud or histogram before committing peaks.")
-        )
+    children.append(
+        dash.html.Div("2. Use the graph to verify the event cloud or histogram before committing peaks.")
+    )
 
     if process is not None and bool(getattr(process, "supports_automatic_action", False)):
         children.append(
@@ -406,31 +393,6 @@ def build_graph_helper_panel(
         )
 
     return children, base_style
-
-
-def register_graph_toggle_control_visibility_callback(
-    *,
-    ids: Any,
-) -> None:
-    """
-    Hide the graph toggle until a peak process is selected.
-    """
-
-    @dash.callback(
-        dash.Output(
-            ids.graph_toggle_switch,
-            "style",
-        ),
-        dash.Input(
-            ids.process_dropdown,
-            "value",
-        ),
-        prevent_initial_call=False,
-    )
-    def toggle_graph_toggle_control(
-        process_name: Any,
-    ) -> dict[str, str]:
-        return build_graph_toggle_control_style(process_name)
 
 
 def register_advanced_mode_control_visibility_callback(
@@ -568,61 +530,6 @@ def register_process_visibility_callback(
             styles.append(process_style)
 
         return styles
-
-
-def register_force_graph_visible_callback(
-    *,
-    ids: Any,
-) -> None:
-    """
-    Force the graph visible when the selected process requires a graph.
-
-    This applies to manual click processes and to any script that sets
-    force_graph_visible=True.
-    """
-
-    @dash.callback(
-        dash.Output(
-            ids.graph_toggle_switch,
-            "value",
-            allow_duplicate=True,
-        ),
-        dash.Input(
-            ids.process_dropdown,
-            "value",
-        ),
-        dash.State(
-            ids.graph_toggle_switch,
-            "value",
-        ),
-        prevent_initial_call=True,
-    )
-    def force_graph_visible_for_selected_process(
-        process_name: Any,
-        current_graph_toggle_value: Any,
-    ) -> Any:
-        selected_process_name = registry.get_selected_process_name(
-            process_name,
-        )
-
-        if not selected_process_name:
-            return []
-
-        process = registry.get_process_instance(
-            process_name=selected_process_name,
-        )
-
-        if process is None:
-            return current_graph_toggle_value
-
-        if process.should_force_graph_visible(
-            selected_process_name=selected_process_name,
-        ):
-            return [
-                "enabled",
-            ]
-
-        return current_graph_toggle_value
 
 
 def register_graph_visibility_callback(
@@ -801,16 +708,8 @@ def register_graph_controls_visibility_callback(
             None,
         )
 
-        if graph_type in (
-            "1d_histogram",
-            "2d_scatter",
-        ):
-            return {
-                "display": "flex",
-                "alignItems": "center",
-                "gap": "16px",
-                "flexWrap": "wrap",
-            }
+        if graph_type == "1d_histogram":
+            return {"display": "block"}
 
         return {
             "display": "none",
@@ -866,19 +765,14 @@ def register_bins_visibility_callback(
 
         if graph_type == "1d_histogram":
             return (
-                {"display": "block"},
+                {"display": "grid"},
                 {"display": "none"},
                 {"display": "none"},
             )
 
         if graph_type == "2d_scatter":
-            marker_style = {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "4px",
-                "minWidth": "150px",
-            }
-            return {"display": "none"}, marker_style, dict(marker_style)
+            return {"display": "none"}, {"display": "grid"}, {"display": "grid"}
+
 
         return {"display": "none"}, {"display": "none"}, {"display": "none"}
 

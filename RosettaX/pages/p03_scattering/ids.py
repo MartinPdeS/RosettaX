@@ -207,10 +207,6 @@ class CalibrationSectionIds:
         return f"{self.prefix}-mie-relation-plot-options"
 
     @property
-    def diameter_peak_position_plot_options(self) -> str:
-        return f"{self.prefix}-diameter-peak-position-plot-options"
-
-    @property
     def slope_out(self) -> str:
         return f"{self.prefix}-instrument-response-gain-output"
 

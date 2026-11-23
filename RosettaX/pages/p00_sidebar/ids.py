@@ -25,7 +25,6 @@ class SidebarIds:
     saved_profiles_refresh_button = f"{prefix}-saved-profiles-refresh-button"
     saved_profiles_open_folder_button = f"{prefix}-saved-profiles-open-folder-button"
     saved_profiles_open_folder_status = f"{prefix}-saved-profiles-open-folder-status"
-    more_profiles = f"{prefix}-more-profiles"
     profile_description = f"{prefix}-profile-description"
     saved_profiles_dropdown = f"{prefix}-saved-profiles-dropdown"
     saved_profiles_load_status = f"{prefix}-saved-profiles-load-status"

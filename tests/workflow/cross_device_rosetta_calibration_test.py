@@ -69,32 +69,34 @@ METVES_SAMPLES = [
 # This recording resolves a marker on 488 green. Auto-select still prefers 405.
 METVES_SIZING_FLUORESCENCE = {"apogee_microplus_metves_07g1.fcs": "488-Grn(Peak)"}
 
+# Fixed-input review outcomes for the default Rosetta mode, not bead-identity labels.
 CHECKED_METVES_OUTCOMES = {
-    'beckman_coulter_cytoflex_s_metves_23w1.fcs': ([147, 203, 296, 400, 600], ''),
-    'beckman_coulter_cytoflex_s_metves_16p1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], ''),
-    'beckman_coulter_cytoflex_lx_metves_14n1.fcs': ([400, 600], ''),
-    'beckman_coulter_cytoflex_lx_metves_05e1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
-    'cytek_aurora_metves_23w2.fcs': ([125, 147, 203, 296], ''),
+    'beckman_coulter_cytoflex_s_metves_23w1.fcs': ([], 'The scatter peak assignments are sensitive'),
+    'beckman_coulter_cytoflex_s_metves_16p1.fcs': ([], 'The scatter peak assignments are sensitive'),
+    'beckman_coulter_cytoflex_lx_metves_14n1.fcs': ([], 'No stable fluorescence valley'),
+    'beckman_coulter_cytoflex_lx_metves_05e1.fcs': ([], 'The scatter peak assignments are sensitive'),
+    'cytek_aurora_metves_23w2.fcs': ([], 'No stable fluorescence valley'),
     'bd_facslyric_metves_20t1.fcs': ([147, 203, 296, 400, 600, 799], ''),
-    'apogee_microplus_metves_06f2.fcs': ([203, 296, 400, 600], ''),
-    'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([600, 799, 994], 'Found 0 validated scatter peaks'),
-    'apogee_a50_micro_metves_19s1.fcs': ([125, '', '', 400, 600, 799, 994], 'Found 2 validated scatter peaks'),
-    'cytek_aurora_metves_11k2.fcs': ([125, 147, 203, 296], ''),
-    'apogee_microplus_metves_04d1.fcs': ([296, 400, 600, 799, 994], ''),
+    'apogee_microplus_metves_06f2.fcs': (['', 400, 600], 'Partial result'),
+    'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([], 'No stable fluorescence valley'),
+    'apogee_a50_micro_metves_19s1.fcs': ([], 'The scatter peak assignments are sensitive'),
+    'cytek_aurora_metves_11k2.fcs': ([], 'No stable fluorescence valley'),
+    'apogee_microplus_metves_04d1.fcs': ([400, 600, 799, 994], 'Partial result'),
     'bd_facsymphony_a1_metves_25y2.fcs': ([100, 125, 147, 203, 296, 400, 600, 799, 994], ''),
-    'apogee_microplus_metves_07g1.fcs': ([203, 296, 400], ''),
-    'bd_facscelesta_sorp_metves_09i1.fcs': ([], '0 fluorescent marker peaks'),
-    'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
+    'apogee_microplus_metves_07g1.fcs': ([], 'No stable fluorescence valley'),
+    'bd_facscelesta_sorp_metves_09i1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], ''),
+    'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([], 'The scatter peak assignments are sensitive'),
     'beckman_coulter_moflo_astrios_metves_21u1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
     'apogee_microplus_metves_07g2.fcs': (['', '', 147, 203, 296, 400, 600], ''),
-    'cytek_aurora_metves_12l1.fcs': ([125, 147, 203], ''),
-    'cytek_northern_lights_metves_22v2.fcs': ([125, 147, 203], ''),
-    'bd_facsymphony_a1_metves_25y1.fcs': ([], '0 fluorescent marker peaks'),
+    'cytek_aurora_metves_12l1.fcs': ([], 'No stable fluorescence valley'),
+    'cytek_northern_lights_metves_22v2.fcs': ([], 'No stable fluorescence valley'),
+    'bd_facsymphony_a1_metves_25y1.fcs': ([100, 125, 147, 203, 296, 400, 600, 799, 994], ''),
     'apogee_a60_micro_metves_22v1.fcs': ([100, 125, 147, 203, 296], ''),
-    'cytek_aurora_metves_18r1.fcs': ([], '0 fluorescent marker peaks'),
-    'beckman_coulter_cytoflex_lx_metves_16p2.fcs': ([203, 296, 400, 600, 799, 994], ''),
-    'bd_facsymphony_a5_metves_08h1.fcs': ([147, 203, 296, 400, 600, 799], ''),
+    'cytek_aurora_metves_18r1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
+    'beckman_coulter_cytoflex_lx_metves_16p2.fcs': ([], 'No stable fluorescence valley'),
+    'bd_facsymphony_a5_metves_08h1.fcs': ([], 'No stable fluorescence valley'),
 }
+
 
 @pytest.mark.parametrize(
     ("filename", "scatter", "fluorescence"),
@@ -204,11 +206,18 @@ def run_real_sample(
     )
     assert result is not None
     rows = result.table_prefill_rows or []
-    can_fit = fit_calibration and len(rows) >= 3 and all(row["particle_diameter_nm"] for row in rows) and not result.warning
+    provisional = result.peak_lines_payload.get("rosetta_sizing", {}).get("needs_confirmation", False)
+    can_fit = (
+        fit_calibration and len(rows) >= 3 and all(row["particle_diameter_nm"] for row in rows)
+        and not result.warning and not provisional
+    )
     return {
         "warning": result.warning,
         "status": result.status,
         "rows": rows,
+        "provisional": provisional,
+        "gate": result.peak_lines_payload.get("baseline_cutoff"),
+        "gate_interval": result.peak_lines_payload.get("rosetta_gate_interval"),
         "r_squared": run_real_calibration(filename=filename, scatter=scatter, rows=rows) if can_fit else None,
     }
 
@@ -237,13 +246,13 @@ def run_sample_in_subprocess(**sample) -> dict:
 # Expected behavior at the default settings. These outcomes check the workflow
 # against fixed recordings and are not independent bead identity annotations.
 EXPECTED_OUTCOMES = {
-    "apogee_a60_micro_cal003_2022-01-31.fcs": ("fit", [100, 125, 147, 203, 296]),
-    "bd_facsymphony_a1_cal003_2022-02-11.fcs": ("missing_marker", []),
-    "bd_facsymphony_a1_cal003_2022-02-18.fcs": ("missing_marker", []),
-    "bd_facsymphony_a1_cal003_2022-11-16.fcs": ("fit", [100, 125, 147, 203, 296, 400, 600, 799, 994]),
-    "miltenyi_macsquant_cal003_2022-05-13.fcs": ("fit", [296, 400, 600, 799, 994]),
-    "beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs": ("fit", [125, 147, 203, 296, 400, 600, 799, 994]),
-    "bd_facscalibur_cal003_2023-02-08.fcs": ("missing_marker", []),
+    'apogee_a60_micro_cal003_2022-01-31.fcs': ('', [100, 125, 147, 203, 296]),
+    'bd_facsymphony_a1_cal003_2022-02-11.fcs': ('The scatter peak assignments are sensitive', []),
+    'bd_facsymphony_a1_cal003_2022-02-18.fcs': ('', [203, 296, 400, 600, 799, 994]),
+    'bd_facsymphony_a1_cal003_2022-11-16.fcs': ('', [100, 125, 147, 203, 296, 400, 600, 799, 994]),
+    'miltenyi_macsquant_cal003_2022-05-13.fcs': ('', [296, 400, 600, 799, 994]),
+    'beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs': ('The scatter peak assignments are sensitive', []),
+    'bd_facscalibur_cal003_2023-02-08.fcs': ('0 fluorescent marker peaks', []),
 }
 
 
@@ -253,7 +262,7 @@ def test_rosetta_bead_positions_sizes_and_scattering_fit(
 ) -> None:
     """Check assigned sizes, known diagnostic paths, and supported calibrations."""
     result = run_sample_in_subprocess(filename=filename, scatter=scatter, fluorescence=fluorescence)
-    expected_outcome, expected_diameters = EXPECTED_OUTCOMES[filename]
+    warning_fragment, expected_diameters = EXPECTED_OUTCOMES[filename]
     rows = result["rows"]
     assert [row["particle_diameter_nm"] for row in rows] == expected_diameters
     positions = [row["measured_peak_position"] for row in rows]
@@ -261,11 +270,11 @@ def test_rosetta_bead_positions_sizes_and_scattering_fit(
     assert positions == sorted(set(positions))
     assert all(not diameter or diameter in ROSETTA_MIX_PARTICLE_DIAMETERS_NM for diameter in expected_diameters)
 
-    assert result["warning"] == (expected_outcome == "missing_marker"), result["status"]
-    if expected_outcome == "missing_marker":
-        assert "0 fluorescent marker peaks" in result["status"]
+    assert result["warning"] == bool(warning_fragment), result["status"]
+    if warning_fragment:
+        assert warning_fragment in result["status"]
 
-    if expected_outcome == "fit":
+    if rows and not warning_fragment and not result["provisional"]:
         r_squared = result["r_squared"]
         assert r_squared is not None and math.isfinite(r_squared) and r_squared > 0.90
     else:
@@ -294,3 +303,10 @@ def test_metves_rosetta_assignments_and_warnings(
     assert result["warning"] == bool(warning_fragment), result["status"]
     if warning_fragment:
         assert warning_fragment in result["status"]
+
+    if filename == "apogee_microplus_metves_04d1.fcs":
+        # The plotted trough spans approximately 1,500 to 8,000 a.u.
+        # The sizing warning still shows a cutoff between the bands.
+        lower, upper = result["gate_interval"]
+        assert 1_500 < lower < result["gate"] < upper < 8_000
+        assert 2_500 < result["gate"] < 5_000

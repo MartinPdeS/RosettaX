@@ -929,7 +929,7 @@ class Calibration:
         @dash.callback(
             dash.Output(self.ids.graph_diameter_peak_position, "figure"),
             dash.Input(self.page.ids.State.page_state_store, "data"),
-            dash.Input(self.ids.diameter_peak_position_plot_options, "value"),
+            dash.Input(self.ids.mie_relation_plot_options, "value"),
             dash.State("runtime-config-store", "data"),
             prevent_initial_call=False,
         )

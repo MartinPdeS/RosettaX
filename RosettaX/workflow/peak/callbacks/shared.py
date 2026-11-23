@@ -100,7 +100,6 @@ class PeakWorkflowCallbacks:
         It intentionally does not run on initial page render. Dash session
         persistence should restore user choices for:
 
-        - Show graph
         - Log x and Log y through the shared axis scale toggle
         - Bins
 
@@ -112,7 +111,6 @@ class PeakWorkflowCallbacks:
 
         outputs = [
             dash.Output(ids.nbins_input, "value"),
-            dash.Output(ids.graph_toggle_switch, "value"),
             dash.Output(ids.data_filter_switch, "value"),
             dash.Output(ids.axis_scale_toggle, "value"),
             dash.Output(ids.marker_size_input, "value"),
@@ -179,7 +177,6 @@ class PeakWorkflowCallbacks:
                     "calibration.n_bins_for_plots",
                     default=100,
                 ),
-                ["enabled"] if runtime_config.get_show_graphs(default=True) else [],
                 ["enabled"] if runtime_config.get_bool(
                     "calibration.filter_edge_artifacts",
                     default=True,

@@ -41,7 +41,7 @@ def build_plot_number_control(
             dbc.Label(
                 label,
                 html_for=input_id,
-                style=PLOT_CONTROL_LABEL_STYLE,
+                class_name="plot-option-label",
             ),
             dbc.Input(
                 id=input_id,
@@ -51,15 +51,11 @@ def build_plot_number_control(
                 debounce=True,
                 persistence=True,
                 persistence_type="session",
-                style={"width": width},
+                style={"width": "100%", "maxWidth": width},
             ),
         ],
-        style={
-            "display": "flex" if visible else "none",
-            "flexDirection": "column",
-            "gap": "4px",
-            "minWidth": width,
-        },
+        className="plot-option-number",
+        style=None if visible else {"display": "none"},
         **container_kwargs,
     )
 
@@ -95,13 +91,14 @@ def build_plot_axis_checklist(
     options: list[dict[str, str]],
     value: list[str] | None = None,
 ) -> dbc.Checklist:
-    """Build a consistent inline log-axis checklist."""
+    """Build the stacked log-scale switches."""
     return dbc.Checklist(
         id=component_id,
         options=options,
         value=value if isinstance(value, list) else [],
-        inline=True,
+        inline=False,
         switch=True,
+        class_name="plot-option-switches",
         persistence=True,
         persistence_type="session",
     )
@@ -125,47 +122,30 @@ class PlotOptions:
     ) -> html.Div:
         """Build standardized Axes and optional Display option groups."""
         axis_options = [
-            {"label": "x log", "value": cls.x_log_value},
-            {"label": "y log", "value": cls.y_log_value},
+            {"label": "X axis", "value": cls.x_log_value},
+            {"label": "Y axis", "value": cls.y_log_value},
         ]
         if color_log_enabled:
-            axis_options.append({"label": "color log", "value": cls.color_log_value})
+            axis_options.append({"label": "Color", "value": cls.color_log_value})
 
-        axis_control = build_plot_axis_checklist(
-            component_id=component_id,
-            options=axis_options,
-            value=value,
-        )
-        control_row_style = {
-            "display": "flex",
-            "alignItems": "center",
-            "gap": "16px",
-            "flexWrap": "wrap",
-            "padding": "0",
-        }
-        rows: list[Any] = [
+        groups = [
             html.Div(
-                [html.Strong("Axes", style={"minWidth": "64px"}), axis_control],
-                style=control_row_style,
+                [
+                    html.Strong("Log scale"),
+                    build_plot_axis_checklist(component_id=component_id, options=axis_options, value=value),
+                ],
+                className="plot-options-group plot-options-scale",
+                role="group",
+                **{"aria-label": "Log scale"},
             ),
         ]
         if display_controls:
-            rows.append(
+            groups.append(
                 html.Div(
-                    [
-                        html.Strong("Display", style={"minWidth": "64px"}),
-                        *display_controls,
-                    ],
-                    style=control_row_style,
+                    [html.Strong("Display"), html.Div(display_controls, className="plot-options-fields")],
+                    className="plot-options-group plot-options-display",
+                    role="group",
+                    **{"aria-label": "Display"},
                 )
             )
-
-        return build_plot_control_panel(
-            rows,
-            style_overrides={
-                "display": "flex",
-                "flexDirection": "column",
-                "alignItems": "stretch",
-                "gap": "8px",
-            },
-        )
+        return html.Div(groups, className="plot-options")

@@ -7,7 +7,6 @@ from .rosetta_annotations import (
     ROSETTA_BASELINE_GATE_COLOR,
     add_rosetta_scatter_guide_annotations,
     extract_rosetta_scatter_guide_annotations,
-    include_rosetta_peak_markers_in_view,
 )
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
@@ -208,7 +207,6 @@ def add_peak_workflow_post_layout_overlays(
     has_classified_peaks = any(entry.get("kind") in ("marker", "non_fluorescent", "excluded") for entry in annotation_entries)
     baseline_gate = None
     if has_classified_peaks and isinstance(peak_lines_payload, dict):
-        include_rosetta_peak_markers_in_view(figure=figure, peak_lines_payload=peak_lines_payload)
         try:
             baseline_gate = float(peak_lines_payload.get("baseline_cutoff"))
             if not np.isfinite(baseline_gate):

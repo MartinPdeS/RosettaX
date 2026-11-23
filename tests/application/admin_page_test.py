@@ -375,9 +375,8 @@ def test_hosted_settings_and_profiles_use_server_policy(monkeypatch):
         assert "Minimal.json" in library.profiles
         assert library.get_profile_payload()["ui"]["show_graphs"] is True
         assert [option["label"] for option in build_profile_picker_options(library=library)] == [
-            "Default", "Rosetta Mix Standards", "Diagnostic",
+            "Default", "Diagnostic", "Minimal",
         ]
-        assert build_profile_picker_options(library=library, show_more=True)[-1]["label"] == "Minimal"
 
     client = flask_app.test_client()
     assert client.post("/admin/login", data={"token": "wrong"}).status_code == 403

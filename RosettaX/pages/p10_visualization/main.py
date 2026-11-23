@@ -200,14 +200,12 @@ class VisualizationPage:
                             label="Maximum events",
                             value=default_controls["max_events"],
                             input_mode="numeric",
-                            width="160px",
                         ),
                         plotting_layout.build_plot_number_control(
                             container_id=self.ids.marker_size_container,
                             input_id=self.ids.marker_size,
                             label="Marker size",
                             value=default_controls["marker_size"],
-                            width="160px",
                             visible=False,
                         ),
                         plotting_layout.build_plot_number_control(
@@ -215,7 +213,6 @@ class VisualizationPage:
                             input_id=self.ids.marker_opacity,
                             label="Marker opacity",
                             value=default_controls["marker_opacity"],
-                            width="160px",
                             visible=False,
                         ),
                         plotting_layout.build_plot_number_control(
@@ -223,7 +220,6 @@ class VisualizationPage:
                             input_id=self.ids.histogram_smoothing_sigma,
                             label="Smoothing strength (sigma points)",
                             value=2.0,
-                            width="180px",
                             visible=False,
                         ),
                     ],
@@ -386,19 +382,9 @@ class VisualizationPage:
                 "flexDirection": "column",
                 "gap": styling.get_spacing_token("xs"),
             }
-            marker_field_style = {
-                "display": "none" if is_histogram else "block",
-                "flexDirection": "column",
-                "gap": "4px",
-                "minWidth": "160px",
-            }
+            marker_field_style = {"display": "none" if is_histogram else "grid"}
             smoothing_style = {
-                "display": "flex"
-                if plot_type_string == services.PLOT_TYPE_SMOOTHED_HISTOGRAM
-                else "none",
-                "flexDirection": "column",
-                "gap": "4px",
-                "minWidth": "180px",
+                "display": "grid" if plot_type_string == services.PLOT_TYPE_SMOOTHED_HISTOGRAM else "none",
             }
             return (
                 y_channel_style,

@@ -109,6 +109,9 @@ def register_mutation_callbacks(
         ),
         *input_components,
         *state_components,
+        running=[
+            (dash.Output(dict(ids.process_action_button_pattern(), action="run"), "disabled"), True, False),
+        ],
         prevent_initial_call=True,
     )
     def reduce_peak_workflow_event(
@@ -247,6 +250,12 @@ def register_mutation_callbacks(
 
 
     dash.clientside_callback(
+        'function(process) { return !String(process || "").startsWith("Rosetta Script"); }',
+        dash.Output(ids.rosetta_ready_status, "hidden"),
+        dash.Input(ids.process_dropdown, "value"),
+    )
+
+    dash.clientside_callback(
         """
         function(clicks, settings, pageState, statusIds, selectedProcess) {
             const context = dash_clientside.callback_context;
@@ -256,7 +265,7 @@ def register_mutation_callbacks(
             const preview = trigger && trigger.setting === "marker_fit_strictness" &&
                 trigger.process === selectedProcess;
             return (statusIds || []).map(id => (
-                newFile || ((run || preview) && id.process === trigger.process)
+                newFile || ((run || preview) && id.process === trigger.process && !id.process.startsWith("Rosetta Script"))
                     ? null : dash_clientside.no_update
             ));
         }
@@ -798,10 +807,7 @@ def build_status_children(
     Build status children for pattern matched status outputs.
     """
     if target_process_name.startswith("Rosetta Script"):
-        result_panel = build_rosetta_result_panel(status=status, peak_lines_payload=debug_payload)
-        status_component = result_panel if result_panel is not None else build_status_alert(status=status)
-        if result_panel is None and status_component:
-            status_component = html.Div(status_component, className="app-diagnostics-inline peak-result-message")
+        status_component = build_rosetta_result_panel(status=status, peak_lines_payload=debug_payload)
     else:
         status_component = build_status_alert(status=status)
 

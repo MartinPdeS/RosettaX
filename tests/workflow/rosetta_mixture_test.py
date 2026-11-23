@@ -5,11 +5,9 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
-import logging
 import numpy as np
 import pytest
 from dataclasses import replace
-from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
 from RosettaX.workflow.peak.scripts import rosetta_mix
 from RosettaX.workflow.peak.scripts.base import PeakProcessResult
 from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
@@ -373,8 +371,8 @@ def test_successful_assignment_preserves_saturation_exclusion(monkeypatch, compl
     )
 
 
-def test_mixture_estimates_sizes_assuming_a_single_bright_marker(*, monkeypatch):
-    """Publish provisional sizes from a lone fluorescent marker."""
+def test_mixture_leaves_incomplete_single_marker_ladder_unsized(*, monkeypatch):
+    """Leave sizes blank when a lone marker cannot establish the scatter ladder."""
     coupling = dict(zip(
         (70, 100, 125, 140, 147, 203, 296, 380, 400, 600, 799, 994),
         (1, 2.7, 5, 8, 11, 29, 66, 120, 133, 480, 750, 1300),
@@ -400,99 +398,10 @@ def test_mixture_estimates_sizes_assuming_a_single_bright_marker(*, monkeypatch)
         peak_count=6, max_events_for_analysis=10000,
         process_settings={"saturation_guard_enabled": False},
     )
-    assert result is not None and not result.warning, result.status if result else None
-    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [203, 296, 400]
-    assert [row["measured_peak_position"] for row in result.table_prefill_rows] == pytest.approx(
-        [coupling[diameter] * 1000 for diameter in diameters[1:-1]], rel=0.03,
-    )
-    assert "Assumed the only fluorescent marker is the 380 nm bright marker" in result.status
-    assert "Bright marker (assumed)" in result.peak_lines_payload["labels"]
-    assert result.peak_lines_payload["rosetta_assignment_evidence"]
-    table_rows = ScatteringPeakWorkflowAdapter().apply_peak_process_result_to_table(
-        table_data=[{"particle_diameter_nm": 100, "expected_coupling": 2.0}] * 3,
-        result=result,
-        context={"mie_model": "Solid Sphere", "replace_existing_table_peaks": True},
-        logger=logging.getLogger(__name__),
-    )
-    assert [row["particle_diameter_nm"] for row in table_rows] == [203, 296, 400]
-    assert [row["expected_coupling"] for row in table_rows] == [""] * 3
-    assert [row["measured_peak_position"] for row in table_rows] == [
-        round(row["measured_peak_position"], 1) for row in result.table_prefill_rows
-    ]
-
-
-@pytest.mark.parametrize(
-    ("settings", "expected"),
-    [
-        ({}, (0.70, 0.60)),
-        ({"marker_fit_strictness": "0"}, (0.35, 1.50)),
-        ({"marker_fit_strictness": "0.25"}, (0.525, 1.05)),
-        ({"marker_fit_strictness": "1"}, (0.95, 0.30)),
-        ({"marker_fit_strictness": "2"}, (0.95, 0.30)),
-        ({"marker_fit_strictness": "invalid"}, (0.70, 0.60)),
-        ({"fit_r2_threshold": 0.62, "fit_cv_threshold": 0.90}, (0.62, 0.90)),
-        ({"marker_fit_strictness": 1, "fit_r2_threshold": 0.62}, (0.95, 0.30)),
-    ],
-)
-def test_marker_fit_strictness_controls_both_fluorescence_thresholds(*, monkeypatch, settings, expected):
-    """Resolve the single control without changing scatter thresholds or legacy callers."""
-    captured = {}
-
-    def capture_settings(*args, process_settings, **kwargs):
-        """Record the thresholds dispatched to the detection pipeline."""
-        captured.update(process_settings)
-        return None
-
-    monkeypatch.setattr(rosetta_mix.FluorescenceGuidedScatterPeakProcess, "run_automatic_action", capture_settings)
-    process = MixtureRosettaScatterPeakProcess()
-    process.run_automatic_action(
-        backend=object(), detector_channels={}, peak_count=10,
-        max_events_for_analysis=10_000, process_settings=settings,
-    )
-    assert (captured["fit_r2_threshold"], captured["fit_cv_threshold"]) == expected
-    assert captured["scatter_fit_cv_threshold"] == 1.0
-    controls = {setting["name"] for setting in process.get_settings()}
-    assert "marker_fit_strictness" in controls
-    assert controls.isdisjoint({"fit_r2_threshold", "fit_cv_threshold"})
-
-
-@pytest.mark.parametrize("clipped_marker", ["bright", "dim"])
-def test_scatter_edge_identifies_marker_without_using_clipped_intensity(*, monkeypatch, clipped_marker):
-    """Use an isolated clipped fluorescence gate only as a scatter ordering boundary."""
-    generator = np.random.default_rng(871)
-    counts = (2400, 2400, 2400, 3200, 3200)
-    scatter_centers = (2500, 6000, 13000, 900, 26000)
-    fluorescence_centers = (2, 2, 2, 4, 5)
-    scatter = np.concatenate([
-        center * np.exp(generator.normal(0, 0.075, count))
-        for center, count in zip(scatter_centers, counts, strict=True)
-    ])
-    fluorescence = np.concatenate([
-        10 ** generator.normal(center, 0.065, count)
-        for center, count in zip(fluorescence_centers, counts, strict=True)
-    ])
-    if clipped_marker == "bright":
-        scatter = np.minimum(scatter, 20000)
-    else:
-        scatter = np.maximum(scatter, 1400)
-    monkeypatch.setattr(
-        rosetta_mix, "column_copy",
-        lambda **kwargs: scatter if kwargs["detector_column"] == "SSC" else fluorescence,
-    )
-    result = MixtureRosettaScatterPeakProcess().run_automatic_action(
-        backend=SimpleNamespace(fcs_file_path="synthetic.fcs"),
-        detector_channels={"scattering": "SSC", "green_fluorescence": "Green"},
-        peak_count=8, max_events_for_analysis=20000, process_settings={},
-    )
-    assert result is not None and not result.warning, result.status if result else None
-    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [203, 296], (result.status, result.peak_lines_payload.get("marker_scatter_diagnostics"))
-    assert [row["measured_peak_position"] for row in result.table_prefill_rows] == pytest.approx(
-        scatter_centers[1:3], rel=0.025,
-    )
-    assert "marker at the scatter limit" in result.status
-    assert {entry["method"] for entry in result.peak_lines_payload["rosetta_size_assignments"]} == {
-        "One measured marker and a clipped scatter boundary",
-    }
+    assert result is not None and result.warning
+    assert not result.peak_lines_payload["rosetta_sizing"]["needs_confirmation"]
+    assert result.table_prefill_rows
+    assert all(not row["particle_diameter_nm"] for row in result.table_prefill_rows)
 
 
 def test_complete_scatter_ladder_identifies_single_marker_by_rank():
@@ -515,9 +424,9 @@ def test_complete_scatter_ladder_identifies_single_marker_by_rank():
         },
     )
     resolved, rows, status = MixtureRosettaScatterPeakProcess().resolve_particle_sizes(result=detection)
-    assert [row["particle_diameter_nm"] for row in rows] == [70, 100, 125, 147, 203, 296, 400, 600, 799, 994]
-    assert resolved.peak_lines_payload["labels"][-1] == "Bright marker"
-    assert "using the 380 nm marker" in status
+    assert [row["particle_diameter_nm"] for row in rows] == [400, 600, 799, 994]
+    assert resolved.peak_lines_payload["labels"][-1] == "Bright marker (assumed)"
+    assert "dim fluorescent marker was not resolved" in status
 
 
 @pytest.mark.parametrize(("higher_peaks", "expected"), [(0, []), (2, [147, 203]), (3, [147, 203, 296]), (4, [147, 203, 296, ""])])

@@ -112,9 +112,10 @@ class Test_PeakMutationStatus:
             },
         )
         assert panel.children[0].children[0].children == "Rosetta preview"
-        assert panel.children[0].children[1].children == "Select Detect peaks to update the calibration table."
+        assert len(panel.children[0].children) == 1
+        assert panel.children[2].children[1].children[0].children.startswith("Select Detect peaks to update the calibration table.")
         metrics = {row.children[0].children: row.children[1].children for row in panel.children[1].children}
-        assert metrics == {"Sized peaks": "5", "Peaks without a diameter": "1", "Events analyzed": "24,000"}
+        assert metrics == {"Sized peaks": "5", "Excluded peaks": "0", "Events analyzed": "24,000", "Fluorescence valley": "—"}
 
     def test_provisional_sizes_stay_visible_when_detection_completed_without_warning(self) -> None:
         """Show that successful detection may still leave provisional assignments."""
@@ -128,4 +129,31 @@ class Test_PeakMutationStatus:
         )
         assert "app-diagnostics-inline" in panel.className
         assert panel.children[0].children[0].children == "Review Rosetta assignments"
-        assert panel.children[0].children[1].children.startswith("Use Compute model")
+        assert len(panel.children[0].children) == 1
+        assert panel.children[2].children[1].children[0].children.startswith("Table filled with provisional results. Use Compute model")
+
+    def test_ambiguous_gate_explanation_stays_in_fit_details(self) -> None:
+        """Keep only the outcome outside the collapsed fit information."""
+        reason = "The scatter peak assignments are sensitive to the fluorescence gate."
+        panel = build_rosetta_result_panel(
+            status=reason,
+            peak_lines_payload={
+                "rosetta_detection_issue": "gate_ambiguous",
+                "rosetta_gate_interval": [2500.0, 6600.0],
+            },
+        )
+        assert panel.children[0].children[0].children == "Rosetta detection stopped"
+        assert len(panel.children[0].children) == 1
+        details = panel.children[2]
+        assert details.children[0].children == "Fit details"
+        assert details.children[1].children[0].children == f"Table unchanged. {reason}"
+        assert panel.children[1].children[-1].children[0].children == "Fluorescence valley"
+
+
+    def test_rosetta_ready_keeps_all_metric_slots_visible(self) -> None:
+        """Reserve four visible metric slots before the first run."""
+        panel = build_rosetta_result_panel()
+        assert panel.children[0].children[0].children == "Rosetta ready"
+        metric_values = [row.children[1].children for row in panel.children[1].children]
+        assert metric_values == ["—"] * 4
+        assert panel.children[2].children[0].children == "Fit details"

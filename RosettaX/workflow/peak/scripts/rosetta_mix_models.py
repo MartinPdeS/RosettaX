@@ -23,6 +23,7 @@ class RosettaDetectionIssue(StrEnum):
     MARKER_MISSING = "marker_missing"
     MARKER_AMBIGUOUS = "marker_ambiguous"
     SCATTER_MISSING = "scatter_missing"
+    GATE_AMBIGUOUS = "gate_ambiguous"
 
 
 class RosettaAssignmentState(StrEnum):

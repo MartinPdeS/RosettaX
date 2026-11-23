@@ -37,6 +37,16 @@ def register_graph_callbacks(
         ids=ids,
     )
 
+    dash.clientside_callback(
+        dash.ClientsideFunction(namespace="rosettax", function_name="capturePeakViewport"),
+        dash.Output(ids.viewport_store, "data"),
+        dash.Input(ids.graph_hist, "relayoutData"),
+        dash.Input(ids.graph_hist, "figure"),
+        dash.State(ids.graph_hist, "id"),
+        dash.State(ids.viewport_store, "data"),
+        prevent_initial_call=True,
+    )
+
     @dash.callback(
         dash.Output(
             ids.graph_hist,
@@ -126,6 +136,7 @@ def register_graph_callbacks(
         ),
         *state_components,
         dash.State(ids.event_trace_store, "data"),
+        dash.State(ids.viewport_store, "data"),
         prevent_initial_call=False,
     )
     def update_graph(
@@ -228,6 +239,10 @@ def register_graph_callbacks(
                 yscale_selection=axis_scale_toggle_values,
             )
 
+            previous_trace, viewport = state_values[-2:]
+            if set(dash.ctx.triggered_prop_ids) == {f"{page_state_store_id}.data"}:
+                preserve_peak_axis_ranges(figure=figure, previous_trace=previous_trace, viewport=viewport)
+
             figure = graphing.add_peak_workflow_post_layout_overlays(
                 figure=figure,
                 process_name=process_name,
@@ -257,7 +272,7 @@ def register_graph_callbacks(
                     dragmode="select",
                 )
 
-            return build_peak_figure_update(figure=figure, previous_trace=state_values[-1])
+            return build_peak_figure_update(figure=figure, previous_trace=previous_trace)
 
         except Exception as exc:
             logger.exception(
@@ -284,6 +299,22 @@ def register_graph_callbacks(
             return figure, None
 
 
+def preserve_peak_axis_ranges(
+    *, figure: go.Figure, previous_trace: dict[str, Any] | None,
+    viewport: dict[str, Any] | None = None,
+) -> None:
+    """Keep the prior viewport when detection refreshes the same event plot."""
+    if previous_trace is None or figure.layout.uirevision != previous_trace.get("revision"):
+        return
+    if not figure.data or figure.data[0].type != "scattergl" or figure.data[0].name != "Events":
+        return
+    view = viewport if viewport and viewport.get("revision") == figure.layout.uirevision else previous_trace
+    for axis_name in ("xaxis", "yaxis"):
+        axis_range = view.get("axis_ranges", {}).get(axis_name)
+        if axis_range is not None:
+            figure.update_layout({axis_name: {"range": axis_range, "autorange": False}})
+
+
 def build_peak_figure_update(
     *, figure: go.Figure, previous_trace: dict[str, Any] | None,
 ) -> tuple[Any, Any]:
@@ -301,6 +332,10 @@ def build_peak_figure_update(
     matching_events = previous_trace is not None and all(
         previous_trace.get(key) == value for key, value in trace.items()
     )
+    trace["axis_ranges"] = {
+        name: list(axis_range) if (axis_range := getattr(figure.layout, name).range) is not None else None
+        for name in ("xaxis", "yaxis")
+    }
     trace["guides"] = hashlib.sha256(to_json((layout, overlays)).encode("utf-8")).hexdigest()
     trace["overlay_count"] = len(overlays)
     if not matching_events:

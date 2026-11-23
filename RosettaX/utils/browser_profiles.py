@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 BROWSER_PROFILES_STORE_ID = "browser-profiles-store"
 DEFAULT_PROFILE_FILENAME = "default_profile.json"
+_RETIRED_PROFILE_FILENAME = "Rosetta_Mix_Standards.json"
 PROFILE_NAME_FIELD = "profile_name"
 
 
@@ -142,6 +143,8 @@ class BrowserProfileLibrary:
                     normalized_profile_name = normalize_profile_filename(
                         str(raw_profile_name or "")
                     )
+                    if normalized_profile_name == _RETIRED_PROFILE_FILENAME:
+                        continue
                     runtime_config = RuntimeConfig.from_dict(
                         raw_profile_payload if isinstance(raw_profile_payload, dict) else None
                     )
@@ -344,6 +347,8 @@ class BrowserProfileLibrary:
         Return a copy with one profile saved into browser storage.
         """
         normalized_profile_name = normalize_profile_filename(profile_name)
+        if normalized_profile_name == _RETIRED_PROFILE_FILENAME:
+            raise ValueError("This workflow profile name has been retired. Choose another name.")
         validated_profile_payload = self._prepare_profile_payload(
             profile_name=normalized_profile_name,
             profile_payload=profile_payload,

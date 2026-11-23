@@ -10,6 +10,7 @@ if __name__ == "__main__":
 import numpy as np
 import pytest
 from dataclasses import FrozenInstanceError
+from pathlib import Path
 from RosettaX.workflow.peak.scripts import rosetta_mix
 
 
@@ -153,3 +154,66 @@ def test_explicit_saved_baseline_gate_remains_authoritative():
         process_settings={"baseline_sigma_multiplier": 1.0},
     )
     assert settings.baseline_sigma_multiplier == 1.0
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected_gate", "expected_marker"),
+    [
+        ("apogee_microplus_metves_04d1.fcs", 3231, 11685),
+        ("apogee_microplus_metves_06f2.fcs", 5298, 23950),
+    ],
+)
+def test_rosetta_gate_separates_broad_apogee_baseline(filename, expected_gate, expected_marker):
+    """Keep the first fluorescent band above the gate when a broad baseline fit fails."""
+    sample = Path(__file__).resolve().parents[2] / "RosettaX" / "assets" / "sample-files" / "cross_device" / filename
+    settings = rosetta_mix.RosettaRunSettings.from_raw_values(
+        peak_count=6, max_events_for_analysis=100_000, process_settings={},
+    )
+    events = rosetta_mix.read_rosetta_events(
+        source={
+            "fcs_file_path": str(sample),
+            "scattering_column": "LALS(Peak)",
+            "green_fluorescence_column": "405-Grn(Peak)",
+            "max_events_for_analysis": settings.max_events_for_analysis,
+            "remove_saturated_events": True,
+        },
+    )
+    result = rosetta_mix.analyze_rosetta_fluorescence(events=events, settings=settings)
+
+    assert result.baseline_upper_gate == pytest.approx(expected_gate, rel=0.03)
+    assert result.baseline_peak["mean"] < result.baseline_upper_gate
+    assert result.marker_peaks[0]["mean"] == pytest.approx(expected_marker, rel=0.03)
+
+
+def test_stable_fluorescence_gate_requires_a_resolved_valley():
+    """Verify known separated populations pass and an overlapping shoulder stops."""
+    rng = np.random.default_rng(318)
+    baseline = rng.normal(2.3, 0.20, 7000)
+    marker = rng.normal(4.1, 0.10, 1500)
+    overlap = rng.normal(2.48, 0.20, 1500)
+    resolve = rosetta_mix.resolve_stable_fluorescence_valley
+
+    interval = resolve(
+        values=10 ** np.r_[baseline, marker], baseline_position=10**2.3,
+        marker_position=10**4.1, minimum_events=35,
+    )
+    assert interval is not None
+    lower, upper = interval
+    assert np.quantile(10**baseline, 0.995) < lower < upper < np.quantile(10**marker, 0.005)
+    assert resolve(
+        values=10 ** np.r_[baseline, overlap], baseline_position=10**2.3,
+        marker_position=10**2.48, minimum_events=35,
+    ) is None
+
+
+def test_stable_gate_checks_local_scatter_regions():
+    """Catch a local fluorescence bridge that is sparse across the whole cloud."""
+    scatter = np.arange(1.0, 401.0)
+    fluorescence = np.full(400, 100.0)
+    fluorescence[200:] = 10_000.0
+    events = rosetta_mix.RosettaEventData(scatter, fluorescence, 0)
+    assert rosetta_mix.gate_separates_scatter_regions(events=events, interval=(500, 5000))
+
+    fluorescence[:10] = 1000.0
+    assert np.count_nonzero(fluorescence == 1000.0) / fluorescence.size < 0.05
+    assert not rosetta_mix.gate_separates_scatter_regions(events=events, interval=(500, 5000))

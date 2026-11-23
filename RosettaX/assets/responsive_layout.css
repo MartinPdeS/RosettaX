@@ -104,8 +104,7 @@
 .peak-result {
     --peak-result-accent: var(--bs-primary, #0d6efd);
     margin-block: 0.75rem 0.35rem;
-    padding: clamp(0.85rem, 2vw, 1.2rem);
-    border-inline-start: 0.25rem solid var(--peak-result-accent);
+    padding: 0.65rem 0.85rem;
     background: color-mix(in srgb, var(--peak-result-accent) 5%, var(--rosettax-surface-background));
     color: var(--rosettax-text-color);
     min-width: 0;
@@ -129,16 +128,27 @@
     font-weight: 700;
 }
 
-.peak-result-summary,
 .peak-result-detail-message {
     margin: 0.35rem 0 0;
     max-width: 75ch;
     overflow-wrap: anywhere;
 }
 
+.peak-status-output:has(.peak-result) + .rosetta-ready-status {
+    display: none;
+}
+
+.peak-result-title,
+.peak-result-metrics dt,
+.peak-result-metrics dd {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .peak-result-metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(7.5rem, 100%), 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.45rem;
     margin: 0.75rem 0 0;
 }
@@ -282,6 +292,23 @@
     box-shadow: 0 0 0 2px var(--bs-body-bg, #fff);
 }
 
+.peak-action-labels {
+    display: inline-grid;
+}
+
+.peak-action-labels > span {
+    grid-area: 1 / 1;
+}
+
+.peak-action-running-label,
+.peak-action-button--run:disabled .peak-action-idle-label {
+    visibility: hidden;
+}
+
+.peak-action-button--run:disabled .peak-action-running-label {
+    visibility: visible;
+}
+
 .peak-action-button:disabled {
     cursor: not-allowed;
     opacity: 0.58;
@@ -397,4 +424,142 @@
 .rosettax-profile-description {
     display: block;
     margin-block: .45rem .25rem;
+}
+
+@media (max-width: 767.98px) {
+    .peak-result-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.plot-options {
+    container-type: inline-size;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem 1.25rem;
+    padding: .7rem .9rem;
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: .55rem;
+    background: var(--rosettax-control-background);
+    color: var(--rosettax-text-color);
+}
+
+.plot-options-group {
+    display: grid;
+    align-content: start;
+    gap: .35rem;
+    min-width: 0;
+}
+
+.plot-options-group > strong {
+    font-size: .85rem;
+    font-weight: 700;
+}
+
+.plot-options-scale {
+    flex: 0 0 10rem;
+    padding-inline: .35rem;
+}
+
+.plot-option-switches,
+.plot-options-fields {
+    display: grid;
+    gap: .3rem;
+}
+
+.plot-option-switches .form-check {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    min-height: 2rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.plot-option-switches .form-check.form-switch .form-check-input {
+    appearance: none;
+    box-sizing: border-box;
+    position: static;
+    flex: 0 0 auto;
+    inset: auto;
+    width: 2.1rem;
+    min-width: 2.1rem;
+    height: 1.15rem;
+    margin: 0;
+    margin-left: 0;
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: 1rem;
+    background: radial-gradient(circle at .52rem center, #fff .32rem, transparent .36rem) #8793a1;
+    cursor: pointer;
+}
+
+.plot-option-switches .form-check-label {
+    min-width: 0;
+    margin: 0;
+}
+
+.plot-option-switches .form-check.form-switch .form-check-input:checked {
+    background: radial-gradient(circle at 1.46rem center, #fff .32rem, transparent .36rem) var(--bs-primary, #225bb1);
+}
+
+.plot-option-switches .form-check-input:focus-visible,
+.plot-option-number .form-control:focus-visible {
+    outline: 2px solid var(--bs-primary, #225bb1);
+    outline-offset: 2px;
+}
+
+.plot-options-display {
+    flex: 0 1 23rem;
+    border-inline-start: 1px solid var(--rosettax-border-color);
+    padding-inline-start: 1.25rem;
+}
+
+.plot-options-display:not(:has(.plot-options-fields > :not([style*="display: none"]))) {
+    display: none;
+}
+
+.plot-option-number {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(5rem, 8rem);
+    align-items: center;
+    gap: .65rem;
+    min-height: 2rem;
+}
+
+.plot-option-number .plot-option-label {
+    margin: 0;
+    font-size: .875rem;
+    overflow-wrap: anywhere;
+}
+
+.plot-option-number .form-control {
+    box-sizing: border-box;
+    min-width: 0;
+    height: 2rem;
+    padding: .25rem .55rem;
+    border: 1px solid var(--rosettax-border-color);
+    border-radius: .35rem;
+    background: var(--rosettax-surface-background);
+    color: inherit;
+    font-size: .875rem;
+}
+
+@container (max-width: 34.5rem) {
+    .plot-options-scale {
+        flex-basis: 100%;
+        padding-inline: 0;
+    }
+
+    .plot-options-group {
+        flex-basis: 100%;
+    }
+
+    .plot-options-display {
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--rosettax-border-color);
+        padding: .65rem 0 0;
+    }
 }

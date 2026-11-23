@@ -377,12 +377,14 @@ def _build_warning_graph_payload(*, peak_lines_payload: Any, show_detected_peaks
         "y_upper_gate",
         "rosetta_detection_issue",
         "rosetta_event_counts",
+        "rosetta_gate_interval",
     )
     if show_detected_peaks:
         retained_payload_keys += (
             "points", "labels", "scatter_guide_positions", "fluorescence_guide_positions",
             "saturation_guard_excluded_positions",
             "rosetta_debug_diagnostics",
+            "marker_scatter_diagnostics",
         )
     payload = {key: peak_lines_payload[key] for key in retained_payload_keys if key in peak_lines_payload}
     if show_detected_peaks:

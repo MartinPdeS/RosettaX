@@ -184,6 +184,11 @@ class PeakIds:
         return f"{self.prefix}-marker-opacity-input"
 
     @property
+    def viewport_store(self) -> str:
+        """Return the ID for the latest user-selected graph viewport."""
+        return f"{self.graph_hist}-viewport"
+
+    @property
     def event_trace_store(self) -> str:
         """Return the store tracking the displayed event trace."""
         return f"{self.graph_hist}-event-trace"
@@ -199,6 +204,11 @@ class PeakIds:
     @property
     def source_channel_store(self) -> str:
         return f"{self.prefix}-source-channel-store"
+
+    @property
+    def rosetta_ready_status(self) -> str:
+        """Return the ID for the ready-state Rosetta feedback card."""
+        return f"{self.prefix}-rosetta-ready-status"
 
     @property
     def script_status(self) -> str:

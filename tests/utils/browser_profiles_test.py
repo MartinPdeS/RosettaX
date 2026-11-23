@@ -176,3 +176,19 @@ def test_delete_profile_rejects_default_and_reselects_default():
 
     assert "custom.json" not in updated_library.profiles
     assert updated_library.selected_profile == DEFAULT_PROFILE_FILENAME
+
+
+def test_retired_rosetta_workflow_profile_falls_back_to_default():
+    """Remove the retired preset from fresh and existing browser libraries."""
+    retired_profile = "Rosetta_Mix_Standards.json"
+    assert retired_profile not in BrowserProfileLibrary.from_seed_data().profiles
+
+    library = BrowserProfileLibrary.from_dict(
+        {
+            "profiles": {retired_profile: {}, "custom.json": {}},
+            "selected_profile": retired_profile,
+        }
+    )
+    assert retired_profile not in library.profiles
+    assert set(library.profiles) == {DEFAULT_PROFILE_FILENAME, "custom.json"}
+    assert library.selected_profile == DEFAULT_PROFILE_FILENAME

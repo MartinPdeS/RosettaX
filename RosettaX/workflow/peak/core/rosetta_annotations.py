@@ -11,36 +11,6 @@ ROSETTA_PEAK_MARKER_STYLES = {
 }
 
 
-def include_rosetta_peak_markers_in_view(*, figure: go.Figure, peak_lines_payload: Any) -> None:
-    """Keep detected peak centers inside the initial axis ranges with padding."""
-    if not isinstance(peak_lines_payload, dict):
-        return
-    points = peak_lines_payload.get("points")
-    if not isinstance(points, list):
-        return
-    for axis_name, coordinate in (("xaxis", "x"), ("yaxis", "y")):
-        axis = getattr(figure.layout, axis_name)
-        if not axis.range or len(axis.range) != 2:
-            continue
-        lower, upper = map(float, axis.range)
-        if upper <= lower:
-            continue
-        values = []
-        for point in points:
-            if not isinstance(point, dict) or point.get("kind") not in ROSETTA_PEAK_MARKER_STYLES:
-                continue
-            try:
-                value = float(point[coordinate])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if not np.isfinite(value) or (axis.type == "log" and value <= 0):
-                continue
-            values.append(float(np.log10(value)) if axis.type == "log" else value)
-        if values:
-            padding = (upper - lower) * 0.04
-            axis.range = [min(lower, min(values) - padding), max(upper, max(values) + padding)]
-
-
 def extract_rosetta_scatter_guide_annotations(
     *,
     peak_lines_payload: Any,

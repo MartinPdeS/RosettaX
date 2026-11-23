@@ -224,7 +224,7 @@ def build_scatter_guide_annotations(
         )
 
     table_point_metadata = match_table_points_to_peak_metadata(
-        table_points=result.peak_positions,
+        table_points=[{"x": row.get("measured_peak_position")} for row in resolved_rows],
         peak_metadata=peak_metadata,
     )
 

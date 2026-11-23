@@ -191,51 +191,34 @@ class ReferenceTable:
             [
                 dash.html.Div(
                     [
-                        dash.dcc.Loading(
-                            dash.dcc.Graph(
-                                id=self.ids.graph_model,
-                                responsive=True,
-                                style=graph_style,
-                                config=styling.PLOTLY_GRAPH_CONFIG,
+                        dash.html.Div(
+                            dash.dcc.Loading(
+                                dash.dcc.Graph(
+                                    id=graph_id,
+                                    responsive=True,
+                                    style=graph_style,
+                                    config=styling.PLOTLY_GRAPH_CONFIG,
+                                ),
+                                type="circle",
+                                color="#0d6efd",
+                                delay_show=150,
                             ),
-                            type="circle",
-                            color="#0d6efd",
-                            delay_show=150,
-                        ),
-                        PlotOptions.build_component(
-                            component_id=self.ids.mie_relation_plot_options,
-                            value=[PlotOptions.y_log_value],
-                        ),
+                            style={"minWidth": 0},
+                        )
+                        for graph_id in (self.ids.graph_model, self.ids.graph_diameter_peak_position)
                     ],
-                    style={"minWidth": 0},
+                    style={
+                        "display": "grid",
+                        "gridTemplateColumns": "repeat(auto-fit, minmax(min(20rem, 100%), 1fr))",
+                        "gap": "16px",
+                    },
                 ),
-                dash.html.Div(
-                    [
-                        dash.dcc.Loading(
-                            dash.dcc.Graph(
-                                id=self.ids.graph_diameter_peak_position,
-                                responsive=True,
-                                style=graph_style,
-                                config=styling.PLOTLY_GRAPH_CONFIG,
-                            ),
-                            type="circle",
-                            color="#0d6efd",
-                            delay_show=150,
-                        ),
-                        PlotOptions.build_component(
-                            component_id=self.ids.diameter_peak_position_plot_options,
-                            value=[],
-                        ),
-                    ],
-                    style={"minWidth": 0},
+                PlotOptions.build_component(
+                    component_id=self.ids.mie_relation_plot_options,
+                    value=[PlotOptions.y_log_value],
                 ),
             ],
-            style={
-                "display": "grid",
-                "gridTemplateColumns": "repeat(auto-fit, minmax(min(20rem, 100%), 1fr))",
-                "gap": "16px",
-                "width": "100%",
-            },
+            style={"display": "grid", "gap": "16px", "width": "100%"},
         )
 
     def register_callbacks(self) -> None:

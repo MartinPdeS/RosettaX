@@ -49,6 +49,7 @@ from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAda
 from RosettaX.workflow.peak.callbacks.graph import (
     add_grouped_2d_scatter_traces,
     build_peak_figure_update,
+    preserve_peak_axis_ranges,
     sanitize_group_points,
 )
 from RosettaX.workflow.peak.core.graphing import (
@@ -804,8 +805,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
         assert "Fluorescence baseline gate" not in annotations
         assert any(shape.name == "Fluorescence baseline gate" and shape.showlegend for shape in figure.layout.shapes)
 
-    def test_rosetta_plot_keeps_edge_markers_inside_axis_limits(self):
-        """Pad log axis limits around detected markers at the plot edge."""
+    def test_rosetta_guides_keep_existing_axis_limits(self):
+        """Keep scale limits fixed when a marker arrives at the plot edge."""
         figure = go.Figure()
         figure.update_xaxes(type="log", range=[1, 3])
         figure.update_yaxes(type="log", range=[1, 5])
@@ -814,8 +815,8 @@ class Test_PeakWorkflowGraphBuilderRosettaOverlays:
             "scatter_guide_annotations": [{"x": 1000, "label": "380 nm", "kind": "marker"}],
         }
         add_peak_workflow_post_layout_overlays(figure=figure, process_name="Rosetta Script V1", peak_lines_payload=payload)
-        assert figure.layout.xaxis.range[1] > 3
-        assert figure.layout.yaxis.range[1] > 5
+        assert figure.layout.xaxis.range == (1, 3)
+        assert figure.layout.yaxis.range == (1, 5)
         assert figure.layout.annotations[0].y == 1
         assert figure.layout.annotations[0].ay < 0
 
@@ -1105,3 +1106,26 @@ def test_repeat_figure_updates_reuse_matching_event_trace():
     figure.data[0].x = [2, 3]
     changed, _ = build_peak_figure_update(figure=figure, previous_trace=trace)
     assert changed is figure
+
+
+def test_peak_detection_keeps_the_previous_default_view():
+    """Reuse axis limits on the same plot even if the new event sample differs."""
+    previous = go.Figure(go.Scattergl(x=[1, 2], y=[3, 4], name="Events"))
+    previous.update_layout(uirevision="sample", xaxis_range=[0, 3], yaxis_range=[2, 5])
+    _, trace = build_peak_figure_update(figure=previous, previous_trace=None)
+
+    updated = go.Figure(go.Scattergl(x=[1, 5], y=[3, 8], name="Events"))
+    updated.update_layout(uirevision="sample", xaxis_range=[0, 6], yaxis_range=[2, 9])
+    preserve_peak_axis_ranges(figure=updated, previous_trace=trace)
+    assert updated.layout.xaxis.range == (0, 3)
+    assert updated.layout.yaxis.range == (2, 5)
+    assert updated.layout.xaxis.autorange is False
+
+    viewport = {"revision": "sample", "axis_ranges": {"xaxis": [1, 2], "yaxis": [3, 4]}}
+    preserve_peak_axis_ranges(figure=updated, previous_trace=trace, viewport=viewport)
+    assert updated.layout.xaxis.range == (1, 2)
+    assert updated.layout.yaxis.range == (3, 4)
+
+    updated.update_layout(uirevision="different sample", xaxis_range=[0, 6])
+    preserve_peak_axis_ranges(figure=updated, previous_trace=trace, viewport=viewport)
+    assert updated.layout.xaxis.range == (0, 6)

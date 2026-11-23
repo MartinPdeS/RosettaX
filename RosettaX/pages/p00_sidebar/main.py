@@ -74,14 +74,12 @@ class Sidebar:
             dash.Output(SidebarIds.saved_profiles_dropdown, "value"),
             dash.Output(SidebarIds.selected_profile_store, "data"),
             dash.Input(BROWSER_PROFILES_STORE_ID, "data"),
-            dash.Input(SidebarIds.more_profiles, "value"),
             dash.State(SidebarIds.saved_profiles_dropdown, "value"),
             dash.State(SidebarIds.selected_profile_store, "data"),
             prevent_initial_call=False,
         )
         def initialize_or_sync_selected_profile(
             browser_profiles_payload: Any,
-            more_profiles: list[str] | None,
             dropdown_value: str | None,
             selected_profile_store_data: str | None,
         ):
@@ -90,9 +88,7 @@ class Sidebar:
             active_profile = selected_profile_store_data
             if not isinstance(active_profile, str) or active_profile not in library.profiles:
                 active_profile = library.selected_profile
-            profile_options = services.build_profile_picker_options(
-                library=library, show_more=bool(more_profiles), active_profile=active_profile,
-            )
+            profile_options = services.build_profile_picker_options(library=library)
             option_values = {option["value"] for option in profile_options}
             selected_option = dropdown_value if isinstance(dropdown_value, str) and dropdown_value in option_values else active_profile
             return (
@@ -456,13 +452,6 @@ class Sidebar:
                             },
                         ),
                         html.Small(id=SidebarIds.profile_description, className="rosettax-profile-description"),
-                        dcc.Checklist(
-                            id=SidebarIds.more_profiles,
-                            options=[{"label": "More profiles", "value": "more"}],
-                            value=[],
-                            inputStyle={"marginRight": "0.4em"},
-                            style={"display": "block" if is_hosted() else "none", "fontSize": "0.85rem"},
-                        ),
                         html.Small(
                             id=SidebarIds.saved_profiles_load_status,
                             style={
