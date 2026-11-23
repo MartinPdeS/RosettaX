@@ -868,6 +868,7 @@ class PeakLayout:
         return html.Div(
             id=container_id,
             children=[
+                dcc.Store(id=self.ids.event_trace_store),
                 dcc.Loading(
                     Scatter2DGraph.build_component(
                         component_ids=Scatter2DGraphIds(

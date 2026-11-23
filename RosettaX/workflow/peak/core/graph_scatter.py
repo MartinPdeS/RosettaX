@@ -8,6 +8,8 @@ import plotly.graph_objs as go
 from ..scripts.base import (
     filter_edge_artifact_pairs,
 )
+from ..scripts.rosetta_mix import read_rosetta_events
+from ..scripts.rosetta_mix_models import RosettaPlotSource
 from RosettaX.utils import casting, plottings
 from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.axis_ranges import (
@@ -207,6 +209,9 @@ def extract_plot_values_from_peak_lines_payload(
     raw_y_values = builder.peak_lines_payload.get("plot_y_values")
 
     if not isinstance(raw_x_values, list) or not isinstance(raw_y_values, list):
+        plot_source = builder.peak_lines_payload.get("rosetta_plot_source")
+        if isinstance(plot_source, dict):
+            return read_rosetta_plot_values(builder=builder, plot_source=plot_source)
         return None
 
     resolved_x_values: list[float] = []
@@ -236,6 +241,41 @@ def extract_plot_values_from_peak_lines_payload(
         np.asarray(resolved_x_values, dtype=float),
         np.asarray(resolved_y_values, dtype=float),
     )
+
+
+def read_rosetta_plot_values(
+    *, builder: PeakWorkflowGraphBuilder, plot_source: dict[str, Any],
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Reproduce the detected event cloud for the active file and channels.
+
+    Returns
+    -------
+    tuple of ndarray or None
+        Aligned scattering and fluorescence values in detector units, or
+        None when the stored selection is invalid or no longer active.
+    """
+    file_path = plot_source.get("fcs_file_path")
+    scattering_column = plot_source.get("scattering_column")
+    fluorescence_column = plot_source.get("green_fluorescence_column")
+    event_limit = plot_source.get("max_events_for_analysis")
+    remove_saturated = plot_source.get("remove_saturated_events")
+    if (
+        not isinstance(file_path, str) or file_path != str(builder.backend.fcs_file_path)
+        or not isinstance(scattering_column, str) or scattering_column != builder.detector_channels.get("scattering")
+        or not isinstance(fluorescence_column, str) or fluorescence_column != builder.detector_channels.get("green_fluorescence")
+        or type(event_limit) is not int or not 1 <= event_limit <= 5_000_000
+        or not isinstance(remove_saturated, bool)
+    ):
+        return None
+
+    events = read_rosetta_events(source=RosettaPlotSource(
+        fcs_file_path=file_path,
+        scattering_column=scattering_column,
+        green_fluorescence_column=fluorescence_column,
+        max_events_for_analysis=event_limit,
+        remove_saturated_events=remove_saturated,
+    ))
+    return events.scattering_values, events.fluorescence_values
 
 
 def compute_2d_density_values(

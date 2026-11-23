@@ -177,10 +177,11 @@ def column_copy(
         require_positive_values=False,
     )
 
+    # load_signal already returns data independent of its cache entry.
     return np.asarray(
         values,
         dtype=dtype,
-    ).copy()
+    )
 
 
 def get_column_names(fcs_file_path: str) -> list[str]:

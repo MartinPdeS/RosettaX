@@ -369,6 +369,7 @@ def _build_warning_graph_payload(*, peak_lines_payload: Any, show_detected_peaks
         return {}
 
     retained_payload_keys = (
+        "rosetta_plot_source",
         "plot_x_values",
         "plot_y_values",
         "baseline_cutoff",

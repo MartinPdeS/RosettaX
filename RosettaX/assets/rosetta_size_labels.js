@@ -68,7 +68,8 @@
 
         if (plot.layout.margin?.t !== topMargin) updates["margin.t"] = topMargin;
         if (Object.keys(updates).length) {
-            window.Plotly.relayout(plot, updates).catch(error => {
+            // Avoid sending Dash a user relayout event for automatic label spacing.
+            window.Plotly.update(plot, {}, updates).catch(error => {
                 if (plot.isConnected) console.warn("Could not position Rosetta size labels", error);
             });
         }

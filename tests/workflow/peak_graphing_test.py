@@ -6,6 +6,7 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
+import dash
 import numpy as np
 import plotly.graph_objs as go
 import pytest
@@ -44,8 +45,10 @@ sys.modules.setdefault(
     _DashBootstrapComponentsStub("dash_bootstrap_components"),
 )
 
+from RosettaX.workflow.peak.adapters.scattering import ScatteringPeakWorkflowAdapter
 from RosettaX.workflow.peak.callbacks.graph import (
     add_grouped_2d_scatter_traces,
+    build_peak_figure_update,
     sanitize_group_points,
 )
 from RosettaX.workflow.peak.core.graphing import (
@@ -57,11 +60,13 @@ from RosettaX.workflow.peak.core.graphing import (
     is_enabled,
     scale_selection_is_log,
 )
+from RosettaX.workflow.peak.scripts import rosetta_mix
 from RosettaX.workflow.peak.scripts.base import (
     filter_edge_artifact_pairs,
     filter_edge_artifact_values,
     resolve_edge_artifact_filter_enabled,
 )
+from RosettaX.workflow.peak.scripts.rosetta_mix_models import RosettaRunSettings
 
 
 class Test_is_enabled:
@@ -439,6 +444,51 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
         payload_x_values, payload_y_values = payload_values
         assert payload_x_values.tolist() == [10.0, 20.0]
         assert payload_y_values.tolist() == [100.0, 200.0]
+
+    @pytest.mark.parametrize("filter_edge_artifacts", [True, False])
+    def test_rebuilds_rosetta_cloud_from_compact_page_state(self, monkeypatch, filter_edge_artifacts):
+        """Keep the detected events and their order without storing their arrays in Dash."""
+        backend = types.SimpleNamespace(fcs_file_path="beads.fcs")
+        detector_channels = {"scattering": "SSC-H", "green_fluorescence": "FL1-H"}
+        signals = {
+            "SSC-H": np.concatenate([np.zeros(35), np.arange(1.0, 66.0), np.full(45, 10_000.0)]),
+            "FL1-H": np.arange(100.0, 245.0),
+        }
+
+        def read_column(*, fcs_file_path, detector_column, dtype, n):
+            """Read a detector prefix without touching the underlying signal."""
+            assert fcs_file_path == backend.fcs_file_path
+            return signals[detector_column][:n].astype(dtype)
+
+        monkeypatch.setattr(rosetta_mix, "column_copy", read_column)
+        settings = RosettaRunSettings.from_raw_values(
+            peak_count=3, max_events_for_analysis=130,
+            process_settings={"filter_edge_artifacts": filter_edge_artifacts},
+        )
+        detected_events = rosetta_mix.load_rosetta_events(
+            backend=backend, scattering_column="SSC-H", green_fluorescence_column="FL1-H",
+            settings=settings, retain_scatter_edges=True,
+        )
+        assert (detected_events.scattering_values.size < 130) is filter_edge_artifacts
+
+        adapter = ScatteringPeakWorkflowAdapter()
+        page_state = adapter.get_page_state_from_payload({"uploaded_fcs_path": backend.fcs_file_path})
+        original_payload = detected_events.plot_payload()
+        next_state = adapter.update_peak_lines_payload(page_state=page_state, peak_lines_payload=original_payload)
+        stored_payload = adapter.get_peak_lines_payload(page_state=next_state)
+        assert set(stored_payload) == {"rosetta_plot_source"}
+        assert "plot_x_values" in original_payload
+
+        builder = types.SimpleNamespace(
+            backend=backend, detector_channels=detector_channels,
+            peak_lines_payload=stored_payload, max_events_for_plots=1,
+        )
+        plot_scatter, plot_fluorescence = graph_scatter.extract_plot_values_from_peak_lines_payload(builder)
+        np.testing.assert_array_equal(plot_scatter, detected_events.scattering_values)
+        np.testing.assert_array_equal(plot_fluorescence, detected_events.fluorescence_values)
+
+        builder.detector_channels = {**detector_channels, "green_fluorescence": "FL2-H"}
+        assert graph_scatter.extract_plot_values_from_peak_lines_payload(builder) is None
 
 
 class Test_EdgeArtifactFiltering:
@@ -1029,3 +1079,29 @@ def test_scatter_graphs_use_configured_grid(show_grid, monkeypatch):
     for figure in (fallback, custom):
         assert figure.layout.xaxis.showgrid is show_grid
         assert figure.layout.yaxis.showgrid is show_grid
+
+
+def test_repeat_figure_updates_reuse_matching_event_trace():
+    """Patch the guides only when the event trace and context match."""
+    figure = go.Figure(go.Scattergl(x=[1, 2], y=[3, 4], name="Events"))
+    figure.update_layout(uirevision="sample")
+    initial, trace = build_peak_figure_update(figure=figure, previous_trace=None)
+    assert initial is figure
+    assert build_peak_figure_update(figure=figure, previous_trace=trace) == (dash.no_update, dash.no_update)
+
+    figure.add_vline(x=2)
+    update, updated_trace = build_peak_figure_update(figure=figure, previous_trace=trace)
+    operations = update.to_plotly_json()["operations"]
+    assert [operation["location"] for operation in operations] == [["layout"]]
+
+    figure.add_scatter(x=[1], y=[3], name="Guide")
+    update, overlay_trace = build_peak_figure_update(figure=figure, previous_trace=updated_trace)
+    assert update.to_plotly_json()["operations"][-1]["operation"] == "Extend"
+
+    figure.data = figure.data[:1]
+    update, _ = build_peak_figure_update(figure=figure, previous_trace=overlay_trace)
+    assert update.to_plotly_json()["operations"][-1]["location"] == ["data", 1]
+
+    figure.data[0].x = [2, 3]
+    changed, _ = build_peak_figure_update(figure=figure, previous_trace=trace)
+    assert changed is figure

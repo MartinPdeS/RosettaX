@@ -44,6 +44,7 @@ from .rosetta_mix_models import (
     RosettaFluorescenceAnalysis,
     RosettaMarkerScatter,
     RosettaPeakPoint,
+    RosettaPlotSource,
     RosettaRunSettings,
     RosettaScatterAnalysis,
 )
@@ -255,8 +256,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 ),
                 baseline_lower_gate=fluorescence.baseline_lower_gate,
                 baseline_upper_gate=fluorescence.baseline_upper_gate,
-                plot_scattering_values=events.scattering_values,
-                plot_fluorescence_values=events.fluorescence_values,
+                plot_events=events,
             )
         markers = find_marker_scatter_points(
             events=events,
@@ -311,8 +311,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 baseline_lower_gate=fluorescence.baseline_lower_gate,
                 baseline_upper_gate=fluorescence.baseline_upper_gate,
                 marker_points=markers.points,
-                plot_scattering_values=events.scattering_values,
-                plot_fluorescence_values=events.fluorescence_values,
+                plot_events=events,
             )
         return build_rosetta_detection_result(
             backend=backend,
@@ -338,8 +337,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         baseline_lower_gate: float | None = None,
         baseline_upper_gate: float | None = None,
         marker_points: list[dict[str, float]] | None = None,
-        plot_scattering_values: np.ndarray | None = None,
-        plot_fluorescence_values: np.ndarray | None = None,
+        plot_events: RosettaEventData | None = None,
     ) -> PeakProcessResult:
         """
         Build a stop result with optional diagnostic payload.
@@ -408,15 +406,8 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
             marker_positions
         )
 
-        if plot_scattering_values is not None and plot_fluorescence_values is not None:
-            payload["plot_x_values"] = np.asarray(
-                plot_scattering_values,
-                dtype=float,
-            ).tolist()
-            payload["plot_y_values"] = np.asarray(
-                plot_fluorescence_values,
-                dtype=float,
-            ).tolist()
+        if plot_events is not None:
+            payload.update(plot_events.plot_payload())
 
         return PeakProcessResult(
             peak_positions=[],
@@ -481,10 +472,39 @@ def load_rosetta_events(
     retain_scatter_edges: bool = False,
 ) -> RosettaEventData:
     """Read paired signals and retain clipped events separately for marker identification."""
+    return read_rosetta_events(
+        source=RosettaPlotSource(
+            fcs_file_path=str(backend.fcs_file_path),
+            scattering_column=scattering_column,
+            green_fluorescence_column=green_fluorescence_column,
+            max_events_for_analysis=settings.max_events_for_analysis,
+            remove_saturated_events=settings.remove_saturated_events,
+        ),
+        retain_scatter_edges=retain_scatter_edges,
+    )
+
+
+def read_rosetta_events(
+    *, source: RosettaPlotSource, retain_scatter_edges: bool = False,
+) -> RosettaEventData:
+    """Apply the same event selection for detection and plotting.
+
+    Parameters
+    ----------
+    source : RosettaPlotSource
+        File, detector channels, event limit, and detector edge filtering.
+    retain_scatter_edges : bool, optional
+        Keep separate signals for detecting clipped fluorescent markers.
+
+    Returns
+    -------
+    RosettaEventData
+        Aligned detector signals in detector units, with filtering diagnostics.
+    """
     columns = read_peak_event_columns(
-        fcs_file_path=backend.fcs_file_path,
-        detector_columns=(scattering_column, green_fluorescence_column),
-        max_events=settings.max_events_for_analysis,
+        fcs_file_path=source["fcs_file_path"],
+        detector_columns=(source["scattering_column"], source["green_fluorescence_column"]),
+        max_events=source["max_events_for_analysis"],
         read_column=column_copy,
     )
     (scattering_values, green_fluorescence_values), removed_nonfinite = filter_finite_peak_events(columns=columns)
@@ -498,12 +518,12 @@ def load_rosetta_events(
                 scatter_edge_fluorescence[edge] = green_fluorescence_values[edge_mask]
 
     fluorescence_with_scatter_edges = None
-    if scatter_edge_fluorescence and settings.remove_saturated_events:
+    if scatter_edge_fluorescence and source["remove_saturated_events"]:
         fluorescence_floor = build_edge_pileup_mask(values=green_fluorescence_values, edge="min")
         fluorescence_with_scatter_edges = green_fluorescence_values[~fluorescence_floor]
 
     removed_saturated_event_count = 0
-    if settings.remove_saturated_events:
+    if source["remove_saturated_events"]:
         saturation_mask = build_saturated_event_mask(
             scattering_values=scattering_values,
             fluorescence_values=green_fluorescence_values,
@@ -517,6 +537,7 @@ def load_rosetta_events(
         scattering_values, green_fluorescence_values, removed_saturated_event_count,
         scatter_edge_values, scatter_edge_fluorescence, fluorescence_with_scatter_edges,
         removed_nonfinite_event_count=removed_nonfinite,
+        plot_source=source,
     )
 
 
@@ -951,8 +972,7 @@ def build_rosetta_detection_result(
         "positions": [float(point["x"]) for point in all_points],
         "x_positions": [float(point["x"]) for point in all_points],
         "y_positions": [float(point["y"]) for point in all_points],
-        "plot_x_values": events.scattering_values.astype(float).tolist(),
-        "plot_y_values": events.fluorescence_values.astype(float).tolist(),
+        **events.plot_payload(),
         "points": [
             {
                 "x": float(point["x"]),

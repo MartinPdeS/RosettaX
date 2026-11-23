@@ -184,6 +184,11 @@ class PeakIds:
         return f"{self.prefix}-marker-opacity-input"
 
     @property
+    def event_trace_store(self) -> str:
+        """Return the store tracking the displayed event trace."""
+        return f"{self.graph_hist}-event-trace"
+
+    @property
     def graph_hist(self) -> str:
         return f"{self.prefix}-histogram-graph"
 

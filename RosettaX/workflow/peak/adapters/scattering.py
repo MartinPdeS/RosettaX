@@ -109,11 +109,17 @@ class ScatteringPeakWorkflowAdapter(BasePeakWorkflowAdapter):
         return backend
 
     def update_peak_lines_payload(self, *, page_state: Any, peak_lines_payload: Any) -> Any:
-        """Store automatic sizing evidence independently of the graph preview."""
+        """Store plot inputs and keep committed sizing evidence during previews."""
+        graph_payload = peak_lines_payload if isinstance(peak_lines_payload, dict) else {}
+        if isinstance(graph_payload.get("rosetta_plot_source"), dict):
+            graph_payload = {
+                key: value for key, value in graph_payload.items()
+                if key not in ("plot_x_values", "plot_y_values")
+            }
+            peak_lines_payload = graph_payload
         updated_state = super().update_peak_lines_payload(
             page_state=page_state, peak_lines_payload=peak_lines_payload,
         )
-        graph_payload = peak_lines_payload if isinstance(peak_lines_payload, dict) else {}
         if graph_payload.get("rosetta_settings_preview"):
             return updated_state
 

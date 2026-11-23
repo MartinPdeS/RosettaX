@@ -1,10 +1,12 @@
 
 import dash
+import hashlib
 import logging
 import numpy as np
 import plotly.graph_objs as go
 from ..core import graphing
 from .mutation import build_process_settings
+from dash._utils import to_json
 from RosettaX.utils import RuntimeConfig, plottings, styling
 from typing import Any
 
@@ -84,6 +86,7 @@ def register_graph_callbacks(
             ids.graph_hist,
             "figure",
         ),
+        dash.Output(ids.event_trace_store, "data"),
         dash.Input(
             ids.graph_toggle_switch,
             "value",
@@ -122,6 +125,7 @@ def register_graph_callbacks(
             "value",
         ),
         *state_components,
+        dash.State(ids.event_trace_store, "data"),
         prevent_initial_call=False,
     )
     def update_graph(
@@ -140,7 +144,7 @@ def register_graph_callbacks(
         detector_dropdown_ids: list[dict[str, Any]],
         process_setting_ids: list[dict[str, Any]],
         *state_values: Any,
-    ) -> go.Figure:
+    ) -> tuple[Any, Any]:
         """
         Build the peak workflow graph.
 
@@ -253,7 +257,7 @@ def register_graph_callbacks(
                     dragmode="select",
                 )
 
-            return figure
+            return build_peak_figure_update(figure=figure, previous_trace=state_values[-1])
 
         except Exception as exc:
             logger.exception(
@@ -277,7 +281,44 @@ def register_graph_callbacks(
                 yscale_selection=axis_scale_toggle_values,
             )
 
-            return figure
+            return figure, None
+
+
+def build_peak_figure_update(
+    *, figure: go.Figure, previous_trace: dict[str, Any] | None,
+) -> tuple[Any, Any]:
+    """Reuse the event trace when its values, styling, and axis context match."""
+    if not figure.data or figure.data[0].type != "scattergl" or figure.data[0].name != "Events":
+        return figure, None
+
+    serialized_figure = figure.to_plotly_json()
+    events, *overlays = serialized_figure["data"]
+    layout = serialized_figure["layout"]
+    trace = {
+        "events": hashlib.sha256(to_json(events).encode("utf-8")).hexdigest(),
+        "revision": figure.layout.uirevision,
+    }
+    matching_events = previous_trace is not None and all(
+        previous_trace.get(key) == value for key, value in trace.items()
+    )
+    trace["guides"] = hashlib.sha256(to_json((layout, overlays)).encode("utf-8")).hexdigest()
+    trace["overlay_count"] = len(overlays)
+    if not matching_events:
+        return figure, trace
+
+    if trace == previous_trace:
+        return dash.no_update, dash.no_update
+
+    previous_overlay_count = previous_trace["overlay_count"]
+    update = dash.Patch()
+    update["layout"] = layout
+    for index, overlay in enumerate(overlays[:previous_overlay_count], start=1):
+        update["data"][index] = overlay
+    for index in range(previous_overlay_count, len(overlays), -1):
+        del update["data"][index]
+    if len(overlays) > previous_overlay_count:
+        update["data"].extend(overlays[previous_overlay_count:])
+    return update, trace
 
 
 def resolve_peak_graph_style(

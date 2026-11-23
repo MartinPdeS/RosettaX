@@ -290,8 +290,20 @@ class RosettaRunSettings:
         )
 
 
+class RosettaPlotSource(TypedDict):
+    """FCS selection needed to reproduce the event cloud from a detection."""
+
+    fcs_file_path: str
+    scattering_column: str
+    green_fluorescence_column: str
+    max_events_for_analysis: int
+    remove_saturated_events: bool
+
+
 @dataclass(frozen=True)
 class RosettaEventData:
+    """Paired detector signals and the filtering applied to them."""
+
     scattering_values: np.ndarray
     fluorescence_values: np.ndarray
     removed_saturated_event_count: int
@@ -299,6 +311,23 @@ class RosettaEventData:
     scatter_edge_fluorescence: dict[str, np.ndarray] = field(default_factory=dict)
     fluorescence_with_scatter_edges: np.ndarray | None = None
     removed_nonfinite_event_count: int = 0
+    plot_source: RosettaPlotSource | None = None
+
+    def plot_payload(self) -> dict[str, Any]:
+        """Serialize the event cloud and its reproducible FCS selection.
+
+        Returns
+        -------
+        dict
+            Paired scattering and fluorescence values in detector units.
+        """
+        payload: dict[str, Any] = {
+            "plot_x_values": np.asarray(self.scattering_values, dtype=float).tolist(),
+            "plot_y_values": np.asarray(self.fluorescence_values, dtype=float).tolist(),
+        }
+        if self.plot_source is not None:
+            payload["rosetta_plot_source"] = dict(self.plot_source)
+        return payload
 
     def event_counts(self) -> dict[str, int]:
         """Return the total and stage-by-stage counts of paired FCS events."""
