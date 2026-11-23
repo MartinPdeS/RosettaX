@@ -23,6 +23,7 @@ class Ids:
     status = f"{page_prefix}-status"
 
     graph = f"{page_prefix}-graph"
+    graph_axis_options = f"{page_prefix}-graph-axis-options"
     table = f"{page_prefix}-table"
 
     export_name = f"{page_prefix}-export-name"

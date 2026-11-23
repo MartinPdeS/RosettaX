@@ -62,18 +62,8 @@ def _build_body(section) -> dbc.CardBody:
             _build_graph_store(section),
             _build_calibration_store(section),
             _build_action_panel(section),
-            dash.html.Div(
-                style={
-                    "height": "18px",
-                },
-            ),
+            dash.html.Hr(className="my-3"),
             _build_graph_block(section),
-            dash.html.Div(
-                style={
-                    "height": "12px",
-                },
-            ),
-            _build_status_block(section),
         ],
         style=ui_forms.build_workflow_section_body_style(),
     )
@@ -106,10 +96,14 @@ def _build_action_panel(section) -> dash.html.Div:
     return dash.html.Div(
         [
             dbc.Button(
-                "Create calibration",
+                dash.html.Span([
+                    dash.html.Span("Create calibration", className="peak-action-idle-label"),
+                    dash.html.Span("Creating calibration…", className="peak-action-running-label"),
+                ], className="peak-action-labels"),
                 id=section.ids.calibrate_btn,
                 n_clicks=0,
                 color="primary",
+                className="peak-action-button--run",
             ),
             ui_forms.build_info_badge(
                 tooltip_target_id=section.create_calibration_tooltip_target_id,
@@ -125,6 +119,7 @@ def _build_action_panel(section) -> dash.html.Div:
                 target=section.create_calibration_tooltip_target_id,
                 placement="right",
             ),
+            _build_status_block(section),
         ],
         style={
             "display": "flex",
@@ -240,6 +235,8 @@ def _build_status_block(section) -> dash.html.Div:
     """
     return dash.html.Div(
         id=section.ids.apply_status,
+        role="status",
+        className="ms-3",
         style={
             "marginTop": "8px",
         },

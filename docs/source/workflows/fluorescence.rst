@@ -5,6 +5,10 @@ Use the fluorescence workflow when you have a bead or reference sample with
 known fluorescence values and want to map one exported detector column onto that
 reference scale.
 
+The **Upload bead FCS** card reads the cytometer model from the file metadata
+and stays open after upload. You can correct the model before choosing the
+fluorescence channel in **Detect peaks**.
+
 
 What enters the fit
 -------------------

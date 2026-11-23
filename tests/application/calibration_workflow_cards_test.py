@@ -98,7 +98,7 @@ def test_calibration_workflow_cards_have_expected_open_state_and_tooltips(
     page_name: str,
     section_keys: tuple[str, ...],
 ) -> None:
-    """Check the scattering upload opens by default and all cards have tooltips."""
+    """Check each calibration upload opens as intended and each card has a tooltip."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     sections_callback_module_name = module_name.rsplit(".", 1)[0] + ".sections.callbacks"
     if page_name != "cross-calibration":
@@ -128,7 +128,7 @@ def test_calibration_workflow_cards_have_expected_open_state_and_tooltips(
 
         assert isinstance(card, dbc.Card)
         assert isinstance(card.children[1], dbc.Collapse)
-        initially_open = page_name == "scattering_calibration" and section_key == "1"
+        initially_open = page_name != "apply_calibration" and section_key == "1"
         assert card.children[1].kwargs["is_open"] is initially_open
         assert calibration_cards.collapse_label(is_open=initially_open) in _collect_text(
             card.children[0]

@@ -336,7 +336,8 @@ class Test_AdminServices:
 
         rows = services.build_recent_visit_rows(visit_summary=visit_summary)
 
-        assert rows == [
+        assert len({row["id"] for row in rows}) == len(rows)
+        assert [{key: value for key, value in row.items() if key != "id"} for row in rows] == [
             {
                 "visited_at": "2026-09-08 11:00:00 UTC",
                 "ip_address": "N/A",
@@ -345,7 +346,6 @@ class Test_AdminServices:
                 "path": "/help",
                 "user_agent": "N/A",
                 "workflow": "Site navigation",
-                "step": "Page opened",
                 "details": "View details",
             },
             {
@@ -356,7 +356,6 @@ class Test_AdminServices:
                 "path": "/",
                 "user_agent": "Mozilla/5.0",
                 "workflow": "Site navigation",
-                "step": "Page opened",
                 "details": "View details",
             },
         ]

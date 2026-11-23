@@ -1,4 +1,5 @@
 
+import hashlib
 import logging
 import plotly.graph_objects as go
 import threading
@@ -190,7 +191,7 @@ def build_recent_visit_rows(
             "organization": event.organization or "N/A",
             "path": event.path,
             "workflow": workflows.get(event.path.rstrip("/"), "Site navigation"),
-            "step": "Page opened",
+            "id": hashlib.sha256(repr(event).encode("utf-8")).hexdigest(),
             "details": "View details",
             "user_agent": event.user_agent or "N/A",
         }

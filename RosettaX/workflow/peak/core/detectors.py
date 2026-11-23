@@ -75,6 +75,7 @@ def populate_peak_script_detector_dropdowns(
     auto_select_rosetta_v1: bool = False,
     auto_select_process_name: str | None = None,
     instrument_catalog_key: str | None = None,
+    refresh_inferred_channels: bool = False,
     reset_rosetta_v1: bool = False,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
@@ -215,12 +216,12 @@ def populate_peak_script_detector_dropdowns(
                 else None
             )
             default_value = selected or (current_value if current_value in valid_values else None)
-        elif current_value in valid_values:
+        elif current_value in valid_values and not (refresh_inferred_channels and selection_mode == "auto-detect"):
             default_value = current_value
         else:
             default_value = infer_default_detector_channel(
                 column_names=column_names,
-                metadata=metadata,
+                metadata=metadata if instrument_catalog_key is None else None,
                 detector_role=detector_role,
                 selection_mode=selection_mode,
                 matched_rule=matched_rule,

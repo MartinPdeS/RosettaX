@@ -1,4 +1,4 @@
-"""Identify the cytometer once for scattering calibration."""
+"""Identify the cytometer for FCS calibration workflows."""
 
 import dash
 from dash import dcc, html

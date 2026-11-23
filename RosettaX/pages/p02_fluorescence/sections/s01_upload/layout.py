@@ -2,15 +2,16 @@
 import dash
 import dash_bootstrap_components as dbc
 from RosettaX.utils import ui_forms
+from RosettaX.workflow.upload.system import build_system_selector
 
 
 def get_layout(section) -> dbc.Card:
     """
     Build the upload section layout.
     """
-    card = section.layout_builder.get_layout()
-
-    return card
+    return section.layout_builder.get_layout(
+        extra_body_children=[build_system_selector(ids=section.page.ids.State)],
+    )
 
 
 def build_card_title(section) -> dash.html.Div:

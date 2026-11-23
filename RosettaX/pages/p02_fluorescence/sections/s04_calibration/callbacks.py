@@ -228,6 +228,7 @@ def _register_calibration_workflow_callback(section) -> None:
         dash.State(section.page.ids.Fluorescence.process_dropdown, "value"),
         dash.State(_get_fluorescence_detector_dropdown_pattern(section), "id"),
         dash.State(_get_fluorescence_detector_dropdown_pattern(section), "value"),
+        running=[(dash.Output(section.ids.calibrate_btn, "disabled"), True, False)],
         prevent_initial_call=True,
     )
     def calibrate_and_apply(

@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import logging
 from . import services
 from .ids import Ids
-from dash import Input, Output, dash_table, dcc, html
+from dash import Input, Output, State, dash_table, dcc, html
 from dash.exceptions import PreventUpdate
 from RosettaX.application.access import has_admin_session
 from RosettaX.utils import styling, ui_forms
@@ -82,29 +82,32 @@ class AdminPage:
 
         @dash.callback(
             Output(self.ids.recent_visit_details, "children"),
+            Output(self.ids.recent_visit_details, "is_open"),
+            Output(self.ids.recent_visits_table, "active_cell"),
             Input(self.ids.recent_visits_table, "active_cell"),
-            Input(self.ids.recent_visits_table, "derived_viewport_data"),
+            State(self.ids.recent_visits_table, "data"),
             prevent_initial_call=True,
         )
-        def show_visit_details(active_cell, visible_rows):
-            """Show connection metadata for the selected activity row."""
+        def show_visit_details(active_cell, rows):
+            """Open the selected visit by row ID, including after sorting or filtering."""
             if not has_admin_session():
                 raise PreventUpdate
-            if not active_cell or active_cell.get("column_id") != "details" or not visible_rows:
-                return None
-            row_index = active_cell.get("row", -1)
-            if not 0 <= row_index < len(visible_rows):
-                return None
-            row = visible_rows[row_index]
-            return html.Details([
-                html.Summary(f"Connection details · {row['visited_at']}"),
-                html.Dl([
-                    html.Dt("IP address"), html.Dd(row["ip_address"]),
+            if not active_cell or active_cell.get("column_id") != "details":
+                raise PreventUpdate
+            row_id = active_cell.get("row_id")
+            row = next((candidate for candidate in rows or [] if candidate.get("id") == row_id), None)
+            if row is None:
+                raise PreventUpdate
+            details = [
+                dbc.ModalHeader(dbc.ModalTitle(f"Visit details · {row['visited_at']}")),
+                dbc.ModalBody(html.Dl([
                     html.Dt("Location"), html.Dd(row["location"]),
+                    html.Dt("IP address"), html.Dd(row["ip_address"]),
                     html.Dt("Organization"), html.Dd(row["organization"]),
                     html.Dt("User agent"), html.Dd(row["user_agent"], className="text-break"),
-                ], className="mt-2 mb-0"),
-            ], open=True, className="border rounded p-3 mt-3")
+                ], className="mb-0")),
+            ]
+            return details, True, None
 
         return self
 
@@ -346,7 +349,7 @@ class AdminPage:
                         columns=[
                             {"name": "Time (UTC)", "id": "visited_at"},
                             {"name": "Workflow", "id": "workflow"},
-                            {"name": "Step", "id": "step"},
+                            {"name": "Location", "id": "location"},
                             {"name": "Page", "id": "path"},
                             {"name": "Details", "id": "details"},
                         ],
@@ -376,7 +379,7 @@ class AdminPage:
                             {"if": {"column_id": "details"}, "cursor": "pointer", "textDecoration": "underline"},
                         ],
                     ),
-                    html.Div(id=self.ids.recent_visit_details),
+                    dbc.Modal(id=self.ids.recent_visit_details, is_open=False, centered=True),
                 ]),
             ]
         )

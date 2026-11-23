@@ -4,6 +4,7 @@ from RosettaX.workflow.save.ids import SaveIds as SaveSectionIds
 from RosettaX.workflow.upload.ids import UploadIds as UploadSectionIds
 
 PAGE_NAME = "fluorescent_calibration"
+SYSTEM_MODEL_ID = f"{PAGE_NAME}-system-model"
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,8 @@ class PeakSectionIds(PeakIds):
     Fluorescence peak section IDs.
     """
 
+    system_model = SYSTEM_MODEL_ID
+
     def __init__(
         self,
         *,
@@ -93,6 +96,9 @@ class Ids:
     page_name = PAGE_NAME
 
     class State:
+        system_model = SYSTEM_MODEL_ID
+        system_file = f"{PAGE_NAME}-system-file"
+        system_status = f"{PAGE_NAME}-system-status"
         page_state_store = f"{PAGE_NAME}-page-state-store"
         workflow_progress = f"{PAGE_NAME}-workflow-progress"
         description_tooltip_target = f"{PAGE_NAME}-description-tooltip-target"

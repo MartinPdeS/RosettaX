@@ -35,7 +35,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                     return [noUpdate, noUpdate];
                 }
             } else {
-                if (cardId?.page === "scattering_calibration" && cardId.section === "1") {
+                if (cardId?.section === "1" && ["scattering_calibration", "fluorescent_calibration", "cross-calibration"].includes(cardId.page)) {
                     return [noUpdate, noUpdate];
                 }
                 if (!runtimeConfig) return [noUpdate, noUpdate];

@@ -10,6 +10,7 @@ from RosettaX.ui import (
 from RosettaX.utils import styling, ui_forms
 from RosettaX.workflow.calibration_cards import build_calibration_workflow_section_card
 from RosettaX.workflow.cross_calibration import services
+from RosettaX.workflow.plotting import PlotOptions
 from typing import Any
 
 
@@ -154,13 +155,18 @@ class CrossCalibrationPage:
             html.Div(
                 [
                     dbc.Button(
-                        "Create transfer calibration",
+                        html.Span([
+                            html.Span("Create transfer calibration", className="peak-action-idle-label"),
+                            html.Span("Creating transfer calibration…", className="peak-action-running-label"),
+                        ], className="peak-action-labels"),
                         id=self.ids.build_button,
                         n_clicks=0,
                         color="primary",
+                        className="peak-action-button--run",
                     ),
                     html.Div(
                         id=self.ids.status,
+                        role="status",
                         style={
                             "minHeight": "24px",
                             "display": "flex",
@@ -180,6 +186,7 @@ class CrossCalibrationPage:
         return build_calibration_workflow_section_card(
             page_name=self.ids.page_prefix,
             workflow_step=self.workflow_header.get_workflow_step(workflow_step=self.upload_step),
+            initially_open=True,
             body_children=body_children,
         )
 
@@ -292,6 +299,11 @@ class CrossCalibrationPage:
                     config=styling.PLOTLY_GRAPH_CONFIG,
                     style=services.resolve_graph_style(),
                 ),
+                PlotOptions.build_component(
+                    component_id=self.ids.graph_axis_options,
+                    value=[PlotOptions.x_log_value, PlotOptions.y_log_value],
+                ),
+                html.Hr(className="my-3"),
                 dash_table.DataTable(
                     id=self.ids.table,
                     columns=[
@@ -469,6 +481,8 @@ class CrossCalibrationPage:
             dash.State(self.ids.primary_summary_store, "data"),
             dash.State(self.ids.secondary_summary_store, "data"),
             dash.State("runtime-config-store", "data"),
+            dash.State(self.ids.graph_axis_options, "value"),
+            running=[(dash.Output(self.ids.build_button, "disabled"), True, False)],
             prevent_initial_call=True,
         )
         def build_cross_calibration(
@@ -476,6 +490,7 @@ class CrossCalibrationPage:
             primary_summary: Any,
             secondary_summary: Any,
             runtime_config_data: Any,
+            axis_options: list[str] | None,
         ) -> tuple[Any, str, Any, list[dict[str, Any]]]:
             if not n_clicks:
                 return (
@@ -526,6 +541,7 @@ class CrossCalibrationPage:
                 services.build_result_figure(
                     result_dict,
                     runtime_config_data=runtime_config_data,
+                    axis_options=axis_options,
                 ),
                 services.build_result_table_data(result_dict),
             )
@@ -543,17 +559,20 @@ class CrossCalibrationPage:
         @dash.callback(
             dash.Output(self.ids.graph, "figure", allow_duplicate=True),
             dash.Input("runtime-config-store", "data"),
+            dash.Input(self.ids.graph_axis_options, "value"),
             dash.State(self.ids.result_store, "data"),
             prevent_initial_call=True,
         )
         def sync_graph_figure_style_from_profile(
             runtime_config_data: Any,
+            axis_options: list[str] | None,
             result: Any,
         ) -> Any:
             if isinstance(result, dict):
                 return services.build_result_figure(
                     result,
                     runtime_config_data=runtime_config_data,
+                    axis_options=axis_options,
                 )
 
             return services.build_empty_result_figure(

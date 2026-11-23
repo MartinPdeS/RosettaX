@@ -3,7 +3,6 @@ import dash
 import dash_bootstrap_components as dbc
 import logging
 from ...state import ScatteringPageState
-from ..system import build_system_selector, register_system_detection
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
@@ -11,6 +10,10 @@ from RosettaX.workflow.upload.adapters import ScatteringUploadAdapter
 from RosettaX.workflow.upload.callbacks import register_upload_callbacks
 from RosettaX.workflow.upload.layout import UploadLayout
 from RosettaX.workflow.upload.models import UploadConfig
+from RosettaX.workflow.upload.system import (
+    build_system_selector,
+    register_system_detection,
+)
 from typing import Any
 
 logger = logging.getLogger(__name__)

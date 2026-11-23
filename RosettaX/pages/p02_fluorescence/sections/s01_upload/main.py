@@ -6,6 +6,7 @@ from RosettaX.ui import WorkflowStep
 from RosettaX.workflow.upload.adapters import FluorescenceUploadAdapter
 from RosettaX.workflow.upload.layout import UploadLayout
 from RosettaX.workflow.upload.models import UploadConfig
+from RosettaX.workflow.upload.system import register_system_detection
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,8 @@ class Upload:
     Upload persistence, runtime config synchronization, filename display, and
     page state reset behavior are delegated to ``RosettaX.workflow.upload``.
     """
+
+    initially_open = True
 
     workflow_step = WorkflowStep(
         title="Upload bead FCS file",
@@ -86,4 +89,5 @@ class Upload:
         """
         Register callbacks for the fluorescence upload section.
         """
+        register_system_detection(ids=self.page.ids.State)
         callbacks.register_callbacks(self)

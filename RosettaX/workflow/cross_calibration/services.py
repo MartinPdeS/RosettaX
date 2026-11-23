@@ -538,6 +538,8 @@ def build_cross_calibration_result(
 def build_result_figure(
     result: dict[str, Any] | None,
     runtime_config_data: Any = None,
+    *,
+    axis_options: list[str] | None = None,
 ) -> go.Figure:
     """
     Build the cross-calibration review figure.
@@ -613,13 +615,13 @@ def build_result_figure(
     )
     figure.update_xaxes(
         title_text=str(result.get("x_axis_label") or "Secondary routine-bead peak"),
-        type="log",
+        type="log" if axis_options is None or "x_log" in axis_options else "linear",
         showgrid=True,
         zeroline=False,
     )
     figure.update_yaxes(
         title_text=str(result.get("y_axis_label") or "Primary calibrated scale"),
-        type="log",
+        type="log" if axis_options is None or "y_log" in axis_options else "linear",
         showgrid=True,
         zeroline=False,
     )

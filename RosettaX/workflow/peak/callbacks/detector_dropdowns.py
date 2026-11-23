@@ -27,7 +27,7 @@ def register_detector_dropdown_callbacks(
     """
 
     system_model_id = getattr(ids, "system_model", None)
-    system_states = [dash.State(system_model_id, "value")] if system_model_id else []
+    system_inputs = [dash.Input(system_model_id, "value")] if system_model_id else []
 
     @dash.callback(
         dash.Output(
@@ -61,7 +61,7 @@ def register_detector_dropdown_callbacks(
             ids.process_detector_dropdown_pattern(),
             "value",
         ),
-        *system_states,
+        *system_inputs,
         prevent_initial_call=False,
     )
     def populate_detector_dropdowns(
@@ -103,6 +103,8 @@ def register_detector_dropdown_callbacks(
             ),
             current_detector_values=current_detector_values,
             instrument_catalog_key=instrument_catalog_key,
+            refresh_inferred_channels=bool(system_model_id and dash.ctx.triggered_id == system_model_id),
+
             runtime_config_data=runtime_config_data,
             detector_selection_runtime_config_path=getattr(
                 adapter,
