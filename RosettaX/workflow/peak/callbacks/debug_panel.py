@@ -220,18 +220,36 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
             for guide in plotted_guides
             if guide["kind"] == "non_fluorescent"
         }
+        exclusion_reasons = {
+            position: "Excluded because it falls beyond the scatter saturation guard."
+            for position in peak_lines_payload.get("saturation_guard_excluded_positions", [])
+        }
+        lowest_peak = peak_lines_payload.get("rosetta_lowest_peak_exclusion")
+        if isinstance(lowest_peak, dict) and lowest_peak.get("position") is not None:
+            diameter = lowest_peak.get("diameter_nm")
+            assigned_size = f" ({diameter:g} nm)" if isinstance(diameter, (int, float)) and diameter > 0 else ""
+            exclusion_reasons[lowest_peak["position"]] = (
+                f"Excluded as the lowest detected non-fluorescent peak{assigned_size}."
+            )
+        displayed_rows = []
+        for row in scatter_rows:
+            position = row.get("position")
+            label = labels_by_position.get(position)
+            reason = exclusion_reasons.get(position)
+            if reason and not label:
+                displayed_rows.append(dict(row, graph_result="Excluded", rejection_reasons=[reason]))
+            elif row.get("validated") and not label:
+                displayed_rows.append(dict(
+                    row,
+                    graph_result="No size assigned",
+                    rejection_reasons=["The fit passed, but this peak did not receive a diameter in the final sizing result."],
+                ))
+            else:
+                displayed_rows.append(dict(row, graph_result=label or "No guide"))
         sections.append(
             _build_rosetta_debug_table(
                 title="Non-fluorescent scatter candidates",
-                rows=[
-                    dict(
-                        row,
-                        graph_result=labels_by_position.get(row.get("position")) or (
-                            "No size assigned" if row.get("validated") else "No guide"
-                        ),
-                    )
-                    for row in scatter_rows
-                ],
+                rows=displayed_rows,
             )
         )
 

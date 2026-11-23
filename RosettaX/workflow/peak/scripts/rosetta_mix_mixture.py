@@ -47,7 +47,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     scatter_fit_function = staticmethod(find_mixture_scatter_peaks)
     always_show_process_settings = True
     recover_clipped_marker = True
-    require_stable_fluorescence_gate = True
+    require_stable_fluorescence_gate = False
     allow_unassigned_sizes = True
 
     def fit_marker_bounded_scatter(
@@ -445,48 +445,9 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
     def _finalize_size_assignment(
         self, *, result: PeakProcessResult, assignment: RosettaSizeAssignment,
     ) -> tuple[PeakProcessResult, RosettaSizeAssignment]:
-        """Apply the lowest-peak exclusion and retain evidence for detector checks."""
+        """Retain evidence for detector checks after size assignment."""
         payload = result.peak_lines_payload
-        lowest_peak = min(
-            (point["x"] for point in payload.get("points", []) if point.get("kind") == "non_fluorescent"),
-            default=None,
-        )
-        rows = [row for row in assignment.rows if row["measured_peak_position"] != lowest_peak]
-        if len(rows) != len(assignment.rows):
-            excluded_row = next(row for row in assignment.rows if row["measured_peak_position"] == lowest_peak)
-            # Keep the peak on the graph and preserve the rank of the other rows.
-            payload = dict(
-                payload,
-                rosetta_lowest_peak_exclusion={
-                    "position": lowest_peak,
-                    "diameter_nm": excluded_row.get("particle_diameter_nm"),
-                    "rows_before": len(assignment.rows),
-                },
-                rosetta_size_assignments=[
-                    entry for entry in payload.get("rosetta_size_assignments", [])
-                    if entry["position"] != lowest_peak
-                ],
-                scatter_guide_annotations=[
-                    entry for entry in payload.get("scatter_guide_annotations", [])
-                    if entry["x"] != lowest_peak or entry.get("kind") == "marker"
-                ],
-            )
-            result = replace(
-                result, table_prefill_rows=rows,
-                peak_positions=[point for point in result.peak_positions if point["x"] != lowest_peak],
-                new_peak_positions=[position for position in (result.new_peak_positions or []) if position != lowest_peak],
-            )
-            if not any(row.get("particle_diameter_nm") for row in rows) and assignment.state in {
-                RosettaAssignmentState.ASSIGNED, RosettaAssignmentState.PARTIAL,
-            }:
-                assignment = replace(
-                    assignment, state=RosettaAssignmentState.UNRESOLVED, failure_code="lowest_peak_exclusion",
-                    detail=" ".join(filter(None, (
-                        "No assigned diameters remain after excluding the lowest non-fluorescent peak.", assignment.detail,
-                    ))),
-                )
-            assignment = replace(assignment, rows=rows)
-
+        rows = assignment.rows
         if rows and assignment.needs_confirmation and payload.get("scatter_bootstrap_positions"):
             payload = dict(
                 payload,

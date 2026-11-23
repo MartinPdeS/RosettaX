@@ -139,25 +139,20 @@ The algorithm follows the MATLAB-described approach from the Exometry method:
    position. If fluorescence clips above the dim marker gate, Rosetta can use
    a dominant, validated scatter population at the fluorescence ceiling to
    recover the bright anchor.
-5. **Non-fluorescent gate.** The default Rosetta mode requires a low-density
-   valley between the baseline and first fluorescent band. It checks that
-   the valley persists across histogram resolutions and two event subsets,
-   and checks for a bridge of events within scatter regions. The cutoff is
-   chosen inside the shared valley. The older Rosetta modes use the fitted
-   baseline and the *baseline gate width* setting.
+5. **Non-fluorescent gate.** Rosetta uses the fitted baseline and the
+   *baseline gate width* setting to select non-fluorescent events. The
+   requirement for a stable valley before the first marker is disabled.
 6. **Non-fluorescent scatter peaks.** Rosetta fits the gated scatter distribution
    with a mixture model in log intensity. When both markers provide usable
    scatter positions, Rosetta fits three regions independently: below the
    140 nm marker, between the markers, and above the 380 nm marker. Each fit
    includes a small margin at the marker boundaries to account for nearby peak
    tails. With one usable scatter anchor, Rosetta fits the full gated
-   distribution. It checks that moving the fluorescence cutoff within the
-   valley does not materially change the relevant scatter peaks. With a
-   single fluorescence marker and one usable scatter anchor, this check
-   compares only peaks above that anchor. **Detect peaks** updates the
-   calibration table after the detection checks pass. The lowest detected
-   non-fluorescent peak is excluded from the table because acquisition limits
-   and overlapping populations can distort it.
+   distribution. **Detect peaks** updates the
+   calibration table after the detection checks pass. Candidates near
+   the acquisition floor must pass the same truncation, prominence, and
+   separation checks as other peaks. An accepted peak can be sized when its
+   marker-bounded region supports an assignment.
 
 The script stops with an informative status message if:
 

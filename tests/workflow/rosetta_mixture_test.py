@@ -318,13 +318,13 @@ def test_partial_assignment_preserves_outer_rows_and_annotations(monkeypatch, co
         max_events_for_analysis=10000, process_settings={},
     )
     assert result.warning
-    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [100, 125, "", "", "", 400, 600, 799, 994]
+    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [70, 100, 125, "", "", "", 400, 600, 799, 994]
     annotations = result.peak_lines_payload["scatter_guide_annotations"]
     assert all(entry["kind"] == "marker" or not 1000 < entry["x"] < 10000 for entry in annotations)
     assert result.status.startswith("Partial result: Found 2")
     sizing = result.peak_lines_payload["rosetta_sizing"]
     assert sizing["state"] == "partial"
-    assert sizing["needs_confirmation"]
+    assert not sizing["needs_confirmation"]
     assert sizing["rejection_reasons"][0].startswith("Found 2 validated scatter peaks")
 
 
@@ -337,9 +337,9 @@ def test_complete_assignment_publishes_expected_size_annotations(monkeypatch, co
         max_events_for_analysis=10000, process_settings={},
     )
     assert not result.warning
-    assert len(result.table_prefill_rows) == 9
+    assert len(result.table_prefill_rows) == 10
     assert result.peak_lines_payload["rosetta_sizing"]["state"] == "assigned"
-    assert result.peak_lines_payload["rosetta_lowest_peak_exclusion"]["diameter_nm"] == 70
+    assert result.table_prefill_rows[0]["particle_diameter_nm"] == 70
     annotations = result.peak_lines_payload["scatter_guide_annotations"]
     assert [entry["label"] for entry in annotations if 1000 < entry["x"] < 10000] == ["147 nm", "203 nm", "296 nm"]
     assert all(entry["x"] > 10000 for entry in annotations if entry["label"] == "400 nm")
