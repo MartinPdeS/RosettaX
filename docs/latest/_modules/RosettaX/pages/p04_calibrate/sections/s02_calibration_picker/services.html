@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -509,12 +509,15 @@
                 <article class="bd-article">
                   
   <h1>Source code for RosettaX.pages.p04_calibrate.sections.s02_calibration_picker.services</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TargetMiePreviewControls</span><span class="p">,</span> <span class="n">TargetMiePreviewResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dash</span><span class="w"> </span><span class="kn">import</span> <span class="n">html</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.apply_calibration.payload</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CalibrationPayload</span><span class="p">,</span>
+    <span class="n">decode_calibration_record</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.upload.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_uploaded_file_bytes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
@@ -557,28 +560,10 @@
             <span class="s2">"Uploaded calibration file has a malformed Dash contents payload."</span>
         <span class="p">)</span>
 
-    <span class="n">raw_bytes</span> <span class="o">=</span> <span class="n">read_uploaded_file_bytes</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
-
-    <span class="n">record</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
-        <span class="n">raw_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Calibration file root record is invalid."</span><span class="p">)</span>
-
-    <span class="n">schema</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">schema</span> <span class="o">!=</span> <span class="s2">"rosettax_calibration_v1"</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Calibration file schema is unsupported: </span><span class="si">{</span><span class="n">schema</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'&lt;missing&gt;'</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
-
-    <span class="n">payload</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"payload"</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Calibration file is missing top level "payload".'</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">resolved_filename</span><span class="p">,</span> <span class="n">payload</span></div>
+    <span class="k">return</span> <span class="n">resolved_filename</span><span class="p">,</span> <span class="n">decode_calibration_record</span><span class="p">(</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">read_uploaded_file_bytes</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">),</span>
+        <span class="n">require_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 
@@ -628,56 +613,7 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Build a lightweight calibration summary for UI decisions.</span>
 <span class="sd">    """</span>
-    <span class="n">calibration_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"calibration_type"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">source_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"source_channel"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">output_quantity</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"output_quantity"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">version</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"version"</span><span class="p">,</span>
-        <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">applied_output_channel_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"applied_output_channel_name"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">instrument_response</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"instrument_response"</span><span class="p">,</span>
-        <span class="p">{},</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instrument_response</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">measured_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">instrument_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="s2">"measured_channel"</span><span class="p">,</span>
-                <span class="s2">""</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">measured_channel</span> <span class="o">=</span> <span class="s2">""</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_channel</span> <span class="ow">and</span> <span class="n">measured_channel</span><span class="p">:</span>
-        <span class="n">source_channel</span> <span class="o">=</span> <span class="n">measured_channel</span>
+    <span class="n">calibration</span> <span class="o">=</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"selected_calibration"</span><span class="p">:</span> <span class="n">selected_calibration</span><span class="p">,</span>
@@ -689,15 +625,15 @@
         <span class="s2">"file_path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">calibration_file_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">calibration_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
-        <span class="s2">"calibration_type"</span><span class="p">:</span> <span class="n">calibration_type</span><span class="p">,</span>
-        <span class="s2">"source_channel"</span><span class="p">:</span> <span class="n">source_channel</span><span class="p">,</span>
-        <span class="s2">"output_quantity"</span><span class="p">:</span> <span class="n">output_quantity</span><span class="p">,</span>
-        <span class="s2">"applied_output_channel_name"</span><span class="p">:</span> <span class="n">applied_output_channel_name</span><span class="p">,</span>
-        <span class="s2">"version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
-        <span class="s2">"is_scattering"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
-        <span class="s2">"is_fluorescence"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"fluorescence"</span><span class="p">,</span>
-        <span class="s2">"requires_target_model"</span><span class="p">:</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
-        <span class="s2">"is_valid"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">calibration_type</span><span class="p">),</span>
+        <span class="s2">"calibration_type"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span><span class="p">,</span>
+        <span class="s2">"source_channel"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">source_channel</span><span class="p">,</span>
+        <span class="s2">"output_quantity"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">output_quantity</span><span class="p">,</span>
+        <span class="s2">"applied_output_channel_name"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">output_channel_name</span><span class="p">,</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="s2">"is_scattering"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
+        <span class="s2">"is_fluorescence"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"fluorescence"</span><span class="p">,</span>
+        <span class="s2">"requires_target_model"</span><span class="p">:</span> <span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span><span class="p">,</span>
+        <span class="s2">"is_valid"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span><span class="p">),</span>
         <span class="s2">"error"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
         <span class="s2">"calibration_payload"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">),</span>
     <span class="p">}</span></div>

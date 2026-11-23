@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Workflow API &#8212; RosettaX 0.14.1 documentation</title>
+    <title>Workflow API &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -54,7 +54,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -137,8 +137,8 @@
     
     
     
-    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -3599,7 +3599,7 @@ dataframe transformer applying the power-law fluorescence calibration.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source_channel</strong> (<em>str</em>) – Detector column to calibrate.</p></li>
-<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Loaded calibration JSON payload.</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] or </em><a class="reference internal" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration" title="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration"><em>FluorescenceCalibration</em></a>) – Saved calibration data or the parsed fluorescence transformation.</p></li>
 <li><p><strong>output_channel_name</strong> (<em>str</em>)</p></li>
 <li><p><strong>warnings</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
@@ -3616,7 +3616,7 @@ dataframe transformer applying the power-law fluorescence calibration.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.services.build_multi_calibration_dataframe_transformer_factory">
 <span class="sig-name descname"><span class="pre">build_multi_calibration_dataframe_transformer_factory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_applications</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warnings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/services.html#build_multi_calibration_dataframe_transformer_factory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.services.build_multi_calibration_dataframe_transformer_factory" title="Link to this definition">#</a></dt>
-<dd><p>Build one dataframe transformer factory that applies all calibrations in sequence.</p>
+<dd><p>Build one dataframe transformer factory that applies calibrations in sequence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3638,7 +3638,7 @@ dataframe transformer function suitable for use with
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>source_channel</strong> (<em>str</em>) – Detector column to calibrate.</p></li>
-<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Loaded calibration JSON payload.</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] or </em><em>CalibrationPayload</em>) – Saved calibration data or its normalized representation for this run.</p></li>
 <li><p><strong>target_model_parameters</strong> (<a class="reference internal" href="#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters" title="RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters"><em>ScatteringTargetModelParameters</em></a>) – Target Mie model parameters for the scattering conversion.</p></li>
 <li><p><strong>output_channel_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 </ul>
@@ -3729,15 +3729,78 @@ legacy scattering calibration payloads.</p>
 </dl>
 </dd></dl>
 
-<span class="target" id="module-RosettaX.workflow.apply_calibration.fluorescence"></span><dl class="py function">
+<p id="module-RosettaX.workflow.apply_calibration.fluorescence">Apply saved fluorescence calibration models to detector measurements.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">FluorescenceCalibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intercept</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/fluorescence.html#FluorescenceCalibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A linear calibration or a power law when a prefactor is present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>slope</strong> (<em>float</em>)</p></li>
+<li><p><strong>intercept</strong> (<em>float</em>)</p></li>
+<li><p><strong>prefactor</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_log_parameters">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_log_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/fluorescence.html#FluorescenceCalibration.from_log_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_log_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Resolve log coefficients using the nested payload as a legacy fallback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration" title="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration"><em>FluorescenceCalibration</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_payload">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_payload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/fluorescence.html#FluorescenceCalibration.from_payload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_payload" title="Link to this definition">#</a></dt>
+<dd><p>Resolve the coefficients of a saved log, slope, or scale model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration" title="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration"><em>FluorescenceCalibration</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.intercept">
+<span class="sig-name descname"><span class="pre">intercept</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.intercept" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.prefactor">
+<span class="sig-name descname"><span class="pre">prefactor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.prefactor" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.slope">
+<span class="sig-name descname"><span class="pre">slope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.slope" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.apply_legacy_calibration_to_series">
 <span class="sig-name descname"><span class="pre">apply_legacy_calibration_to_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warning_messages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/fluorescence.html#apply_legacy_calibration_to_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.apply_legacy_calibration_to_series" title="Link to this definition">#</a></dt>
-<dd><p>Apply a legacy fluorescence or simple linear calibration payload.</p>
+<dd><p>Apply a saved log or linear fluorescence model to an array of detector values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>values</strong> (<em>ndarray</em>)</p></li>
-<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration" title="RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration"><em>FluorescenceCalibration</em></a>)</p></li>
 <li><p><strong>warning_messages</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>source_channel</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 </ul>
@@ -3751,7 +3814,7 @@ legacy scattering calibration payloads.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series">
 <span class="sig-name descname"><span class="pre">apply_log_calibration_to_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warning_messages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/apply_calibration/fluorescence.html#apply_log_calibration_to_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series" title="Link to this definition">#</a></dt>
-<dd><p>Apply a log power law calibration.</p>
+<dd><p>Apply a log power law from saved coefficients to an array of detector values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -4438,16 +4501,15 @@ can switch model types without losing a complete preset state.</p>
 <li><p>estimated coupling</p></li>
 <li><p>target model Mie equivalent diameter</p></li>
 </ul>
-<p>If the full target Mie relation is not strictly monotonic, the widest
-strictly monotonic branch is selected automatically. Diameter inversion uses
-linear extrapolation outside the selected branch coupling range.</p>
+<p>A non-monotonic target uses an approximation based on its leftmost monotonic
+branch. Inversion extrapolates linearly outside the resolved coupling range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dataframe</strong> (<em>Any</em>)</p></li>
 <li><p><strong>source_channel</strong> (<em>str</em>)</p></li>
 <li><p><strong>output_channel_names</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
-<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>calibration_payload</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>CalibrationPayload</em>)</p></li>
 <li><p><strong>target_model_parameters</strong> (<a class="reference internal" href="#RosettaX.workflow.apply_calibration.scattering.ScatteringTargetModelParameters" title="RosettaX.workflow.apply_calibration.scattering.models.ScatteringTargetModelParameters"><em>ScatteringTargetModelParameters</em></a>)</p></li>
 <li><p><strong>metadata</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
@@ -5494,23 +5556,6 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm">
-<span class="sig-name descname"><span class="pre">extract_channel_wavelength_nm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#extract_channel_wavelength_nm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm" title="Link to this definition">#</a></dt>
-<dd><p>Extract a three-digit wavelength from an FCS channel name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>channel_name</strong> (<em>Any</em>) – Candidate FCS channel name.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Wavelength in nanometers when encoded in the channel name.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int or None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata">
 <span class="sig-name descname"><span class="pre">extract_instrument_name_from_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#extract_instrument_name_from_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata" title="Link to this definition">#</a></dt>
 <dd><p>Extract one instrument or system name from FCS metadata.</p>
@@ -5614,19 +5659,19 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.infer_rosetta_v1_channel">
-<span class="sig-name descname"><span class="pre">infer_rosetta_v1_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preferred_wavelength_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matched_rule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#infer_rosetta_v1_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.infer_rosetta_v1_channel" title="Link to this definition">#</a></dt>
-<dd><p>Return a Rosetta channel suggestion, leaving ambiguous matches unset.</p>
+<span class="sig-name descname"><span class="pre">infer_rosetta_v1_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matched_rule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#infer_rosetta_v1_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.infer_rosetta_v1_channel" title="Link to this definition">#</a></dt>
+<dd><p>Resolve a catalog recommendation against the uploaded FCS columns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>column_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Available FCS channels.</p></li>
-<li><p><strong>detector_role</strong> (<em>Any</em>) – Scattering or green fluorescence role.</p></li>
-<li><p><strong>preferred_wavelength_nm</strong> (<em>int</em><em> or </em><em>None</em>) – Preferred excitation wavelength, in nanometers.</p></li>
-<li><p><strong>matched_rule</strong> (<em>dict</em><em> or </em><em>None</em>) – Optional instrument-specific preferences.</p></li>
+<li><p><strong>column_names</strong> (<em>list</em><em> of </em><em>str</em>) – Available FCS columns.</p></li>
+<li><p><strong>detector_role</strong> (<em>str</em>) – Scattering or green fluorescence role.</p></li>
+<li><p><strong>matched_rule</strong> (<em>dict</em><em> or </em><em>None</em>) – Instrument rule resolved from the FCS metadata.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Suggested channel when the catalog resolves a unique match.</p>
+<dd class="field-even"><p>First configured name with a unique case-insensitive match, or None
+when the role needs manual selection.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str or None</p>
@@ -5651,7 +5696,7 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.load_detector_auto_detect_rules">
 <span class="sig-name descname"><span class="pre">load_detector_auto_detect_rules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#load_detector_auto_detect_rules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.load_detector_auto_detect_rules" title="Link to this definition">#</a></dt>
-<dd><p>Load detector auto-detect rules from the shared JSON file.</p>
+<dd><p>Load FCS instrument rules from the shared catalog.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list[dict[str, <em>Any</em>]]</p>
@@ -5769,28 +5814,6 @@ is delegated to PeakWorkflowGraphBuilder.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[str, Any]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="RosettaX.workflow.peak.core.detectors.resolve_rosetta_v1_suggestion">
-<span class="sig-name descname"><span class="pre">resolve_rosetta_v1_suggestion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detector_role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preferred_wavelength_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matched_rule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/RosettaX/workflow/peak/core/detectors.html#resolve_rosetta_v1_suggestion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#RosettaX.workflow.peak.core.detectors.resolve_rosetta_v1_suggestion" title="Link to this definition">#</a></dt>
-<dd><p>Suggest a channel and explain the match or ambiguity.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>column_names</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Available FCS channels.</p></li>
-<li><p><strong>detector_role</strong> (<em>Any</em>) – Scattering or green fluorescence role.</p></li>
-<li><p><strong>preferred_wavelength_nm</strong> (<em>int</em><em> or </em><em>None</em>) – Preferred excitation wavelength, in nanometers.</p></li>
-<li><p><strong>matched_rule</strong> (<em>dict</em><em> or </em><em>None</em>) – Instrument-specific preferences from the detector catalog.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Suggested channel and explanation for the user.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple[str or None, str]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -6663,6 +6686,14 @@ that has:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.services.resolve_requested_output_channel_name"><code class="docutils literal notranslate"><span class="pre">resolve_requested_output_channel_name()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.services.resolve_source_channel"><code class="docutils literal notranslate"><span class="pre">resolve_source_channel()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.services.resolve_unique_output_channel_name"><code class="docutils literal notranslate"><span class="pre">resolve_unique_output_channel_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_log_parameters"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration.from_log_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_payload"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration.from_payload()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.intercept"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration.intercept</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.prefactor"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration.prefactor</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.slope"><code class="docutils literal notranslate"><span class="pre">FluorescenceCalibration.slope</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.apply_legacy_calibration_to_series"><code class="docutils literal notranslate"><span class="pre">apply_legacy_calibration_to_series()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series"><code class="docutils literal notranslate"><span class="pre">apply_log_calibration_to_series()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.apply_calibration.scattering.CoreShellSphereTargetModel"><code class="docutils literal notranslate"><span class="pre">CoreShellSphereTargetModel</span></code></a><ul class="nav section-nav flex-column">
@@ -6853,7 +6884,6 @@ that has:
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.graphing.build_peak_workflow_graph_figure"><code class="docutils literal notranslate"><span class="pre">build_peak_workflow_graph_figure()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.clean_optional_string"><code class="docutils literal notranslate"><span class="pre">clean_optional_string()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm"><code class="docutils literal notranslate"><span class="pre">extract_channel_wavelength_nm()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata"><code class="docutils literal notranslate"><span class="pre">extract_instrument_name_from_metadata()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.find_fluorescence_channel_from_column_names"><code class="docutils literal notranslate"><span class="pre">find_fluorescence_channel_from_column_names()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.find_matching_column_name"><code class="docutils literal notranslate"><span class="pre">find_matching_column_name()</span></code></a></li>
@@ -6869,7 +6899,6 @@ that has:
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.resolve_detector_channels_for_process"><code class="docutils literal notranslate"><span class="pre">resolve_detector_channels_for_process()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.resolve_detector_selection_mode"><code class="docutils literal notranslate"><span class="pre">resolve_detector_selection_mode()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.resolve_process_setting_state"><code class="docutils literal notranslate"><span class="pre">resolve_process_setting_state()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.resolve_rosetta_v1_suggestion"><code class="docutils literal notranslate"><span class="pre">resolve_rosetta_v1_suggestion()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.core.detectors.resolve_rule_based_detector_channel"><code class="docutils literal notranslate"><span class="pre">resolve_rule_based_detector_channel()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.registry.build_peak_process_options"><code class="docutils literal notranslate"><span class="pre">build_peak_process_options()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RosettaX.workflow.peak.registry.build_script_map"><code class="docutils literal notranslate"><span class="pre">build_script_map()</span></code></a></li>
@@ -6929,7 +6958,7 @@ that has:
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.14.1/docs/source/api/workflows.rst">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.15.0/docs/source/api/workflows.rst">
       <i class="fa-solid fa-pencil"></i>
       
       

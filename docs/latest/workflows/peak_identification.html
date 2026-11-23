@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Peak identification scripts &#8212; RosettaX 0.14.1 documentation</title>
+    <title>Peak identification scripts &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -45,7 +45,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -54,7 +54,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -137,8 +137,8 @@
     
     
     
-    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -648,21 +648,34 @@ quality checks (R², CV, minimum event count, saturation guard).</p></li>
 is treated as the baseline noise population, which corresponds to the
 non-fluorescent beads leaking into the green-fluorescence channel.</p></li>
 <li><p><strong>Marker classification.</strong> The remaining one or two fluorescence peaks are
-the fluorescent marker beads (140 nm and 380 nm in CAL003). When only one
-marker is found, the saturation state of the fluorescence detector
-determines whether it is the dim or the bright marker. When two are found,
-the lower-intensity peak is labeled <em>Dim marker</em> and the higher is labeled
-<em>Bright marker</em>.</p></li>
+the fluorescent marker beads (140 nm and 380 nm in CAL003). When two are
+found, the lower-intensity peak is labeled <em>Dim marker</em> and the higher is
+labeled <em>Bright marker</em>. A lone usable marker can still guide inspection of
+measured scatter peaks. If no fluorescence candidate passes the initial fit,
+Rosetta can retry above a wide, sparsely populated gap. The brighter band
+must still pass the usual marker fit checks.</p></li>
 <li><p><strong>Marker scatter peaks.</strong> For each marker peak, events are gated by a
 symmetric sigma window around the fluorescence fit mean, and the scatter
 distribution of those gated events is fitted to find the marker scatter
-position.</p></li>
+position. If fluorescence clips above the dim marker gate, Rosetta can use
+a dominant, validated scatter population at the fluorescence ceiling to
+recover the bright anchor.</p></li>
 <li><p><strong>Non-fluorescent gate.</strong> Events with fluorescence below the baseline mean
 plus <em>baseline gate width</em> × σ are selected. This gate removes all
 fluorescent marker beads from the scatter analysis.</p></li>
-<li><p><strong>Non-fluorescent scatter peaks.</strong> The gated scatter distribution is
-submitted to the same find-fit-validate pipeline used for fluorescence.
-Validated peaks are inserted into the calibration-standard table.</p></li>
+<li><p><strong>Non-fluorescent scatter peaks.</strong> Rosetta fits the gated scatter distribution
+with a mixture model in log intensity. When both markers provide usable
+scatter positions, Rosetta fits three regions independently: below the
+140 nm marker, between the markers, and above the 380 nm marker. Each fit
+includes a small margin at the marker boundaries to account for nearby peak
+tails. The middle fit must resolve three observed populations before Rosetta
+assigns 147, 203 and 296 nm. If the middle region cannot be sized, Rosetta
+still proposes sizes for usable peaks in the outer regions and reports the
+partial result. Incomplete outer regions are sized outward from the nearest
+marker, assuming the missing beads are at the extremes. With fewer than two usable scatter anchors,
+Rosetta fits the full gated distribution. The lowest detected non-fluorescent
+peak stays visible on the graph and is excluded from the calibration table
+because acquisition limits and overlapping populations can distort it.</p></li>
 </ol>
 <p>The script stops with an informative status message if:</p>
 <ul class="simple">
@@ -686,16 +699,18 @@ Validated peaks are inserted into the calibration-standard table.</p></li>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Maximum scatter peaks</p></td>
-<td><p>8</p></td>
+<td><p>10</p></td>
 <td><p>Upper bound on the number of non-fluorescent bead populations to return.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Minimum fit R²</p></td>
-<td><p>0.80</p></td>
-<td><p>Minimum Gaussian fit quality for a peak to be accepted. Applies to both
-fluorescence and scatter fits. Lower values accept noisier peaks.</p></td>
+<tr class="row-odd"><td><p>Marker fit strictness</p></td>
+<td><p>0.5</p></td>
+<td><p>Controls the minimum Gaussian fit R² and maximum coefficient of variation
+(CV) for fluorescence peaks. At 0 the limits are R² ≥ 0.35 and CV ≤ 1.50.
+At 0.5 they are R² ≥ 0.70 and CV ≤ 0.60. At 1 they are R² ≥ 0.95
+and CV ≤ 0.30. Scatter and calibration checks are independent of this setting.</p></td>
 </tr>
 <tr class="row-even"><td><p>Baseline gate width (σ)</p></td>
-<td><p>2.0</p></td>
+<td><p>3.0</p></td>
 <td><p>Non-fluorescent events are those with fluorescence ≤ baseline mean +
 this multiplier × baseline σ. Increasing this value widens the
 non-fluorescent gate and may include dim marker events; decreasing it
@@ -704,29 +719,51 @@ tightens the gate at the risk of excluding small beads near the baseline.</p></t
 </tbody>
 </table>
 </div>
-<p>The workflow does not use marker positions to anchor bead-to-diameter
-assignments directly. That assignment is determined by the calibration-standard
-table preset (e.g. <em>Rosetta Mix</em>) in the scattering model section.</p>
+<p>Changing Marker fit strictness previews the peak graph. Select <strong>Detect peaks</strong>
+to apply the current settings to the calibration table. The Rosetta result
+above the graph shows the sized rows, excluded peaks, and event count. Open
+<strong>Fit details</strong> to inspect the accepted fits and the reasons candidates were
+rejected.</p>
+<p>When you replace the FCS file or change the Rosetta detector channels, run
+<strong>Detect peaks</strong> again to measure peak positions for the new selection.</p>
+<p>With both scatter anchors, Rosetta assigns diameters in scatter order. A
+fluorescent marker isolated at the scatter floor or ceiling can supply an
+ordering boundary for the three intermediate populations. The clipped value
+is excluded from calibration. With one measurable marker and all ten
+non-fluorescent populations, Rosetta can also assign diameters if the marker
+rank identifies it uniquely. If a separate bright fluorescence gate confirms
+the dim marker but has no usable scatter position, Rosetta assigns 147, 203,
+and 296 nm to the nearest resolved peaks above the 140 nm marker, and 125,
+100, and 70 nm to the nearest resolved peaks below it. This assumes that no
+intermediate populations were missed. Around a confirmed bright marker, the
+same rule assigns 296, 203, and 147 nm toward lower scatter and 400, 600, 799,
+and 994 nm toward higher scatter. If only one fluorescent marker is detected
+and the full scatter ladder cannot identify it, Rosetta assumes it is the
+380 nm marker and applies the same rank rule provisionally. Other unresolved
+peaks remain in the graph
+and table without diameters. Hover over a sized peak to see whether its
+diameter was estimated from one marker or assigned with more evidence. Detector
+geometry is configured after peak detection and is used for coupling.</p>
+<p>Overlapping or reversed fluorescent candidates are shown with their measured
+scatter positions. A gate is retained as a sizing candidate only if it has
+substantially stronger scatter support and is separated from the other gate.
+The peak table can keep the measured positions while marker identity is
+unresolved.</p>
+<p>Select <strong>Compute model</strong> to calculate the expected coupling for the diameters
+in the table. <strong>Create calibration</strong> uses the diameters currently in the table.</p>
 <p>Rosetta Script V1 assigns Rosetta Mix sizes using both the 140 nm and 380 nm
 fluorescent marker anchors. If either anchor is unavailable or unreliable, or
 not all detected peaks can be assigned, it shows a warning and leaves the
 existing graph and calibration table unchanged.</p>
-<p>On the plot, purple diamonds and dotted guides identify fluorescent markers;
-teal circles and dashed guides identify non-fluorescent peaks. The horizontal
-line marks the fluorescence baseline gate. Size labels above that line identify
-the non-fluorescent peaks, while marker labels appear at the top of the plot.</p>
-<p>For Rosetta Script V1, use <em>Auto-select detectors</em> to select uniquely named
-side-scattering and green-fluorescence channels. It prefers peak measurements and a green channel with the same encoded
-wavelength as the selected scattering channel; if that is unavailable, it uses
-a uniquely identifiable 488 nm green channel. If names are missing or multiple
-channels still match a role, select that channel manually. Verify that the
-selected channels match the instrument and measurement being analyzed.
-For blue-laser channels named by emission filter (for example,
-<code class="docutils literal notranslate"><span class="pre">B535/30-A</span></code>), auto-selection recognizes a single green-range filter and
-prefers its area measurement. Multiple matching filters remain unselected.
-The suggestion message explains the channel-name or instrument rule used and
-lists ambiguous matches. Channel names and instrument preferences are maintained
-in <code class="docutils literal notranslate"><span class="pre">RosettaX/workflow/detector/detector_auto_detect_rules.json</span></code>.</p>
+<p>Purple dotted guides identify fluorescent markers. Teal dashed guides identify
+non-fluorescent peaks. The angled size labels sit above their guides. The legend
+below the axes identifies the fluorescence baseline gate and saturation cutoff.</p>
+<p>For the Rosetta scripts, <em>Auto-select detectors</em> uses the instrument’s scatter
+and green fluorescence recommendations in
+<code class="docutils literal notranslate"><span class="pre">RosettaX/assets/instrument_catalog.toml</span></code>. A recommendation must
+match a column in the uploaded FCS file. If the instrument is unknown, a
+recommendation is unset, or its column is missing, select the channel manually.
+Any valid existing selection for that role is retained.</p>
 </section>
 </section>
 
@@ -792,7 +829,7 @@ in <code class="docutils literal notranslate"><span class="pre">RosettaX/workflo
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.14.1/docs/source/workflows/peak_identification.rst">
+    <a href="https://github.com/MartinPdeS/RosettaX/edit/v0.15.0/docs/source/workflows/peak_identification.rst">
       <i class="fa-solid fa-pencil"></i>
       
       

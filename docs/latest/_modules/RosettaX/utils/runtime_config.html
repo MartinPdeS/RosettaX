@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.utils.runtime_config &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.utils.runtime_config &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -1553,14 +1553,39 @@
         <span class="k">return</span> <span class="n">resolved_value</span></div>
 
 
+<div class="viewcode-block" id="RuntimeConfig.coerce_field_value">
+<a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.coerce_field_value">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coerce_field_value</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Coerce and validate a value for a known runtime configuration path.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            Canonical configuration path.</span>
+<span class="sd">        value : Any</span>
+<span class="sd">            Input value before schema coercion.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Any</span>
+<span class="sd">            Value in the type defined by the field schema.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeConfigValidationError</span>
+<span class="sd">            The value cannot be coerced or falls outside the field constraints.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_coerce_value</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">config_field</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">[</span><span class="n">path</span><span class="p">])</span></div>
+
+
 <div class="viewcode-block" id="RuntimeConfig.set_path">
 <a class="viewcode-back" href="../../../api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.set_path">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_value</span><span class="p">(</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coerce_field_value</span><span class="p">(</span>
                 <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
                 <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
-                <span class="n">config_field</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">[</span><span class="n">path</span><span class="p">],</span>
             <span class="p">)</span>
 
         <span class="n">old_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>

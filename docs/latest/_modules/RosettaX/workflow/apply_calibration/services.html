@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.apply_calibration.services &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.workflow.apply_calibration.services &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -512,13 +512,14 @@
 <span></span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">io</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.fluorescence</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_legacy_calibration_to_series</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.fluorescence</span><span class="w"> </span><span class="kn">import</span> <span class="n">FluorescenceCalibration</span><span class="p">,</span> <span class="n">apply_legacy_calibration_to_series</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.payload</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationPayload</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.scattering</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
     <span class="n">apply_scattering_calibration_to_dataframe</span><span class="p">,</span>
     <span class="n">build_scattering_output_columns</span><span class="p">,</span>
-    <span class="n">calibration_is_scattering_v2</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
@@ -569,9 +570,6 @@
 
 
 
-<span class="n">APPLIED_OUTPUT_CHANNEL_NAME_KEY</span> <span class="o">=</span> <span class="s2">"applied_output_channel_name"</span>
-
-
 <div class="viewcode-block" id="apply_calibration_to_fcs_files">
 <a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.services.apply_calibration_to_fcs_files">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">apply_calibration_to_fcs_files</span><span class="p">(</span>
@@ -592,7 +590,7 @@
     <span class="n">calibration_descriptions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">source_channels_seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="n">unresolved_calibration_applications</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">CalibrationApplication</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unresolved_calibration_applications</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">CalibrationApplication</span><span class="p">,</span> <span class="n">CalibrationPayload</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">calibration_application</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">calibrations</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">calibration_application</span><span class="o">.</span><span class="n">selected_calibration</span><span class="p">:</span>
@@ -604,10 +602,15 @@
         <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Uploaded calibration payload is missing."</span><span class="p">)</span>
 
-        <span class="n">calibration_payload</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">)</span>
-        <span class="n">source_channel</span> <span class="o">=</span> <span class="n">resolve_source_channel</span><span class="p">(</span>
-            <span class="n">calibration_payload</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">calibration</span> <span class="o">=</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">calibration</span><span class="o">.</span><span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span>
+            <span class="ow">and</span> <span class="n">calibration</span><span class="o">.</span><span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">calibration</span><span class="o">.</span><span class="n">saved_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Scattering calibration version must be an integer."</span><span class="p">)</span>
+
+        <span class="n">source_channel</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">source_channel</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">source_channel</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Calibration payload is missing "source_channel".'</span><span class="p">)</span>
@@ -624,28 +627,19 @@
             <span class="n">source_channel</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">is_scattering</span> <span class="o">=</span> <span class="n">calibration_is_scattering_v2</span><span class="p">(</span>
-            <span class="n">calibration_payload</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">unresolved_calibration_applications</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="n">calibration_application</span><span class="p">,</span>
-                <span class="n">source_channel</span><span class="p">,</span>
-                <span class="n">is_scattering</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">unresolved_calibration_applications</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">calibration_application</span><span class="p">,</span> <span class="n">calibration</span><span class="p">))</span>
 
     <span class="n">input_export_columns</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">build_input_export_columns</span><span class="p">(</span>
         <span class="n">source_channels</span><span class="o">=</span><span class="n">input_source_channels</span><span class="p">,</span>
         <span class="n">export_columns</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">export_columns</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">calibration_applications</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">CalibrationApplication</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">transformer_factories</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">reserved_output_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">input_export_columns</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">calibration_application</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span> <span class="n">is_scattering</span> <span class="ow">in</span> <span class="n">unresolved_calibration_applications</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">is_scattering</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">calibration_application</span><span class="p">,</span> <span class="n">calibration</span> <span class="ow">in</span> <span class="n">unresolved_calibration_applications</span><span class="p">:</span>
+        <span class="n">source_channel</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">source_channel</span>
+        <span class="k">if</span> <span class="n">calibration</span><span class="o">.</span><span class="n">is_scattering_v2</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">calibration_application</span><span class="o">.</span><span class="n">scattering_target_model_parameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">"Scattering target model parameters are required for scattering calibration."</span>
@@ -656,10 +650,7 @@
             <span class="p">)</span>
             <span class="n">resolved_output_channels</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">resolve_unique_output_channel_name</span><span class="p">(</span>
-                    <span class="n">preferred_name</span><span class="o">=</span><span class="n">resolve_requested_output_channel_name</span><span class="p">(</span>
-                        <span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">,</span>
-                        <span class="n">default</span><span class="o">=</span><span class="n">default_output_columns</span><span class="o">.</span><span class="n">mie_equivalent_diameter_nm</span><span class="p">,</span>
-                    <span class="p">),</span>
+                    <span class="n">preferred_name</span><span class="o">=</span><span class="n">calibration</span><span class="o">.</span><span class="n">output_channel_name</span> <span class="ow">or</span> <span class="n">default_output_columns</span><span class="o">.</span><span class="n">mie_equivalent_diameter_nm</span><span class="p">,</span>
                     <span class="n">reserved_names</span><span class="o">=</span><span class="n">reserved_output_names</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
                         <span class="p">{</span>
                             <span class="n">default_output_columns</span><span class="o">.</span><span class="n">estimated_coupling</span><span class="p">,</span>
@@ -670,10 +661,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">resolved_output_channels</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">resolve_unique_output_channel_name</span><span class="p">(</span>
-                    <span class="n">preferred_name</span><span class="o">=</span><span class="n">resolve_requested_output_channel_name</span><span class="p">(</span>
-                        <span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">,</span>
-                        <span class="n">default</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
-                    <span class="p">),</span>
+                    <span class="n">preferred_name</span><span class="o">=</span><span class="n">calibration</span><span class="o">.</span><span class="n">output_channel_name</span> <span class="ow">or</span> <span class="n">source_channel</span><span class="p">,</span>
                     <span class="n">reserved_names</span><span class="o">=</span><span class="n">reserved_output_names</span><span class="p">,</span>
                 <span class="p">),</span>
             <span class="p">]</span>
@@ -689,19 +677,18 @@
         <span class="n">calibration_descriptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">selected_calibration</span><span class="si">}</span><span class="s1"> -&gt; "</span><span class="si">{</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resolved_output_channels</span><span class="p">)</span><span class="si">}</span><span class="s1">"'</span>
         <span class="p">)</span>
-        <span class="n">calibration_applications</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="n">calibration_application</span><span class="p">,</span>
-                <span class="n">source_channel</span><span class="p">,</span>
-                <span class="n">is_scattering</span><span class="p">,</span>
-                <span class="n">resolved_output_channels</span><span class="p">,</span>
+        <span class="n">transformer_factories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">_build_calibration_transformer_factory</span><span class="p">(</span>
+                <span class="n">application</span><span class="o">=</span><span class="n">calibration_application</span><span class="p">,</span>
+                <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
+                <span class="n">is_scattering</span><span class="o">=</span><span class="n">calibration</span><span class="o">.</span><span class="n">is_scattering_v2</span><span class="p">,</span>
+                <span class="n">output_channels</span><span class="o">=</span><span class="n">resolved_output_channels</span><span class="p">,</span>
+                <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration</span><span class="p">,</span>
+                <span class="n">warnings</span><span class="o">=</span><span class="n">warnings</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="n">dataframe_transformer_factory</span> <span class="o">=</span> <span class="n">build_multi_calibration_dataframe_transformer_factory</span><span class="p">(</span>
-        <span class="n">calibration_applications</span><span class="o">=</span><span class="n">calibration_applications</span><span class="p">,</span>
-        <span class="n">warnings</span><span class="o">=</span><span class="n">warnings</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">dataframe_transformer_factory</span> <span class="o">=</span> <span class="n">_combine_transformer_factories</span><span class="p">(</span><span class="n">transformer_factories</span><span class="o">=</span><span class="n">transformer_factories</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">uploaded_fcs_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">uploaded_fcs_path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">uploaded_fcs_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -765,38 +752,52 @@
     <span class="n">calibration_applications</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">CalibrationApplication</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span>
     <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Build one dataframe transformer factory that applies all calibrations in sequence.</span>
-<span class="sd">    """</span>
+<span class="w">    </span><span class="sd">"""Build one dataframe transformer factory that applies calibrations in sequence."""</span>
+    <span class="k">return</span> <span class="n">_combine_transformer_factories</span><span class="p">(</span>
+        <span class="n">transformer_factories</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">_build_calibration_transformer_factory</span><span class="p">(</span>
+                <span class="n">application</span><span class="o">=</span><span class="n">application</span><span class="p">,</span> <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">is_scattering</span><span class="o">=</span><span class="n">is_scattering</span><span class="p">,</span>
+                <span class="n">output_channels</span><span class="o">=</span><span class="n">output_channels</span><span class="p">,</span> <span class="n">calibration_payload</span><span class="o">=</span><span class="n">application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">,</span>
+                <span class="n">warnings</span><span class="o">=</span><span class="n">warnings</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">application</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span> <span class="n">is_scattering</span><span class="p">,</span> <span class="n">output_channels</span> <span class="ow">in</span> <span class="n">calibration_applications</span>
+        <span class="p">],</span>
+    <span class="p">)</span></div>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe_transformer_factory</span><span class="p">(</span>
-        <span class="n">uploaded_fcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="n">individual_transformers</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">calibration_application</span><span class="p">,</span> <span class="n">source_channel</span><span class="p">,</span> <span class="n">is_scattering</span><span class="p">,</span> <span class="n">resolved_output_channels</span> <span class="ow">in</span> <span class="n">calibration_applications</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">is_scattering</span><span class="p">:</span>
-                <span class="n">individual_transformers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">build_scattering_dataframe_transformer_factory</span><span class="p">(</span>
-                        <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
-                        <span class="n">output_channel_names</span><span class="o">=</span><span class="n">resolved_output_channels</span><span class="p">,</span>
-                        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">,</span>
-                        <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">scattering_target_model_parameters</span><span class="p">,</span>
-                    <span class="p">)(</span>
-                        <span class="n">uploaded_fcs_path</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">individual_transformers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">build_legacy_dataframe_transformer_factory</span><span class="p">(</span>
-                        <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
-                        <span class="n">output_channel_name</span><span class="o">=</span><span class="n">resolved_output_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_application</span><span class="o">.</span><span class="n">calibration_payload</span><span class="p">,</span>
-                        <span class="n">warnings</span><span class="o">=</span><span class="n">warnings</span><span class="p">,</span>
-                    <span class="p">)(</span>
-                        <span class="n">uploaded_fcs_path</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_calibration_transformer_factory</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">application</span><span class="p">:</span> <span class="n">CalibrationApplication</span><span class="p">,</span>
+    <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">is_scattering</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">output_channels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">CalibrationPayload</span><span class="p">,</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Build the per-file transformer for one calibration and its output names."""</span>
+    <span class="k">if</span> <span class="n">is_scattering</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">build_scattering_dataframe_transformer_factory</span><span class="p">(</span>
+            <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">output_channel_names</span><span class="o">=</span><span class="n">output_channels</span><span class="p">,</span>
+            <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span>
+            <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">application</span><span class="o">.</span><span class="n">scattering_target_model_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="n">CalibrationPayload</span><span class="p">):</span>
+        <span class="n">calibration_payload</span> <span class="o">=</span> <span class="n">FluorescenceCalibration</span><span class="o">.</span><span class="n">from_payload</span><span class="p">(</span><span class="n">payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="o">.</span><span class="n">saved_payload</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">build_legacy_dataframe_transformer_factory</span><span class="p">(</span>
+        <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span> <span class="n">output_channel_name</span><span class="o">=</span><span class="n">output_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="n">warnings</span><span class="o">=</span><span class="n">warnings</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_combine_transformer_factories</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">transformer_factories</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Create one per-file transformer by composing the calibration transforms."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataframe_transformer_factory</span><span class="p">(</span><span class="n">uploaded_fcs_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">individual_transformers</span> <span class="o">=</span> <span class="p">[</span><span class="n">factory</span><span class="p">(</span><span class="n">uploaded_fcs_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">factory</span> <span class="ow">in</span> <span class="n">transformer_factories</span><span class="p">]</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">dataframe_transformer</span><span class="p">(</span>
             <span class="n">dataframe</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -812,8 +813,7 @@
 
         <span class="k">return</span> <span class="n">dataframe_transformer</span>
 
-    <span class="k">return</span> <span class="n">dataframe_transformer_factory</span></div>
-
+    <span class="k">return</span> <span class="n">dataframe_transformer_factory</span>
 
 
 <div class="viewcode-block" id="build_scattering_dataframe_transformer_factory">
@@ -822,7 +822,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">output_channel_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">CalibrationPayload</span><span class="p">,</span>
     <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -836,8 +836,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    source_channel : str</span>
 <span class="sd">        Detector column to calibrate.</span>
-<span class="sd">    calibration_payload : dict[str, Any]</span>
-<span class="sd">        Loaded calibration JSON payload.</span>
+<span class="sd">    calibration_payload : dict[str, Any] or CalibrationPayload</span>
+<span class="sd">        Saved calibration data or its normalized representation for this run.</span>
 <span class="sd">    target_model_parameters : ScatteringTargetModelParameters</span>
 <span class="sd">        Target Mie model parameters for the scattering conversion.</span>
 
@@ -907,7 +907,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">output_channel_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">FluorescenceCalibration</span><span class="p">,</span>
     <span class="n">warnings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -920,8 +920,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    source_channel : str</span>
 <span class="sd">        Detector column to calibrate.</span>
-<span class="sd">    calibration_payload : dict[str, Any]</span>
-<span class="sd">        Loaded calibration JSON payload.</span>
+<span class="sd">    calibration_payload : dict[str, Any] or FluorescenceCalibration</span>
+<span class="sd">        Saved calibration data or the parsed fluorescence transformation.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1020,35 +1020,7 @@
 <span class="sd">    str</span>
 <span class="sd">        Source channel name, or an empty string when not found.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">""</span>
-
-    <span class="n">source_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"source_channel"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">source_channel</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">source_channel</span>
-
-    <span class="n">instrument_response</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"instrument_response"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instrument_response</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">measured_channel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-            <span class="n">instrument_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="s2">"measured_channel"</span><span class="p">,</span>
-                <span class="s2">""</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">measured_channel</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">measured_channel</span>
-
-    <span class="k">return</span> <span class="s2">""</span></div>
+    <span class="k">return</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span><span class="o">.</span><span class="n">source_channel</span></div>
 
 
 
@@ -1062,20 +1034,8 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Resolve the preferred applied output channel short name from a calibration payload.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">preferred_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">APPLIED_OUTPUT_CHANNEL_NAME_KEY</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">preferred_name</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">preferred_name</span>
-
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+    <span class="n">preferred_name</span> <span class="o">=</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span><span class="o">.</span><span class="n">output_channel_name</span>
+    <span class="k">return</span> <span class="n">preferred_name</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">default</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 
 

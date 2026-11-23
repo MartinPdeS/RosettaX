@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.apply_calibration.fluorescence &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.workflow.apply_calibration.fluorescence &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -509,9 +509,71 @@
                 <article class="bd-article">
                   
   <h1>Source code for RosettaX.workflow.apply_calibration.fluorescence</h1><div class="highlight"><pre>
-<span></span>
+<span></span><span class="sd">"""Apply saved fluorescence calibration models to detector measurements."""</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="FluorescenceCalibration">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FluorescenceCalibration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A linear calibration or a power law when a prefactor is present."""</span>
+
+    <span class="n">slope</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">intercept</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">prefactor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="FluorescenceCalibration.from_payload">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_payload">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_payload</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"FluorescenceCalibration"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resolve the coefficients of a saved log, slope, or scale model."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Calibration payload must be a dictionary."</span><span class="p">)</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parameters"</span><span class="p">)</span>
+        <span class="n">nested_payload</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"payload"</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">nested_payload</span> <span class="o">=</span> <span class="n">nested_payload</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nested_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fit_model"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">nested_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">"log10(y)=slope*log10(x)+intercept"</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_log_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">nested_payload</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slope"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intercept"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"slope"</span><span class="p">]),</span> <span class="n">intercept</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"intercept"</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scale"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"scale"</span><span class="p">]),</span> <span class="n">intercept</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"offset"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Unsupported calibration payload format. Expected a log model, "</span>
+            <span class="s1">'"slope"/"intercept", or "scale"/"offset".'</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluorescenceCalibration.from_log_parameters">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_log_parameters">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_log_parameters</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FluorescenceCalibration"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resolve log coefficients using the nested payload as a legacy fallback."""</span>
+        <span class="n">slope</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slope"</span><span class="p">,</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"slope"</span><span class="p">))</span>
+        <span class="n">intercept</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intercept"</span><span class="p">,</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intercept"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">slope</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">intercept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Log calibration payload is missing slope or intercept."</span><span class="p">)</span>
+
+        <span class="n">prefactor</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prefactor"</span><span class="p">,</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prefactor"</span><span class="p">))</span>
+        <span class="n">intercept</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">intercept</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">slope</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">slope</span><span class="p">),</span>
+            <span class="n">intercept</span><span class="o">=</span><span class="n">intercept</span><span class="p">,</span>
+            <span class="n">prefactor</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">prefactor</span><span class="p">)</span> <span class="k">if</span> <span class="n">prefactor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">10.0</span> <span class="o">**</span> <span class="n">intercept</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="apply_legacy_calibration_to_series">
@@ -519,171 +581,21 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">apply_legacy_calibration_to_series</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">FluorescenceCalibration</span><span class="p">,</span>
     <span class="n">warning_messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Apply a legacy fluorescence or simple linear calibration payload.</span>
-
-<span class="sd">    Supported schemas</span>
-<span class="sd">    -----------------</span>
-<span class="sd">    - log10(y)=slope*log10(x)+intercept</span>
-<span class="sd">    - top level slope/intercept</span>
-<span class="sd">    - top level scale/offset</span>
-<span class="sd">    """</span>
-    <span class="n">values_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-        <span class="n">values</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+<span class="w">    </span><span class="sd">"""Apply a saved log or linear fluorescence model to an array of detector values."""</span>
+    <span class="n">calibration</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">calibration_payload</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="n">FluorescenceCalibration</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">FluorescenceCalibration</span><span class="o">.</span><span class="n">from_payload</span><span class="p">(</span><span class="n">payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span>
     <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Calibration payload must be a dictionary."</span><span class="p">)</span>
-
-    <span class="n">nested_parameters</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"parameters"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nested_parameters</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">nested_parameters</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="n">nested_payload</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"payload"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nested_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">nested_payload</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="n">fit_model</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"fit_model"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">nested_model</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">nested_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"model"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">resolved_model</span> <span class="o">=</span> <span class="n">fit_model</span> <span class="ow">or</span> <span class="n">nested_model</span>
-
-    <span class="k">if</span> <span class="s2">"log10(y)=slope*log10(x)+intercept"</span> <span class="ow">in</span> <span class="n">resolved_model</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">apply_log_calibration_to_series</span><span class="p">(</span>
-            <span class="n">values</span><span class="o">=</span><span class="n">values_array</span><span class="p">,</span>
-            <span class="n">nested_parameters</span><span class="o">=</span><span class="n">nested_parameters</span><span class="p">,</span>
-            <span class="n">nested_payload</span><span class="o">=</span><span class="n">nested_payload</span><span class="p">,</span>
-            <span class="n">warning_messages</span><span class="o">=</span><span class="n">warning_messages</span><span class="p">,</span>
-            <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="n">top_level_slope</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"slope"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">top_level_intercept</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"intercept"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">top_level_slope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">top_level_intercept</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">slope</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-            <span class="n">top_level_slope</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">intercept</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-            <span class="n">top_level_intercept</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">values_array</span> <span class="o">+</span> <span class="n">intercept</span>
-
-    <span class="n">top_level_scale</span> <span class="o">=</span> <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"scale"</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">top_level_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-            <span class="n">top_level_scale</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-            <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                <span class="s2">"offset"</span><span class="p">,</span>
-                <span class="mf">0.0</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">values_array</span> <span class="o">+</span> <span class="n">offset</span>
-
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"Unsupported calibration payload format. Expected a log model, "</span>
-            <span class="s1">'"slope"/"intercept", or "scale"/"offset".'</span>
-    <span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="apply_log_calibration_to_series">
-<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_log_calibration_to_series</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">nested_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="n">nested_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="n">warning_messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Apply a log power law calibration.</span>
-<span class="sd">    """</span>
-    <span class="n">values_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-        <span class="n">values</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">slope_value</span> <span class="o">=</span> <span class="n">nested_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"slope"</span><span class="p">,</span>
-        <span class="n">nested_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"slope"</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="n">intercept_value</span> <span class="o">=</span> <span class="n">nested_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"intercept"</span><span class="p">,</span>
-        <span class="n">nested_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"intercept"</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="n">prefactor_value</span> <span class="o">=</span> <span class="n">nested_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">"prefactor"</span><span class="p">,</span>
-        <span class="n">nested_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"prefactor"</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">slope_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">intercept_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"Log calibration payload is missing slope or intercept."</span>
-        <span class="p">)</span>
-
-    <span class="n">slope</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-        <span class="n">slope_value</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">intercept</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
-        <span class="n">intercept_value</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">prefactor</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="nb">float</span><span class="p">(</span>
-            <span class="n">prefactor_value</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">prefactor_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="k">else</span> <span class="nb">float</span><span class="p">(</span>
-            <span class="mi">10</span> <span class="o">**</span> <span class="n">intercept</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
+    <span class="n">values_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">prefactor</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">prefactor</span>
+    <span class="n">slope</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">slope</span>
+    <span class="k">if</span> <span class="n">prefactor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">slope</span> <span class="o">*</span> <span class="n">values_array</span> <span class="o">+</span> <span class="n">calibration</span><span class="o">.</span><span class="n">intercept</span>
 
     <span class="n">negative_mask</span> <span class="o">=</span> <span class="n">values_array</span> <span class="o">&lt;</span> <span class="mi">0</span>
 
@@ -717,6 +629,29 @@
     <span class="n">calibrated_values</span><span class="p">[</span><span class="o">~</span><span class="n">positive_mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
 
     <span class="k">return</span> <span class="n">calibrated_values</span></div>
+
+
+
+
+<div class="viewcode-block" id="apply_log_calibration_to_series">
+<a class="viewcode-back" href="../../../../api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.apply_log_calibration_to_series">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_log_calibration_to_series</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">nested_parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">nested_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">warning_messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Apply a log power law from saved coefficients to an array of detector values."""</span>
+    <span class="k">return</span> <span class="n">apply_legacy_calibration_to_series</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">FluorescenceCalibration</span><span class="o">.</span><span class="n">from_log_parameters</span><span class="p">(</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">nested_parameters</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">nested_payload</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">warning_messages</span><span class="o">=</span><span class="n">warning_messages</span><span class="p">,</span>
+        <span class="n">source_channel</span><span class="o">=</span><span class="n">source_channel</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 </pre></div>
 

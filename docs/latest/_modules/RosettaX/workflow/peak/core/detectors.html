@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.peak.core.detectors &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.workflow.peak.core.detectors &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -510,22 +510,21 @@
                   
   <h1>Source code for RosettaX.workflow.peak.core.detectors</h1><div class="highlight"><pre>
 <span></span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.fcs_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSMetadata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCSFile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.utils.runtime_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">RosettaX.workflow.detector.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">INSTRUMENT_CATALOG_PATH</span><span class="p">,</span>
+    <span class="n">load_instrument_catalog</span><span class="p">,</span>
+    <span class="n">load_instrument_rules</span><span class="p">,</span>
+    <span class="n">match_instrument_rule</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="s2">"detector"</span> <span class="o">/</span> <span class="p">(</span>
-    <span class="s2">"detector_auto_detect_rules.json"</span>
-<span class="p">)</span>
-<span class="c1"># Keep the shared channel catalog independent of test overrides for instrument rules.</span>
-<span class="n">CHANNEL_CATALOG_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="s2">"detector"</span> <span class="o">/</span> <span class="s2">"detector_auto_detect_rules.json"</span>
+<span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span> <span class="o">=</span> <span class="n">INSTRUMENT_CATALOG_PATH</span>
 
 
 <div class="viewcode-block" id="load_channel_catalog">
@@ -539,9 +538,9 @@
 <span class="sd">        Catalog entries, or an empty dictionary if the resource is unavailable.</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">CHANNEL_CATALOG_PATH</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">load_instrument_catalog</span><span class="p">()</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Could not load channel catalog from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">CHANNEL_CATALOG_PATH</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Could not load channel catalog from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">INSTRUMENT_CATALOG_PATH</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{}</span>
     <span class="n">catalog</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"channel_names"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
     <span class="k">return</span> <span class="n">catalog</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span></div>
@@ -693,36 +692,6 @@
 
     <span class="n">resolved_options</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">resolved_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">rosetta_scattering_index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-        <span class="p">(</span>
-            <span class="n">index</span>
-            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">detector_dropdown_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">detector_dropdown_ids</span> <span class="ow">or</span> <span class="p">[])</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">detector_dropdown_id</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">detector_dropdown_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"process"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Rosetta Script"</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="p">(</span>
-                <span class="n">auto_select_process_name</span> <span class="ow">is</span> <span class="kc">None</span>
-                <span class="ow">or</span> <span class="n">detector_dropdown_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"process"</span><span class="p">)</span> <span class="o">==</span> <span class="n">auto_select_process_name</span>
-            <span class="p">)</span>
-            <span class="ow">and</span> <span class="n">detector_dropdown_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"channel"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"scattering"</span>
-        <span class="p">),</span>
-        <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">selected_scattering_channel</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">rosetta_scattering_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">current_scattering_channel</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_detector_values</span> <span class="ow">or</span> <span class="p">[])[</span><span class="n">rosetta_scattering_index</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">auto_select_rosetta_v1</span> <span class="ow">or</span> <span class="n">current_scattering_channel</span> <span class="ow">in</span> <span class="n">valid_values</span><span class="p">:</span>
-            <span class="n">selected_scattering_channel</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">infer_rosetta_v1_channel</span><span class="p">(</span>
-                    <span class="n">column_names</span><span class="o">=</span><span class="n">column_names</span><span class="p">,</span>
-                    <span class="n">detector_role</span><span class="o">=</span><span class="s2">"scattering"</span><span class="p">,</span>
-                    <span class="n">matched_rule</span><span class="o">=</span><span class="n">matched_rule</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">auto_select_rosetta_v1</span>
-                <span class="k">else</span> <span class="n">current_scattering_channel</span>
-            <span class="p">)</span>
-    <span class="n">scattering_wavelength_nm</span> <span class="o">=</span> <span class="n">extract_channel_wavelength_nm</span><span class="p">(</span>
-        <span class="n">channel_name</span><span class="o">=</span><span class="n">selected_scattering_channel</span><span class="p">,</span>
-    <span class="p">)</span>
 
     <span class="k">for</span> <span class="n">detector_dropdown_id</span><span class="p">,</span> <span class="n">current_value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
         <span class="n">detector_dropdown_ids</span> <span class="ow">or</span> <span class="p">[],</span>
@@ -755,11 +724,6 @@
                 <span class="n">infer_rosetta_v1_channel</span><span class="p">(</span>
                     <span class="n">column_names</span><span class="o">=</span><span class="n">column_names</span><span class="p">,</span>
                     <span class="n">detector_role</span><span class="o">=</span><span class="n">detector_role</span><span class="p">,</span>
-                    <span class="n">preferred_wavelength_nm</span><span class="o">=</span><span class="p">(</span>
-                        <span class="n">scattering_wavelength_nm</span>
-                        <span class="k">if</span> <span class="n">detector_role</span> <span class="o">==</span> <span class="s2">"green_fluorescence"</span>
-                        <span class="k">else</span> <span class="kc">None</span>
-                    <span class="p">),</span>
                     <span class="n">matched_rule</span><span class="o">=</span><span class="n">matched_rule</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">auto_select_this_process</span>
@@ -793,155 +757,37 @@
 
 
 
-<div class="viewcode-block" id="resolve_rosetta_v1_suggestion">
-<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_rosetta_v1_suggestion">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">resolve_rosetta_v1_suggestion</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">column_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">detector_role</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">preferred_wavelength_nm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">matched_rule</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Suggest a channel and explain the match or ambiguity.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    column_names : list[str]</span>
-<span class="sd">        Available FCS channels.</span>
-<span class="sd">    detector_role : Any</span>
-<span class="sd">        Scattering or green fluorescence role.</span>
-<span class="sd">    preferred_wavelength_nm : int or None</span>
-<span class="sd">        Preferred excitation wavelength, in nanometers.</span>
-<span class="sd">    matched_rule : dict or None</span>
-<span class="sd">        Instrument-specific preferences from the detector catalog.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple[str or None, str]</span>
-<span class="sd">        Suggested channel and explanation for the user.</span>
-<span class="sd">    """</span>
-    <span class="n">catalog</span> <span class="o">=</span> <span class="n">load_channel_catalog</span><span class="p">()</span>
-    <span class="n">role_aliases</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"role_aliases"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">detector_role</span><span class="p">,</span> <span class="p">[</span><span class="n">detector_role</span><span class="p">])</span>
-    <span class="n">channel_rules</span> <span class="o">=</span> <span class="p">(</span><span class="n">matched_rule</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"detector_channels"</span><span class="p">,</span> <span class="p">{})</span>
-    <span class="n">aliases</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">channel_rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">role_aliases</span> <span class="k">if</span> <span class="n">channel_rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">)),</span> <span class="p">[])</span>
-    <span class="n">instrument_matches</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">column_names</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="k">for</span> <span class="n">alias</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">)</span>
-    <span class="p">]</span>
-    <span class="n">instrument_matches</span> <span class="o">=</span> <span class="n">_prefer_channel_measurement</span><span class="p">(</span>
-        <span class="n">channel_names</span><span class="o">=</span><span class="n">instrument_matches</span><span class="p">,</span>
-        <span class="n">suffix</span><span class="o">=</span><span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preferred_pulse_measurement_suffix"</span><span class="p">,</span> <span class="s2">"-H"</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instrument_matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">instrument_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Suggested </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> from instrument rule </span><span class="si">{</span><span class="n">matched_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'name'</span><span class="p">,</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
-
-    <span class="n">keywords</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rosetta_keywords"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">detector_role</span><span class="p">,</span> <span class="p">())</span>
-    <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">column_names</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">keyword</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">)]</span>
-    <span class="k">if</span> <span class="n">detector_role</span> <span class="o">==</span> <span class="s2">"green_fluorescence"</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
-            <span class="n">filter_matches</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">filter_rule</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"green_filter"</span><span class="p">,</span> <span class="p">{})</span>
-            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">column_names</span><span class="p">:</span>
-                <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">filter_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pattern"</span><span class="p">,</span> <span class="sa">r</span><span class="s2">"(?!)"</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">filter_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"minimum_wavelength_nm"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">filter_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"maximum_wavelength_nm"</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-                    <span class="n">filter_matches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()))</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">base</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">filter_matches</span><span class="p">})</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">preferred_matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">measurement</span> <span class="ow">in</span> <span class="n">filter_matches</span> <span class="k">if</span> <span class="n">measurement</span> <span class="o">==</span> <span class="n">filter_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preferred_measurement"</span><span class="p">)]</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">preferred_matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">preferred_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"Suggested </span><span class="si">{</span><span class="n">preferred_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> from its blue-laser green emission filter; height was preferred."</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filter_matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">name</span> <span class="o">=</span> <span class="n">filter_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Suggested </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> from its blue-laser green emission filter."</span>
-            <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">filter_matches</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Multiple green filter measurements match: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">. Select one manually."</span>
-        <span class="n">wavelength_matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">extract_channel_wavelength_nm</span><span class="p">(</span><span class="n">channel_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="n">preferred_wavelength_nm</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">preferred_wavelength_nm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wavelength_matches</span><span class="p">:</span>
-            <span class="n">matches</span> <span class="o">=</span> <span class="n">wavelength_matches</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">preferred_wavelength</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preferred_green_wavelength_nm"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-            <span class="n">preferred</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">preferred_wavelength</span> <span class="ow">and</span> <span class="n">preferred_wavelength</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
-            <span class="k">if</span> <span class="n">preferred</span><span class="p">:</span>
-                <span class="n">matches</span> <span class="o">=</span> <span class="n">preferred</span>
-
-    <span class="n">measurement_token</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preferred_measurement_token"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-    <span class="n">peak_matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">matches</span> <span class="k">if</span> <span class="n">measurement_token</span> <span class="ow">and</span> <span class="n">measurement_token</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
-    <span class="k">if</span> <span class="n">peak_matches</span><span class="p">:</span>
-        <span class="n">matches</span> <span class="o">=</span> <span class="n">peak_matches</span>
-    <span class="n">matches</span> <span class="o">=</span> <span class="n">_prefer_channel_measurement</span><span class="p">(</span>
-        <span class="n">channel_names</span><span class="o">=</span><span class="n">matches</span><span class="p">,</span>
-        <span class="n">suffix</span><span class="o">=</span><span class="n">catalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"preferred_pulse_measurement_suffix"</span><span class="p">,</span> <span class="s2">"-H"</span><span class="p">),</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"Suggested </span><span class="si">{</span><span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> from its channel name and measurement."</span>
-    <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Multiple channels match: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">. Select one manually."</span>
-    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"No matching channel name was found. Select one manually."</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_prefer_channel_measurement</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">channel_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Prefer one pulse measurement suffix when matching channels include it."""</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">suffix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">channel_names</span>
-    <span class="n">preferred</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">channel_names</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">suffix</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">())]</span>
-    <span class="k">return</span> <span class="n">preferred</span> <span class="ow">or</span> <span class="n">channel_names</span>
-
-
 <div class="viewcode-block" id="infer_rosetta_v1_channel">
 <a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.peak.core.detectors.infer_rosetta_v1_channel">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">infer_rosetta_v1_channel</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">detector_role</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">preferred_wavelength_nm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">matched_rule</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return a Rosetta channel suggestion, leaving ambiguous matches unset.</span>
+<span class="w">    </span><span class="sd">"""Resolve a catalog recommendation against the uploaded FCS columns.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    column_names : list[str]</span>
-<span class="sd">        Available FCS channels.</span>
-<span class="sd">    detector_role : Any</span>
+<span class="sd">    column_names : list of str</span>
+<span class="sd">        Available FCS columns.</span>
+<span class="sd">    detector_role : str</span>
 <span class="sd">        Scattering or green fluorescence role.</span>
-<span class="sd">    preferred_wavelength_nm : int or None</span>
-<span class="sd">        Preferred excitation wavelength, in nanometers.</span>
 <span class="sd">    matched_rule : dict or None</span>
-<span class="sd">        Optional instrument-specific preferences.</span>
+<span class="sd">        Instrument rule resolved from the FCS metadata.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    str or None</span>
-<span class="sd">        Suggested channel when the catalog resolves a unique match.</span>
+<span class="sd">        First configured name with a unique case-insensitive match, or None</span>
+<span class="sd">        when the role needs manual selection.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">resolve_rosetta_v1_suggestion</span><span class="p">(</span>
-        <span class="n">column_names</span><span class="o">=</span><span class="n">column_names</span><span class="p">,</span>
-        <span class="n">detector_role</span><span class="o">=</span><span class="n">detector_role</span><span class="p">,</span>
-        <span class="n">preferred_wavelength_nm</span><span class="o">=</span><span class="n">preferred_wavelength_nm</span><span class="p">,</span>
-        <span class="n">matched_rule</span><span class="o">=</span><span class="n">matched_rule</span><span class="p">,</span>
-    <span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
-
-
-
-<div class="viewcode-block" id="extract_channel_wavelength_nm">
-<a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">extract_channel_wavelength_nm</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">channel_name</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Extract a three-digit wavelength from an FCS channel name.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    channel_name : Any</span>
-<span class="sd">        Candidate FCS channel name.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    int or None</span>
-<span class="sd">        Wavelength in nanometers when encoded in the channel name.</span>
-<span class="sd">    """</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;!\d)(\d</span><span class="si">{3}</span><span class="s2">)(?!\d)"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">channel_name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span></div>
+    <span class="n">recommendations</span> <span class="o">=</span> <span class="p">(</span><span class="n">matched_rule</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rosetta_channels"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">detector_role</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">recommendation</span> <span class="ow">in</span> <span class="n">recommendations</span><span class="p">:</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">column_names</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">casefold</span><span class="p">()</span> <span class="o">==</span> <span class="n">recommendation</span><span class="o">.</span><span class="n">casefold</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
 
 
 
@@ -1113,44 +959,10 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Resolve one detector auto-detect rule from FCS instrument metadata.</span>
 <span class="sd">    """</span>
-    <span class="n">instrument_name</span> <span class="o">=</span> <span class="n">extract_instrument_name_from_metadata</span><span class="p">(</span>
-        <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">instrument_name</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="n">normalized_instrument_name</span> <span class="o">=</span> <span class="n">normalize_lookup_token</span><span class="p">(</span>
-        <span class="n">instrument_name</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">load_detector_auto_detect_rules</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">instrument_alias</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"instrument_aliases"</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="n">normalized_alias</span> <span class="o">=</span> <span class="n">normalize_lookup_token</span><span class="p">(</span>
-                <span class="n">instrument_alias</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_alias</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">normalized_alias</span> <span class="o">==</span> <span class="n">normalized_instrument_name</span>
-                <span class="ow">or</span> <span class="n">normalized_alias</span> <span class="ow">in</span> <span class="n">normalized_instrument_name</span>
-                <span class="ow">or</span> <span class="n">normalized_instrument_name</span> <span class="ow">in</span> <span class="n">normalized_alias</span>
-            <span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="s2">"Matched detector auto-detect rule=</span><span class="si">%r</span><span class="s2"> for instrument_name=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
-                    <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span>
-                    <span class="n">instrument_name</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">rule</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">"No detector auto-detect rule matched instrument_name=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
-        <span class="n">instrument_name</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="kc">None</span></div>
+    <span class="k">return</span> <span class="n">match_instrument_rule</span><span class="p">(</span>
+        <span class="n">instrument_name</span><span class="o">=</span><span class="n">extract_instrument_name_from_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">),</span>
+        <span class="n">rules</span><span class="o">=</span><span class="n">load_detector_auto_detect_rules</span><span class="p">(),</span>
+    <span class="p">)</span></div>
 
 
 
@@ -1215,64 +1027,8 @@
 <div class="viewcode-block" id="load_detector_auto_detect_rules">
 <a class="viewcode-back" href="../../../../../api/workflows.html#RosettaX.workflow.peak.core.detectors.load_detector_auto_detect_rules">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_detector_auto_detect_rules</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Load detector auto-detect rules from the shared JSON file.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">raw_payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span>
-            <span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
-            <span class="s2">"Failed to load detector auto-detect rules from </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-            <span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="n">raw_rules</span> <span class="o">=</span> <span class="n">raw_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rules"</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_rules</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="n">normalized_rules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">raw_rule</span> <span class="ow">in</span> <span class="n">raw_rules</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_rule</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">continue</span>
-
-        <span class="n">instrument_aliases</span> <span class="o">=</span> <span class="n">raw_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"instrument_aliases"</span><span class="p">)</span>
-        <span class="n">detector_channels</span> <span class="o">=</span> <span class="n">raw_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"detector_channels"</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instrument_aliases</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">detector_channels</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">continue</span>
-
-        <span class="n">normalized_rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">"name"</span><span class="p">:</span> <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">raw_rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">))</span> <span class="ow">or</span> <span class="s2">"Unnamed detector rule"</span><span class="p">,</span>
-                <span class="s2">"instrument_aliases"</span><span class="p">:</span> <span class="p">[</span>
-                    <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">instrument_alias</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">instrument_alias</span> <span class="ow">in</span> <span class="n">instrument_aliases</span>
-                    <span class="k">if</span> <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">instrument_alias</span><span class="p">)</span>
-                <span class="p">],</span>
-                <span class="s2">"detector_channels"</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">role_name</span><span class="p">):</span> <span class="p">[</span>
-                        <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">candidate_name</span><span class="p">)</span>
-                        <span class="k">for</span> <span class="n">candidate_name</span> <span class="ow">in</span> <span class="n">candidate_names</span>
-                        <span class="k">if</span> <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">candidate_name</span><span class="p">)</span>
-                    <span class="p">]</span>
-                    <span class="k">for</span> <span class="n">role_name</span><span class="p">,</span> <span class="n">candidate_names</span> <span class="ow">in</span> <span class="n">detector_channels</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">clean_optional_string</span><span class="p">(</span><span class="n">role_name</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-                <span class="p">},</span>
-            <span class="p">}</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">normalized_rules</span></div>
+<span class="w">    </span><span class="sd">"""Load FCS instrument rules from the shared catalog."""</span>
+    <span class="k">return</span> <span class="n">load_instrument_rules</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">DETECTOR_AUTO_DETECT_RULES_PATH</span><span class="p">)</span></div>
 
 
 

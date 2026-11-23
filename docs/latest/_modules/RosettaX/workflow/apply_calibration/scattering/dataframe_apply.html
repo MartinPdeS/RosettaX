@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RosettaX.workflow.apply_calibration.scattering.dataframe_apply &#8212; RosettaX 0.14.1 documentation</title>
+    <title>RosettaX.workflow.apply_calibration.scattering.dataframe_apply &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="../../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../../_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="../../../../../_static/documentation_options.js?v=52d5597a"></script>
     <script src="../../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../../_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="../../../../../_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="../../../../../_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -512,6 +512,7 @@
 <span></span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..payload</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationPayload</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.mie_relation_builder</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_target_mie_relation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ScatteringApplyResult</span><span class="p">,</span>
@@ -533,42 +534,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">calibration_is_scattering_v2</span><span class="p">(</span>
     <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return whether the payload is a scattering version 2 calibration.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">"calibration_is_scattering_v2 returning False because payload is not a dict. "</span>
-            <span class="s2">"payload_type=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-            <span class="nb">type</span><span class="p">(</span><span class="n">calibration_payload</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="n">calibration_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"calibration_type"</span><span class="p">,</span>
-            <span class="s2">""</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-    <span class="n">calibration_version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">"version"</span><span class="p">,</span>
-            <span class="mi">0</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="ow">or</span> <span class="mi">0</span>
-    <span class="p">)</span>
-
-    <span class="n">result</span> <span class="o">=</span> <span class="n">calibration_type</span> <span class="o">==</span> <span class="s2">"scattering"</span> <span class="ow">and</span> <span class="n">calibration_version</span> <span class="o">&gt;=</span> <span class="mi">2</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s2">"calibration_is_scattering_v2 calibration_type=</span><span class="si">%r</span><span class="s2"> calibration_version=</span><span class="si">%r</span><span class="s2"> result=</span><span class="si">%r</span><span class="s2">"</span><span class="p">,</span>
-        <span class="n">calibration_type</span><span class="p">,</span>
-        <span class="n">calibration_version</span><span class="p">,</span>
-        <span class="n">result</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">result</span></div>
+<span class="w">    </span><span class="sd">"""Return whether the payload is a scattering version 2 calibration."""</span>
+    <span class="k">return</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span><span class="o">.</span><span class="n">is_scattering_v2</span></div>
 
 
 
@@ -606,7 +573,7 @@
     <span class="n">dataframe</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">source_channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">output_channel_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">calibration_payload</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">CalibrationPayload</span><span class="p">,</span>
     <span class="n">target_model_parameters</span><span class="p">:</span> <span class="n">ScatteringTargetModelParameters</span><span class="p">,</span>
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScatteringApplyResult</span><span class="p">:</span>
@@ -618,9 +585,8 @@
 <span class="sd">    - estimated coupling</span>
 <span class="sd">    - target model Mie equivalent diameter</span>
 
-<span class="sd">    If the full target Mie relation is not strictly monotonic, the widest</span>
-<span class="sd">    strictly monotonic branch is selected automatically. Diameter inversion uses</span>
-<span class="sd">    linear extrapolation outside the selected branch coupling range.</span>
+<span class="sd">    A non-monotonic target uses an approximation based on its leftmost monotonic</span>
+<span class="sd">    branch. Inversion extrapolates linearly outside the resolved coupling range.</span>
 <span class="sd">    """</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="s2">"apply_scattering_calibration_to_dataframe called with source_channel=</span><span class="si">%r</span><span class="s2"> "</span>
@@ -636,18 +602,16 @@
             <span class="sa">f</span><span class="s1">'Source channel "</span><span class="si">{</span><span class="n">source_channel</span><span class="si">}</span><span class="s1">" is missing from the input dataframe.'</span>
         <span class="p">)</span>
 
+    <span class="n">calibration</span> <span class="o">=</span> <span class="n">CalibrationPayload</span><span class="o">.</span><span class="n">from_value</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">)</span>
+    <span class="n">scattering_calibration</span> <span class="o">=</span> <span class="n">calibration</span><span class="o">.</span><span class="n">scattering_calibration</span>
     <span class="n">full_target_mie_relation</span> <span class="o">=</span> <span class="n">build_target_mie_relation</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration_payload</span><span class="p">,</span>
+        <span class="n">calibration_payload</span><span class="o">=</span><span class="n">calibration</span><span class="o">.</span><span class="n">saved_payload</span><span class="p">,</span>
         <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">relation_resolution</span> <span class="o">=</span> <span class="n">resolve_monotonic_target_mie_relation</span><span class="p">(</span>
         <span class="n">target_mie_relation</span><span class="o">=</span><span class="n">full_target_mie_relation</span><span class="p">,</span>
         <span class="n">target_model_parameters</span><span class="o">=</span><span class="n">target_model_parameters</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">scattering_calibration</span> <span class="o">=</span> <span class="n">scattering</span><span class="o">.</span><span class="n">ScatteringCalibration</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-        <span class="n">calibration_payload</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">source_values</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">source_channel</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span>

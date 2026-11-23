@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; RosettaX 0.14.1 documentation</title>
+    <title>Index &#8212; RosettaX 0.15.0 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=9f5afd58"></script>
+    <script src="_static/documentation_options.js?v=52d5597a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/sg-tags.js?v=d80f6fa4"></script>
@@ -53,7 +53,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/MartinPdeS/RosettaX/documentation_page/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.14.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.15.0';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.14.1" />
+  <meta name="docsearch:version" content="0.15.0" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -134,8 +134,8 @@
     
     
     
-    <img src="_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.14.1 documentation - Home"/>
-    <img src="_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.14.1 documentation - Home"/>
+    <img src="_static/logo.svg" class="logo__image only-dark" alt="RosettaX 0.15.0 documentation - Home"/>
+    <img src="_static/logo.svg" class="logo__image only-light pst-js-only" alt="RosettaX 0.15.0 documentation - Home"/>
   
   
 </a></div>
@@ -845,6 +845,8 @@
 </li>
       <li><a href="api/utilities.html#RosettaX.utils.reader.FCSFile.close">close() (FCSFile method)</a>
 </li>
+      <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.coerce_field_value">coerce_field_value() (RuntimeConfig class method)</a>
+</li>
       <li><a href="api/utilities.html#RosettaX.utils.casting.coerce_optional_integer">coerce_optional_integer() (in module RosettaX.utils.casting)</a>
 </li>
       <li><a href="api/utilities.html#RosettaX.utils.casting.coerce_optional_number">coerce_optional_number() (in module RosettaX.utils.casting)</a>
@@ -1125,8 +1127,6 @@
 </li>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.extract_1d_positions_from_peak_payload">extract_1d_positions_from_peak_payload() (in module RosettaX.pages.p02_fluorescence.state)</a>
 </li>
-      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.extract_channel_wavelength_nm">extract_channel_wavelength_nm() (in module RosettaX.workflow.peak.core.detectors)</a>
-</li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.extract_instrument_name_from_metadata">extract_instrument_name_from_metadata() (in module RosettaX.workflow.peak.core.detectors)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.extract_peak_values_from_peak_lines_payload">extract_peak_values_from_peak_lines_payload() (BasePeakWorkflowAdapter method)</a>
@@ -1193,17 +1193,19 @@
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.fit_linear_instrument_response">fit_linear_instrument_response() (in module RosettaX.workflow.scattering.calibration_services)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.fitted_expected_coupling_values_log10">fitted_expected_coupling_values_log10 (ScatteringCalibrationFitResult attribute)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.flatten_datatable_values">flatten_datatable_values() (BasePeakWorkflowAdapter method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_histogram_payload">fluorescence_histogram_payload (FluorescencePageState attribute)</a>
 </li>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_peak_lines">fluorescence_peak_lines (FluorescencePageState attribute)</a>
 </li>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.fluorescence_source_channel">fluorescence_source_channel (FluorescencePageState attribute)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration">FluorescenceCalibration (class in RosettaX.workflow.apply_calibration.fluorescence)</a>
 </li>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState">FluorescencePageState (class in RosettaX.pages.p02_fluorescence.state)</a>
 </li>
@@ -1238,6 +1240,10 @@
 </li>
       </ul></li>
       <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_json_path">from_json_path() (RuntimeConfig class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_log_parameters">from_log_parameters() (FluorescenceCalibration class method)</a>
+</li>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.from_payload">from_payload() (FluorescenceCalibration class method)</a>
 </li>
       <li><a href="api/utilities.html#RosettaX.utils.runtime_config.RuntimeConfig.from_profile_name">from_profile_name() (RuntimeConfig class method)</a>
 </li>
@@ -1385,9 +1391,11 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept">intercept (ScatteringCalibrationFitResult attribute)</a>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.intercept">intercept (FluorescenceCalibration attribute)</a>
 
       <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.intercept">(ScatteringCalibrationFitResult attribute)</a>
+</li>
         <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.intercept">(ScatteringInstrumentResponse attribute)</a>
 </li>
       </ul></li>
@@ -1792,8 +1800,6 @@
         <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.particle_diameters_nm">(ScatteringCalibrationScattererPreset attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.OpticalParameters.particle_refractive_index">particle_refractive_index (OpticalParameters attribute)</a>
 
       <ul>
@@ -1808,6 +1814,8 @@
         <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.scattering.SolidSphereTargetModel.particle_refractive_index">(SolidSphereTargetModel attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.particle_refractive_index_presets">particle_refractive_index_presets (ModelConfiguration attribute)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.particle_refractive_index_source">particle_refractive_index_source (ScatteringCalibrationScattererPreset attribute)</a>
@@ -1822,6 +1830,12 @@
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.ApplyCalibrationFilesResult.payload_bytes">payload_bytes (ApplyCalibrationFilesResult attribute)</a>
 </li>
+      <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.peak_graph_revision">peak_graph_revision (FluorescencePageState attribute)</a>
+
+      <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.state.ScatteringPageState.peak_graph_revision">(ScatteringPageState attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/pages.html#RosettaX.pages.p02_fluorescence.state.FluorescencePageState.peak_lines_payload">peak_lines_payload (FluorescencePageState attribute)</a>
 
       <ul>
@@ -1829,6 +1843,8 @@
 </li>
       </ul></li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.peak_lines_payload_keys">peak_lines_payload_keys (BasePeakWorkflowAdapter attribute)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.state.ScatteringPageState.peak_table_context">peak_table_context (ScatteringPageState attribute)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.peak_table_sort_order_runtime_config_path">peak_table_sort_order_runtime_config_path (BasePeakWorkflowAdapter attribute)</a>
 </li>
@@ -1848,8 +1864,12 @@
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.parameters.table.populate_table_from_runtime_defaults">populate_table_from_runtime_defaults() (in module RosettaX.workflow.parameters.table)</a>
 </li>
-      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor">prefactor (ScatteringCalibrationFitResult attribute)</a>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.prefactor">prefactor (FluorescenceCalibration attribute)</a>
+
+      <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.prefactor">(ScatteringCalibrationFitResult attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/pages.html#RosettaX.pages.p04_calibrate.sections.s04_apply.services.prepare_calibration_export">prepare_calibration_export() (in module RosettaX.pages.p04_calibrate.sections.s04_apply.services)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.mie_relation.prepare_unique_interpolation_grid">prepare_unique_interpolation_grid() (in module RosettaX.workflow.scattering.mie_relation)</a>
@@ -1954,8 +1974,6 @@
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.services.resolve_requested_output_channel_name">resolve_requested_output_channel_name() (in module RosettaX.workflow.apply_calibration.services)</a>
 </li>
-      <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_rosetta_v1_suggestion">resolve_rosetta_v1_suggestion() (in module RosettaX.workflow.peak.core.detectors)</a>
-</li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.core.detectors.resolve_rule_based_detector_channel">resolve_rule_based_detector_channel() (in module RosettaX.workflow.peak.core.detectors)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ModelConfiguration.resolve_runtime_detector_preset">resolve_runtime_detector_preset() (ModelConfiguration static method)</a>
@@ -1983,6 +2001,8 @@
       <li><a href="api/workflows.html#RosettaX.workflow.upload.services.resolve_upload_directory">resolve_upload_directory() (in module RosettaX.workflow.upload.services)</a>
 </li>
       <li><a href="api/workflows.html#RosettaX.workflow.peak.adapters.base.BasePeakWorkflowAdapter.result_has_table_data">result_has_table_data() (BasePeakWorkflowAdapter method)</a>
+</li>
+      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.state.ScatteringPageState.rosetta_assignment_evidence">rosetta_assignment_evidence (ScatteringPageState attribute)</a>
 </li>
       <li>
     RosettaX
@@ -2418,9 +2438,11 @@
         <li><a href="api/workflows.html#RosettaX.workflow.scattering.model.ScatteringCalibrationScattererPreset.shell_thicknesses_nm">(ScatteringCalibrationScattererPreset attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope">slope (ScatteringCalibrationFitResult attribute)</a>
+      <li><a href="api/workflows.html#RosettaX.workflow.apply_calibration.fluorescence.FluorescenceCalibration.slope">slope (FluorescenceCalibration attribute)</a>
 
       <ul>
+        <li><a href="api/pages.html#RosettaX.pages.p03_scattering.backend.ScatteringCalibrationFitResult.slope">(ScatteringCalibrationFitResult attribute)</a>
+</li>
         <li><a href="api/workflows.html#RosettaX.workflow.scattering.calibration_services.ScatteringInstrumentResponse.slope">(ScatteringInstrumentResponse attribute)</a>
 </li>
       </ul></li>

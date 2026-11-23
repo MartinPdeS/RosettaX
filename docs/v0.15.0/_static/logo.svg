@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="490" height="192" viewBox="0 0 490 192" role="img" aria-labelledby="title desc">
+  <title id="title">RosettaX</title>
+  <desc id="desc">Flow-cytometry Calibration</desc>
+  <text x="24" y="123" fill="#292929" font-family="Arial,Helvetica,sans-serif" font-size="110" font-weight="600" letter-spacing="-3" textLength="352" lengthAdjust="spacingAndGlyphs">Rosetta</text>
+  <g transform="translate(377 29) scale(1.38)"><path d="M8 6h12l52 68H60Z" fill="#326bff"/><path d="M60 6h12L48 36l-7-9ZM32 44l7 9-19 21H8Z" fill="#12c4d5"/></g>
+  <text x="245" y="166" text-anchor="middle" fill="#586f85" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="400" textLength="400" lengthAdjust="spacingAndGlyphs">Flow-cytometry Calibration</text>
+  <path d="M45 174H445" stroke="#586f85" stroke-width="1.6"/>
+</svg>
