@@ -47,6 +47,12 @@ def register_graph_callbacks(
         prevent_initial_call=True,
     )
 
+    dash.clientside_callback(
+        "function(trace) { return JSON.stringify(trace?.svg_guides ?? null); }",
+        dash.Output(ids.graph_toggle_container, "data-peak-guides"),
+        dash.Input(ids.event_trace_store, "data"),
+    )
+
     @dash.callback(
         dash.Output(
             ids.graph_hist,
@@ -182,6 +188,27 @@ def register_graph_callbacks(
             page_state=page_state,
         )
 
+        previous_trace, viewport = state_values[-2:]
+        results_only = set(dash.ctx.triggered_prop_ids) == {f"{page_state_store_id}.data"}
+        event_context = None
+        payload = peak_lines_payload if isinstance(peak_lines_payload, dict) else {}
+        if (
+            str(process_name or "").startswith("Rosetta Script")
+            and uploaded_fcs_path
+            and not {"plot_x_values", "plot_y_values"}.intersection(payload)
+        ):
+            event_context = hashlib.sha256(to_json((
+                str(uploaded_fcs_path), process_name, graph_toggle_value, advanced_mode_value,
+                detector_dropdown_ids, detector_dropdown_values, axis_scale_toggle_values,
+                data_filter_value, max_events_for_plots, marker_size, marker_opacity,
+                runtime_config_data, process_setting_ids, process_setting_values,
+                payload.get("rosetta_plot_source"),
+            )).encode("utf-8")).hexdigest()
+        reuse_events = bool(
+            results_only and event_context and previous_trace
+            and previous_trace.get("event_context") == event_context
+        )
+
         backend = adapter.get_backend(
             uploaded_fcs_path=uploaded_fcs_path,
         )
@@ -215,6 +242,7 @@ def register_graph_callbacks(
                 max_events_for_plots=max_events_for_plots,
                 marker_size=marker_size,
                 marker_opacity=marker_opacity,
+                reuse_event_trace=reuse_events,
                 runtime_config_data=runtime_config_data,
             )
 
@@ -239,8 +267,7 @@ def register_graph_callbacks(
                 yscale_selection=axis_scale_toggle_values,
             )
 
-            previous_trace, viewport = state_values[-2:]
-            if set(dash.ctx.triggered_prop_ids) == {f"{page_state_store_id}.data"}:
+            if results_only:
                 preserve_peak_axis_ranges(figure=figure, previous_trace=previous_trace, viewport=viewport)
 
             figure = graphing.add_peak_workflow_post_layout_overlays(
@@ -272,7 +299,13 @@ def register_graph_callbacks(
                     dragmode="select",
                 )
 
-            return build_peak_figure_update(figure=figure, previous_trace=previous_trace)
+            svg_guides = None
+            if event_context is not None:
+                svg_guides = separate_rosetta_guides(figure=figure)
+            return build_peak_figure_update(
+                figure=figure, previous_trace=previous_trace,
+                event_context=event_context, reuse_events=reuse_events, svg_guides=svg_guides,
+            )
 
         except Exception as exc:
             logger.exception(
@@ -315,8 +348,36 @@ def preserve_peak_axis_ranges(
             figure.update_layout({axis_name: {"range": axis_range, "autorange": False}})
 
 
+def separate_rosetta_guides(*, figure: go.Figure) -> dict[str, Any]:
+    """Move axis-spanning lines and size annotations to the browser overlay."""
+    lines = []
+    remaining_shapes = []
+    for shape in figure.layout.shapes:
+        vertical = shape.yref == "y domain" or shape.yref == "paper"
+        horizontal = shape.xref == "x domain" or shape.xref == "paper"
+        if shape.type == "line" and (
+            (vertical and shape.xref == "x" and shape.x0 == shape.x1 and (shape.y0, shape.y1) == (0, 1))
+            or (horizontal and shape.yref == "y" and shape.y0 == shape.y1 and (shape.x0, shape.x1) == (0, 1))
+        ):
+            lines.append(shape.to_plotly_json())
+        else:
+            remaining_shapes.append(shape)
+    annotations = []
+    remaining_annotations = []
+    for annotation in figure.layout.annotations:
+        if annotation.name == "rosetta-size-guide":
+            annotations.append(annotation.to_plotly_json())
+        else:
+            remaining_annotations.append(annotation)
+    figure.layout.shapes = remaining_shapes
+    figure.layout.annotations = remaining_annotations
+    return {"lines": lines, "annotations": annotations, "revision": figure.layout.uirevision}
+
+
 def build_peak_figure_update(
     *, figure: go.Figure, previous_trace: dict[str, Any] | None,
+    event_context: str | None = None, reuse_events: bool = False,
+    svg_guides: dict[str, Any] | None = None,
 ) -> tuple[Any, Any]:
     """Reuse the event trace when its values, styling, and axis context match."""
     if not figure.data or figure.data[0].type != "scattergl" or figure.data[0].name != "Events":
@@ -326,23 +387,33 @@ def build_peak_figure_update(
     events, *overlays = serialized_figure["data"]
     layout = serialized_figure["layout"]
     trace = {
-        "events": hashlib.sha256(to_json(events).encode("utf-8")).hexdigest(),
+        "events": (
+            previous_trace["events"] if reuse_events and previous_trace
+            else hashlib.sha256(to_json(events).encode("utf-8")).hexdigest()
+        ),
         "revision": figure.layout.uirevision,
     }
     matching_events = previous_trace is not None and all(
         previous_trace.get(key) == value for key, value in trace.items()
     )
+    if event_context is not None:
+        trace["event_context"] = event_context
     trace["axis_ranges"] = {
         name: list(axis_range) if (axis_range := getattr(figure.layout, name).range) is not None else None
         for name in ("xaxis", "yaxis")
     }
     trace["guides"] = hashlib.sha256(to_json((layout, overlays)).encode("utf-8")).hexdigest()
     trace["overlay_count"] = len(overlays)
+    if svg_guides is not None:
+        trace["svg_guides"] = svg_guides
     if not matching_events:
         return figure, trace
 
     if trace == previous_trace:
         return dash.no_update, dash.no_update
+
+    if trace["guides"] == previous_trace.get("guides"):
+        return dash.no_update, trace
 
     previous_overlay_count = previous_trace["overlay_count"]
     update = dash.Patch()

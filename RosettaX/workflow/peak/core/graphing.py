@@ -55,6 +55,7 @@ def build_peak_workflow_graph_figure(
     max_events_for_plots: Any = None,
     marker_size: Any = None,
     marker_opacity: Any = None,
+    reuse_event_trace: bool = False,
     runtime_config_data: Any = None,
 ) -> go.Figure:
     """
@@ -81,6 +82,7 @@ def build_peak_workflow_graph_figure(
         max_events_for_plots=max_events_for_plots,
         marker_size=marker_size,
         marker_opacity=marker_opacity,
+        reuse_event_trace=reuse_event_trace,
         runtime_config_data=runtime_config_data,
     ).build()
 
@@ -122,6 +124,7 @@ class PeakWorkflowGraphBuilder:
         max_events_for_plots: Any = None,
         marker_size: Any = None,
         marker_opacity: Any = None,
+        reuse_event_trace: bool = False,
         runtime_config_data: Any = None,
     ) -> None:
         self.backend = backend
@@ -141,6 +144,7 @@ class PeakWorkflowGraphBuilder:
         self.max_events_for_plots = max_events_for_plots
         self.marker_size = marker_size
         self.marker_opacity = marker_opacity
+        self.reuse_event_trace = reuse_event_trace
         self.runtime_config_data = runtime_config_data
 
         self.runtime_config = RuntimeConfig.from_dict(

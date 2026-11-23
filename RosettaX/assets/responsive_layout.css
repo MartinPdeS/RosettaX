@@ -296,6 +296,10 @@
     display: inline-grid;
 }
 
+.peak-workflow:has(.peak-action-button--run:disabled) .rosetta-guide-overlay {
+    visibility: hidden;
+}
+
 .peak-action-labels > span {
     grid-area: 1 / 1;
 }
@@ -562,4 +566,12 @@
         border-block-start: 1px solid var(--rosettax-border-color);
         padding: .65rem 0 0;
     }
+}
+
+.rosetta-guide-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }

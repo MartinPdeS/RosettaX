@@ -54,91 +54,94 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
             "Select both detector channels first.",
         )
 
-    payload_plot_values = extract_plot_values_from_peak_lines_payload(builder)
-
-    if payload_plot_values is not None:
-        x_values, y_values = payload_plot_values
+    if builder.reuse_event_trace:
+        figure = go.Figure(go.Scattergl(name="Events", showlegend=False))
     else:
-        x_values = np.asarray(
-            column_copy(
-                fcs_file_path=builder.backend.fcs_file_path,
-                detector_column=str(
-                    x_detector_column,
+        payload_plot_values = extract_plot_values_from_peak_lines_payload(builder)
+
+        if payload_plot_values is not None:
+            x_values, y_values = payload_plot_values
+        else:
+            x_values = np.asarray(
+                column_copy(
+                    fcs_file_path=builder.backend.fcs_file_path,
+                    detector_column=str(
+                        x_detector_column,
+                    ),
+                    dtype=float,
+                    n=graph_settings.resolve_max_events_for_plots(builder),
                 ),
                 dtype=float,
-                n=graph_settings.resolve_max_events_for_plots(builder),
-            ),
-            dtype=float,
-        )
+            )
 
-        y_values = np.asarray(
-            column_copy(
-                fcs_file_path=builder.backend.fcs_file_path,
-                detector_column=str(
-                    y_detector_column,
+            y_values = np.asarray(
+                column_copy(
+                    fcs_file_path=builder.backend.fcs_file_path,
+                    detector_column=str(
+                        y_detector_column,
+                    ),
+                    dtype=float,
+                    n=graph_settings.resolve_max_events_for_plots(builder),
                 ),
                 dtype=float,
-                n=graph_settings.resolve_max_events_for_plots(builder),
-            ),
-            dtype=float,
-        )
+            )
 
-    if builder._edge_artifact_filter_is_enabled():
-        x_values, y_values = filter_edge_artifact_pairs(
+        if builder._edge_artifact_filter_is_enabled():
+            x_values, y_values = filter_edge_artifact_pairs(
+                x_values=x_values,
+                y_values=y_values,
+                remove_x_min=True,
+                remove_x_max=True,
+                remove_y_min=True,
+                remove_y_max=False,
+            )
+
+        filtered_x_values, filtered_y_values = filter_2d_values_for_axis_scale(
+            builder,
             x_values=x_values,
             y_values=y_values,
-            remove_x_min=True,
-            remove_x_max=True,
-            remove_y_min=True,
-            remove_y_max=False,
         )
 
-    filtered_x_values, filtered_y_values = filter_2d_values_for_axis_scale(
-        builder,
-        x_values=x_values,
-        y_values=y_values,
-    )
+        if filtered_x_values.size == 0 or filtered_y_values.size == 0:
+            return plottings._make_info_figure(
+                "No finite events are available for the selected axis scale.",
+            )
 
-    if filtered_x_values.size == 0 or filtered_y_values.size == 0:
-        return plottings._make_info_figure(
-            "No finite events are available for the selected axis scale.",
+        density_values = compute_2d_density_values(
+            builder,
+            x_values=filtered_x_values,
+            y_values=filtered_y_values,
+            x_log_scale=graph_settings.x_axis_is_log(builder),
+            y_log_scale=graph_settings.y_axis_is_log(builder),
+            colormap_log_scale=colormap_is_log(builder),
+            number_of_bins=resolve_density_colormap_number_of_bins(builder),
         )
 
-    density_values = compute_2d_density_values(
-        builder,
-        x_values=filtered_x_values,
-        y_values=filtered_y_values,
-        x_log_scale=graph_settings.x_axis_is_log(builder),
-        y_log_scale=graph_settings.y_axis_is_log(builder),
-        colormap_log_scale=colormap_is_log(builder),
-        number_of_bins=resolve_density_colormap_number_of_bins(builder),
-    )
+        figure = go.Figure()
 
-    figure = go.Figure()
-
-    figure.add_trace(
-        go.Scattergl(
-            x=filtered_x_values,
-            y=filtered_y_values,
-            mode="markers",
-            name="Events",
-            marker={
-                "size": graph_settings.get_default_marker_size(builder),
-                "opacity": graph_settings.get_default_marker_opacity(builder),
-                "color": density_values,
-                "colorscale": "Turbo",
-                "showscale": False,
-            },
-            showlegend=False,
-            customdata=density_values,
-            hovertemplate=(
-                f"{x_detector_column}=%{{x:.6g}}<br>"
-                f"{y_detector_column}=%{{y:.6g}}<br>"
-                "density=%{customdata:.6g}"
-                "<extra></extra>"
-            ),
+        figure.add_trace(
+            go.Scattergl(
+                x=filtered_x_values,
+                y=filtered_y_values,
+                mode="markers",
+                name="Events",
+                marker={
+                    "size": graph_settings.get_default_marker_size(builder),
+                    "opacity": graph_settings.get_default_marker_opacity(builder),
+                    "color": density_values,
+                    "colorscale": "Turbo",
+                    "showscale": False,
+                },
+                showlegend=False,
+                customdata=density_values,
+                hovertemplate=(
+                    f"{x_detector_column}=%{{x:.6g}}<br>"
+                    f"{y_detector_column}=%{{y:.6g}}<br>"
+                    "density=%{customdata:.6g}"
+                    "<extra></extra>"
+                ),
+            )
         )
-    )
 
     Scatter2DGraph.apply_formatting(
         figure=figure,
@@ -158,14 +161,15 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
         uirevision=f"peak_workflow_{builder.resolved_process_name}_2d_scatter",
     )
 
-    figure = apply_stable_2d_axis_ranges(
-        figure=figure,
-        x_values=filtered_x_values,
-        y_values=filtered_y_values,
-        x_log_scale=graph_settings.x_axis_is_log(builder),
-        y_log_scale=graph_settings.y_axis_is_log(builder),
-        trim_outliers=not builder._is_rosetta_script_process(),
-    )
+    if not builder.reuse_event_trace:
+        figure = apply_stable_2d_axis_ranges(
+            figure=figure,
+            x_values=filtered_x_values,
+            y_values=filtered_y_values,
+            x_log_scale=graph_settings.x_axis_is_log(builder),
+            y_log_scale=graph_settings.y_axis_is_log(builder),
+            trim_outliers=not builder._is_rosetta_script_process(),
+        )
 
     figure = graph_overlays.add_2d_overlays(
         builder,

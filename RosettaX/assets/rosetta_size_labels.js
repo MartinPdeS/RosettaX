@@ -31,46 +31,81 @@
         return closest;
     }
 
+    const overlays = new WeakMap();
+    const svgNamespace = "http://www.w3.org/2000/svg";
+    const guideSelector = "[data-peak-guides]";
+
+    function addSvg(parent, type, attributes, text) {
+        const element = document.createElementNS(svgNamespace, type);
+        for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+        if (text !== undefined) element.textContent = text;
+        parent.append(element);
+        return element;
+    }
+
     function placeLabels(plot) {
-        const annotations = plot.layout?.annotations;
-        const axis = plot._fullLayout?.xaxis;
-        if (!plot.isConnected || typeof axis?.r2p !== "function" ||
-            !annotations?.some(annotation => annotation.name === labelName)) return;
+        const state = overlays.get(plot);
+        const layout = plot._fullLayout;
+        const xAxis = layout?.xaxis;
+        const yAxis = layout?.yaxis;
+        if (!state || !xAxis || !yAxis || !plot.isConnected) return;
+
+        const svg = state.svg;
+        const surface = plot.querySelector(".plot-container > .svg-container");
+        if (!surface) return;
+        if (svg.parentNode !== surface) surface.append(svg);
+        svg.replaceChildren();
+        let guides;
+        try {
+            guides = JSON.parse(state.container.dataset.peakGuides);
+        } catch (_) {
+            return;
+        }
+        if (!guides || guides.revision !== layout.uirevision) return;
+        svg.style.width = `${layout.width}px`;
+        svg.style.height = `${layout.height}px`;
+        svg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
+        const left = xAxis._offset, right = left + xAxis._length;
+        const top = yAxis._offset, bottom = top + yAxis._length;
+        const dashes = {dot: "2 4", dash: "7 5", dashdot: "7 4 2 4"};
+        for (const shape of guides.lines) {
+            const vertical = shape.xref === "x";
+            const axis = vertical ? xAxis : yAxis;
+            const offset = axis.d2p(vertical ? shape.x0 : shape.y0);
+            if (!Number.isFinite(offset) || offset < 0 || offset > axis._length) continue;
+            const position = axis._offset + offset;
+            addSvg(svg, "line", {
+                x1: vertical ? position : left, x2: vertical ? position : right,
+                y1: vertical ? top : position, y2: vertical ? bottom : position,
+                stroke: shape.line?.color ?? "#444", "stroke-width": shape.line?.width ?? 1,
+                "stroke-dasharray": dashes[shape.line?.dash] ?? "",
+            });
+        }
 
         const labels = [];
-        annotations.forEach((annotation, index) => {
-            if (annotation.name !== labelName) return;
-            const guide = axis.r2p(annotation.x);
-            if (!Number.isFinite(guide) || guide < 0 || guide > axis._length) return;
-            const text = plot.querySelector(`g.annotation[data-index="${index}"] .annotation-text`);
-            if (!text) return;
-
+        const labelGroup = addSvg(svg, "g", {class: "rosetta-size-label"});
+        for (const annotation of guides.annotations) {
+            const guide = left + xAxis.r2p(annotation.x);
+            if (!Number.isFinite(guide) || guide < left || guide > right) continue;
+            const color = annotation.font?.color ?? "#444";
+            const text = addSvg(labelGroup, "text", {
+                fill: color, "font-size": annotation.font?.size ?? 13,
+            }, annotation.text);
             const {width, height} = text.getBBox();
-            const canvasPosition = axis._offset + guide;
-            const leftLimit = Math.ceil(height * Math.SQRT1_2 + 4 - canvasPosition);
-            const rightLimit = Math.floor(plot._fullLayout.width - canvasPosition - width * Math.SQRT1_2 - 4);
-            labels.push({annotation, index, width, height, guide, leftLimit, rightLimit});
-        });
-
-        const updates = {};
+            labels.push({text, color, guide, width, height,
+                leftLimit: Math.ceil(height * Math.SQRT1_2 + 4 - guide),
+                rightLimit: Math.floor(layout.width - guide - width * Math.SQRT1_2 - 4),
+            });
+        }
         const placed = [];
-        let topMargin = 60;
-        // Work from right to left so labels stay in the same order as their guides.
         for (const guideLabel of labels.sort((left, right) => right.guide - left.guide)) {
             const label = placeLabel(guideLabel, placed);
             placed.push(label);
-
-            const labelHeight = (label.width + label.height) * Math.SQRT1_2;
-            topMargin = Math.max(topMargin, Math.ceil(label.rise + labelHeight + 24));
-            if (label.annotation.ax !== label.shift) updates[`annotations[${label.index}].ax`] = label.shift;
-            if (label.annotation.ay !== -label.rise) updates[`annotations[${label.index}].ay`] = -label.rise;
-        }
-
-        if (plot.layout.margin?.t !== topMargin) updates["margin.t"] = topMargin;
-        if (Object.keys(updates).length) {
-            // Avoid sending Dash a user relayout event for automatic label spacing.
-            window.Plotly.update(plot, {}, updates).catch(error => {
-                if (plot.isConnected) console.warn("Could not position Rosetta size labels", error);
+            const y = Math.max(12, top - label.rise - 4);
+            label.text.setAttribute("transform", `translate(${label.position}, ${y}) rotate(-45)`);
+            addSvg(labelGroup, "line", {
+                x1: label.guide, x2: label.position, y1: top, y2: y + 2,
+                stroke: label.color, "stroke-width": 1,
             });
         }
     }
@@ -84,17 +119,39 @@
         });
     }
 
-    function observePlots() {
-        for (const plot of document.querySelectorAll(".js-plotly-plot")) {
-            if (observedPlots.has(plot) || typeof plot.on !== "function" ||
-                !plot.layout?.annotations?.some(annotation => annotation.name === labelName)) continue;
+    function bindOverlay(container) {
+        const plot = container.querySelector(".js-plotly-plot");
+        if (!plot || typeof plot.on !== "function") return;
+        if (!observedPlots.has(plot)) {
             observedPlots.add(plot);
+            const svg = document.createElementNS(svgNamespace, "svg");
+            svg.setAttribute("class", "rosetta-guide-overlay");
+            svg.setAttribute("aria-hidden", "true");
+            overlays.set(plot, {svg, container});
             plot.on("plotly_afterplot", () => schedulePlacement(plot));
-            schedulePlacement(plot);
+            plot.on("plotly_relayouting", () => schedulePlacement(plot));
         }
+        schedulePlacement(plot);
     }
 
-    const observer = new MutationObserver(observePlots);
-    observer.observe(document.documentElement, {childList: true, subtree: true});
-    observePlots();
+    const observer = new MutationObserver(records => {
+        const containers = new Set();
+        for (const record of records) {
+            if (record.type === "attributes") {
+                containers.add(record.target);
+                continue;
+            }
+            for (const node of record.addedNodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                const container = node.closest(guideSelector);
+                if (container) containers.add(container);
+                node.querySelectorAll(guideSelector).forEach(item => containers.add(item));
+            }
+        }
+        containers.forEach(bindOverlay);
+    });
+    observer.observe(document.documentElement, {
+        childList: true, subtree: true, attributes: true, attributeFilter: ["data-peak-guides"],
+    });
+    document.querySelectorAll(guideSelector).forEach(bindOverlay);
 })();

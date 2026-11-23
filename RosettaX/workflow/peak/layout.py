@@ -75,7 +75,8 @@ class PeakLayout:
             [
                 *self._build_state_stores(),
                 *self._build_peak_workflow_layout(),
-            ]
+            ],
+            className="peak-workflow",
         )
 
     def _build_state_stores(self) -> list[dcc.Store]:

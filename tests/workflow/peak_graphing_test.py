@@ -1056,6 +1056,7 @@ def test_scatter_graphs_use_configured_grid(show_grid, monkeypatch):
         marker_size=None,
         marker_opacity=None,
         resolved_process_name="test",
+        reuse_event_trace=False,
         backend=None,
         uploaded_fcs_path=None,
         process_settings={},
@@ -1129,3 +1130,17 @@ def test_peak_detection_keeps_the_previous_default_view():
     updated.update_layout(uirevision="different sample", xaxis_range=[0, 6])
     preserve_peak_axis_ranges(figure=updated, previous_trace=trace, viewport=viewport)
     assert updated.layout.xaxis.range == (0, 6)
+
+
+def test_results_only_patch_preserves_event_cloud():
+    """Keep the browser event trace when a lightweight figure contains only guides."""
+    figure = go.Figure(go.Scattergl(x=[1, 2], y=[3, 4], name="Events"))
+    _, trace = build_peak_figure_update(figure=figure, previous_trace=None, event_context="same")
+    guides = go.Figure(go.Scattergl(name="Events"))
+    guides.add_vline(x=2)
+    update, updated_trace = build_peak_figure_update(
+        figure=guides, previous_trace=trace, event_context="same", reuse_events=True,
+    )
+    assert updated_trace["events"] == trace["events"]
+    assert all(operation["location"][:2] != ["data", 0] for operation in update.to_plotly_json()["operations"])
+    assert update.to_plotly_json()["operations"][0]["params"]["value"]["shapes"][0]["x0"] == 2
