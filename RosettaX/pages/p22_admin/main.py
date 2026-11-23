@@ -80,6 +80,32 @@ class AdminPage:
                 dashboard_state["last_updated"],
             )
 
+        @dash.callback(
+            Output(self.ids.recent_visit_details, "children"),
+            Input(self.ids.recent_visits_table, "active_cell"),
+            Input(self.ids.recent_visits_table, "derived_viewport_data"),
+            prevent_initial_call=True,
+        )
+        def show_visit_details(active_cell, visible_rows):
+            """Show connection metadata for the selected activity row."""
+            if not has_admin_session():
+                raise PreventUpdate
+            if not active_cell or active_cell.get("column_id") != "details" or not visible_rows:
+                return None
+            row_index = active_cell.get("row", -1)
+            if not 0 <= row_index < len(visible_rows):
+                return None
+            row = visible_rows[row_index]
+            return html.Details([
+                html.Summary(f"Connection details · {row['visited_at']}"),
+                html.Dl([
+                    html.Dt("IP address"), html.Dd(row["ip_address"]),
+                    html.Dt("Location"), html.Dd(row["location"]),
+                    html.Dt("Organization"), html.Dd(row["organization"]),
+                    html.Dt("User agent"), html.Dd(row["user_agent"], className="text-break"),
+                ], className="mt-2 mb-0"),
+            ], open=True, className="border rounded p-3 mt-3")
+
         return self
 
     def _resolve_dashboard_state(self, *, theme: str) -> dict[str, Any]:
@@ -299,14 +325,14 @@ class AdminPage:
                 dbc.CardHeader(
                     [
                         html.Div(
-                            "Recent visits",
+                            "Recent activity",
                             style={
                                 "fontWeight": "750",
                                 "fontSize": "1.02rem",
                             },
                         ),
                         html.Div(
-                            "Most recent page visits with client IP address and user agent.",
+                            "Latest 200 page visits. Select View details to inspect connection information.",
                             style={
                                 "fontSize": "0.9rem",
                                 "opacity": 0.72,
@@ -314,19 +340,20 @@ class AdminPage:
                         ),
                     ]
                 ),
-                dbc.CardBody(
+                dbc.CardBody([
                     dash_table.DataTable(
                         id=self.ids.recent_visits_table,
                         columns=[
                             {"name": "Time (UTC)", "id": "visited_at"},
-                            {"name": "IP address", "id": "ip_address"},
-                            {"name": "Location", "id": "location"},
-                            {"name": "Organization", "id": "organization"},
+                            {"name": "Workflow", "id": "workflow"},
+                            {"name": "Step", "id": "step"},
                             {"name": "Page", "id": "path"},
-                            {"name": "User agent", "id": "user_agent"},
+                            {"name": "Details", "id": "details"},
                         ],
                         data=recent_visit_rows,
-                        page_size=25,
+                        page_size=200,
+                        filter_action="native",
+                        sort_action="native",
                         style_table={"overflowX": "auto"},
                         style_header={
                             "fontWeight": "700",
@@ -346,17 +373,11 @@ class AdminPage:
                             "maxWidth": "320px",
                         },
                         style_cell_conditional=[
-                            {
-                                "if": {"column_id": "user_agent"},
-                                "maxWidth": "420px",
-                            },
-                            {
-                                "if": {"column_id": "location"},
-                                "maxWidth": "240px",
-                            },
+                            {"if": {"column_id": "details"}, "cursor": "pointer", "textDecoration": "underline"},
                         ],
                     ),
-                ),
+                    html.Div(id=self.ids.recent_visit_details),
+                ]),
             ]
         )
 

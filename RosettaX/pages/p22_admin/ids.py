@@ -19,3 +19,4 @@ class Ids:
     visits_over_time_graph = f"{page_prefix}-visits-over-time-graph"
     page_breakdown_graph = f"{page_prefix}-page-breakdown-graph"
     recent_visits_table = f"{page_prefix}-recent-visits-table"
+    recent_visit_details = f"{page_prefix}-recent-visit-details"

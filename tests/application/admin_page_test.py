@@ -344,6 +344,9 @@ class Test_AdminServices:
                 "organization": "N/A",
                 "path": "/help",
                 "user_agent": "N/A",
+                "workflow": "Site navigation",
+                "step": "Page opened",
+                "details": "View details",
             },
             {
                 "visited_at": "2026-09-08 10:00:00 UTC",
@@ -352,6 +355,9 @@ class Test_AdminServices:
                 "organization": "AS15169 Google LLC",
                 "path": "/",
                 "user_agent": "Mozilla/5.0",
+                "workflow": "Site navigation",
+                "step": "Page opened",
+                "details": "View details",
             },
         ]
 
