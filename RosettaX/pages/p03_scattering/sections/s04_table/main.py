@@ -10,7 +10,7 @@ from RosettaX.pages.p00_sidebar.ids import SidebarIds
 from RosettaX.pages.p03_scattering.sections.s03_model import layout as model_layout
 from RosettaX.pages.p03_scattering.state import ScatteringPageState
 from RosettaX.ui import WorkflowStep
-from RosettaX.utils import RuntimeConfig, styling, ui_forms
+from RosettaX.utils import RuntimeConfig, casting, styling, ui_forms
 from RosettaX.workflow import parameters
 from RosettaX.workflow.plotting import PlotOptions
 from RosettaX.workflow.scattering.rosetta_assignment import (
@@ -117,6 +117,7 @@ class ReferenceTable:
                 "marginBottom": "20px",
             },
             position="before",
+            status_id=self.ids.compute_model_status,
         )
 
         self.layout_builder = ReferenceTableLayout(
@@ -142,13 +143,11 @@ class ReferenceTable:
         body = card.children[1]
         table_body_children = list(body.children)
         body.children = [
+            model_layout.build_detector_geometry_section(self.model_section),
+            dash.html.Hr(className="my-3"),
             model_layout.build_particle_configuration_section(self.model_section),
             *table_body_children,
-            dash.html.Div(
-                style={
-                    "height": "18px",
-                },
-            ),
+            dash.html.Hr(className="my-3"),
             self._build_mie_relation_graph_panel(),
         ]
 
@@ -227,6 +226,7 @@ class ReferenceTable:
         """
         logger.debug("Registering scattering calibration standard table callbacks.")
 
+        self.model_section.register_callbacks()
         register_reference_table_validation(self.ids)
         self._register_table_default_population_callback()
         self._register_table_callbacks()
@@ -468,6 +468,7 @@ class ReferenceTable:
             dash.Output(self.ids.rosetta_validation_plot, "children"),
             dash.Output(self.ids.rosetta_validation_review, "data"),
             dash.Output(self.ids.rosetta_apply_btn, "disabled"),
+            dash.Output(self.ids.compute_model_status, "children"),
             dash.Input(self.ids.compute_model_btn, "n_clicks"),
             dash.Input(self.ids.rosetta_validate_btn, "n_clicks"),
             dash.Input(self.ids.rosetta_apply_btn, "n_clicks"),
@@ -528,6 +529,17 @@ class ReferenceTable:
                 mie_model,
                 None if current_rows is None else len(current_rows),
             )
+
+            try:
+                sampling = casting.as_required_int(detector_sampling, "detector_sampling")
+                valid_sampling = sampling > 0 and float(detector_sampling) == sampling
+            except (TypeError, ValueError, OverflowError):
+                valid_sampling = False
+            if not valid_sampling:
+                return (
+                    *(dash.no_update,) * 6,
+                    "Enter a positive whole number for Detector sampling, then click Compute model again.",
+                )
 
             resolved_mie_model = parameters.table.resolve_mie_model(
                 mie_model,
@@ -613,7 +625,7 @@ class ReferenceTable:
                 )
                 validation_plot = build_validation_results(figure=figure)
                 if suggestions is not None:
-                    return dash.no_update, page_state.to_dict(), sizing_status, validation_plot, suggestions, False
+                    return dash.no_update, page_state.to_dict(), sizing_status, validation_plot, suggestions, False, ""
             else:
                 evidence = page_state.rosetta_assignment_evidence
                 model_settings = {field: compute_coupling.keywords[field] for field in VALIDATION_MODEL_FIELDS}
@@ -664,7 +676,7 @@ class ReferenceTable:
                 len(computed_rows),
             )
 
-            return computed_rows, page_state.to_dict(), sizing_status, validation_plot, None, True
+            return computed_rows, page_state.to_dict(), sizing_status, validation_plot, None, True, ""
 
     def _register_post_compute_cleanup_callback(self) -> None:
         """

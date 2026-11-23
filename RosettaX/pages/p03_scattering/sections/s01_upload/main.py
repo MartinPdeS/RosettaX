@@ -3,6 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 import logging
 from ...state import ScatteringPageState
+from ..system import build_system_selector, register_system_detection
 from RosettaX.ui import WorkflowStep
 from RosettaX.utils import ui_forms
 from RosettaX.workflow.table.scattering import ScatteringCalibrationStandardTable
@@ -19,6 +20,8 @@ class Upload:
     """
     Scattering FCS upload section.
     """
+
+    initially_open = True
 
     workflow_step = WorkflowStep(
         title="Upload bead FCS",
@@ -75,7 +78,9 @@ class Upload:
         """
         Build the scattering upload section layout.
         """
-        return self.layout_builder.get_layout()
+        return self.layout_builder.get_layout(
+            extra_body_children=[build_system_selector(ids=self.page.ids.State)],
+        )
 
     def _build_card_title(self) -> dash.html.Div:
         """
@@ -92,6 +97,7 @@ class Upload:
         """
         Register callbacks for the scattering upload section.
         """
+        register_system_detection(ids=self.page.ids.State)
         register_upload_callbacks(
             page=self.page,
             ids=self.ids,

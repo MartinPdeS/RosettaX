@@ -48,12 +48,19 @@ def build_header(section: Model) -> dbc.CardHeader:
     )
 
 
+def build_detector_geometry_section(section: Model) -> dash.html.Div:
+    """Show the scatter geometry summary and model controls."""
+    return dash.html.Div([
+        build_body(section),
+    ], className="mb-3")
+
+
 def build_collapse(section: Model) -> dbc.Collapse:
     """
     Build collapsible parameter body.
     """
     return dbc.Collapse(
-        build_body(section),
+        build_detector_geometry_section(section),
         id=section.ids.collapse_example,
         is_open=True,
     )
@@ -93,7 +100,7 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
             dash.html.Div(
                 [
                     dbc.Button(
-                        "Auto-detect",
+                        "Auto-detect detector",
                         id=section.ids.detector_configuration_auto_detect_button,
                         n_clicks=0,
                         color="light",
@@ -101,15 +108,8 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                         className="peak-action-button peak-action-button--auto",
                         style={"whiteSpace": "nowrap", "flexShrink": 0},
                     ),
-                    dash.html.Span(
-                        "",
-                        id=section.ids.detector_configuration_auto_detect_status,
-                        role="status",
-                        style={
-                            "marginLeft": "12px",
-                            "fontSize": "0.85rem",
-                        },
-                    ),
+                    dash.html.Span(id=section.ids.detector_configuration_auto_detect_status,
+                                   role="status", className="small ms-2"),
                 ],
                 style={
                     "display": "flex",

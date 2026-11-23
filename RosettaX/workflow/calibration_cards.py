@@ -174,6 +174,7 @@ def build_collapsible_section_layout(section: Any, *, page_name: str) -> Any:
         page_name=page_name,
         section_number=section_number,
         color_name=getattr(section, "card_color", None),
+        initially_open=getattr(section, "initially_open", False),
     )
 
 
@@ -191,6 +192,7 @@ def build_calibration_workflow_section_card(
     tooltip_id: Any | None = None,
     color_name: str | None = None,
     style_overrides: dict[str, Any] | None = None,
+    initially_open: bool = False,
 ) -> dbc.Card:
     """Build a workflow section with a compact, title-only collapse header.
 
@@ -266,10 +268,11 @@ def build_calibration_workflow_section_card(
             color_name=resolved_color_name,
         )
 
-    return make_profile_aware_collapsible_card(
+    return make_collapsible_section_card(
         card,
         page_name=page_name,
         section_key=str(section_number),
+        initially_collapsed=not initially_open,
     )
 
 

@@ -21,7 +21,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 axis_ranges: {xaxis: [...layout.xaxis.range], yaxis: [...layout.yaxis.range]}
             };
         },
-        toggleCalibrationCard: function (toggleClicks, stepClicks, runtimeConfig, isOpen) {
+        toggleCalibrationCard: function (toggleClicks, stepClicks, runtimeConfig, isOpen, cardId) {
             const noUpdate = window.dash_clientside.no_update;
             const triggered = window.dash_clientside.callback_context.triggered_id;
             let nextOpen;
@@ -35,6 +35,9 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                     return [noUpdate, noUpdate];
                 }
             } else {
+                if (cardId?.page === "scattering_calibration" && cardId.section === "1") {
+                    return [noUpdate, noUpdate];
+                }
                 if (!runtimeConfig) return [noUpdate, noUpdate];
                 const collapsed = runtimeConfig.ui?.collapse_calibration_cards ??
                     runtimeConfig.misc?.ui?.collapse_calibration_cards ?? false;

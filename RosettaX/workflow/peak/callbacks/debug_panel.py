@@ -3,6 +3,7 @@
 import dash_bootstrap_components as dbc
 import math
 from dash import html
+from decimal import Decimal
 from typing import Any
 
 
@@ -124,6 +125,21 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
     diagnostics = peak_lines_payload.get("rosetta_debug_diagnostics")
     diagnostics = diagnostics if isinstance(diagnostics, dict) else {}
     sections: list[Any] = [html.P(status, className="peak-result-detail-message")] if status else []
+    plotted_guides = [
+        guide for guide in peak_lines_payload.get("scatter_guide_annotations", [])
+        if guide.get("kind") in {"marker", "non_fluorescent"}
+    ]
+    if plotted_guides:
+        sections.append(html.Div([
+            html.Strong("Size labels shown on the graph"),
+            dbc.Table([
+                html.Thead(html.Tr([html.Th("Label"), html.Th("Scatter position [a.u.]")])),
+                html.Tbody([
+                    html.Tr([html.Td(guide["label"]), html.Td(_format_position(value=guide["x"]))])
+                    for guide in plotted_guides
+                ]),
+            ], size="sm", responsive=True),
+        ]))
     thresholds = diagnostics.get("thresholds", {})
     if thresholds:
         scatter_limits = f"CV ≤ {_format_debug_value(thresholds.get('scatter_cv_maximum'))}"
@@ -199,10 +215,23 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
 
     scatter_rows = diagnostics.get("scatter_peaks", [])
     if scatter_rows:
+        labels_by_position = {
+            guide["x"]: guide["label"]
+            for guide in plotted_guides
+            if guide["kind"] == "non_fluorescent"
+        }
         sections.append(
             _build_rosetta_debug_table(
-                title="Non-fluorescent scatter fits",
-                rows=scatter_rows,
+                title="Non-fluorescent scatter candidates",
+                rows=[
+                    dict(
+                        row,
+                        graph_result=labels_by_position.get(row.get("position")) or (
+                            "No size assigned" if row.get("validated") else "No guide"
+                        ),
+                    )
+                    for row in scatter_rows
+                ],
             )
         )
 
@@ -231,6 +260,9 @@ def _build_rosetta_debug_table(*, title: str, rows: list[dict[str, Any]]) -> Any
         A heading and responsive Bootstrap table.
     """
     headers = ["Peak", "Position [a.u.]", "Events", "R²", "CV", "Result", "Reason"]
+    show_graph_result = any("graph_result" in row for row in rows)
+    if show_graph_result:
+        headers.insert(-1, "Graph")
     body_rows = []
     for row in rows:
         reasons = row.get("rejection_reasons") or []
@@ -238,11 +270,12 @@ def _build_rosetta_debug_table(*, title: str, rows: list[dict[str, Any]]) -> Any
             html.Tr(
                 [
                     html.Td(row.get("population", "—")),
-                    html.Td(_format_debug_value(row.get("position", row.get("mean")))),
+                    html.Td(_format_position(value=row.get("position", row.get("mean")))),
                     html.Td(_format_debug_value(row.get("events", row.get("count")))),
                     html.Td(_format_debug_value(row.get("r2"))),
                     html.Td(_format_debug_value(row.get("cv"))),
                     html.Td("Accepted" if row.get("validated") else "Rejected"),
+                    *([html.Td(row.get("graph_result", "—"))] if show_graph_result else []),
                     html.Td("; ".join(str(reason) for reason in reasons) or "—"),
                 ]
             )
@@ -281,3 +314,18 @@ def _format_debug_value(value: Any) -> str:
     return f"{numeric_value:.4g}"
 
 
+
+
+def _format_position(*, value: Any) -> str:
+    """Format a position in detector units with decimal SI suffixes."""
+    formatted = _format_debug_value(value)
+    try:
+        position = Decimal(formatted)
+    except ArithmeticError:
+        return formatted
+    if not position.is_finite():
+        return formatted
+    for scale, suffix in ((1_000_000, "M"), (1_000, "k")):
+        if abs(position) >= scale:
+            return f"{(position / scale).normalize():f}{suffix}"
+    return f"{position:f}"

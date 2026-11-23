@@ -215,7 +215,10 @@ and omits the smaller sizes from calibration. If the fallback conditions are
 unmet, diameters stay blank. A complete peak count supports the assignment
 but cannot identify a missing standard replaced by an unrelated peak.
 
-Detector geometry is configured after peak detection and is used for coupling.
+The **Upload bead FCS** card identifies the cytometer from the file metadata.
+Confirm or change the model there before using detector auto-selection.
+After **Detect peaks**, **Compute coupling** shows the scatter channel and its
+matching optical preset alongside the detector geometry controls.
 
 Overlapping or reversed fluorescent candidates are shown with their measured
 scatter positions. A gate is retained as a sizing candidate only if it has

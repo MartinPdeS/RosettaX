@@ -39,7 +39,7 @@ class Header:
         self.workflow_header = WorkflowHeader(
             title="Scattering calibration",
             description=(
-                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the Mie model, computing coupling values, fitting the response, and saving the result for reuse."
+                "Create a scattering calibration from bead FCS data by detecting bead populations, configuring the detector for the selected scatter channel, computing coupling values, fitting the response, and saving the result for reuse."
             ),
             steps=workflow_steps,
             card_color=card_color,
@@ -86,27 +86,17 @@ class Header:
         completed_count = 0
         if state.get("uploaded_fcs_path"):
             completed_count = 1
-        peak_payload = self._find_completed_peak_payload(state)
-        if (
-            completed_count == 1
-            and isinstance(peak_payload, dict)
-            and peak_payload.get("positions")
-        ):
+        if completed_count == 1 and self._find_completed_peak_payload(state):
             completed_count = 2
-        detector_configured = _has_complete_detector_configuration(
-            detector_configuration_values,
-        )
-        if completed_count == 2 and detector_configured:
-            completed_count = 3
-        if completed_count == 3 and (
+        if completed_count == 2 and (
             state.get("calibration_model_graph_payload")
             or state.get("calibration_graph_payload")
         ):
+            completed_count = 3
+        if completed_count == 3 and state.get("calibration_payload"):
             completed_count = 4
-        if completed_count == 4 and state.get("calibration_payload"):
+        if completed_count == 4 and state.get("calibration_saved"):
             completed_count = 5
-        if completed_count == 5 and state.get("calibration_saved"):
-            completed_count = 6
 
         return self.workflow_header.build_progress(
             completed_count=completed_count,

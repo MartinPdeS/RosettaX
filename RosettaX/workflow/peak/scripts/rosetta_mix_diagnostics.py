@@ -135,21 +135,18 @@ def build_rosetta_debug_diagnostics(
         if isinstance(fluorescence_baseline_peak, dict)
         else None
     )
-    marker_candidate_index = 0
+    marker_roles = {
+        marker["fluorescence_position"]: marker["marker_role"]
+        for marker in marker_scatter_diagnostics or []
+        if "fluorescence_position" in marker and "marker_role" in marker
+    }
     fluorescence_rows: list[dict[str, Any]] = []
-    for peak in fluorescence_peaks:
+    for index, peak in enumerate(fluorescence_peaks, start=1):
         mean_value = float(peak.get("mean", 0.0))
         if baseline_mean is not None and np.isclose(mean_value, baseline_mean):
             population = "Baseline"
         else:
-            marker_candidate_index += 1
-            population = (
-                "Dim marker candidate"
-                if marker_candidate_index == 1
-                else "Bright marker candidate"
-                if marker_candidate_index == 2
-                else f"Fluorescence candidate {marker_candidate_index}"
-            )
+            population = marker_roles.get(mean_value, f"Fluorescence candidate {index}")
         fluorescence_rows.append(
             {
                 "population": population,

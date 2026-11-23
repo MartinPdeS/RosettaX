@@ -74,6 +74,7 @@ def populate_peak_script_detector_dropdowns(
     detector_selection_runtime_config_path: str | None = None,
     auto_select_rosetta_v1: bool = False,
     auto_select_process_name: str | None = None,
+    instrument_catalog_key: str | None = None,
     reset_rosetta_v1: bool = False,
     logger: logging.Logger,
 ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
@@ -170,6 +171,9 @@ def populate_peak_script_detector_dropdowns(
     matched_rule = resolve_detector_auto_detect_rule(
         metadata=metadata,
     )
+
+    if instrument_catalog_key is not None:
+        matched_rule = load_instrument_catalog()["instruments"].get(instrument_catalog_key)
 
     resolved_options: list[list[dict[str, Any]]] = []
     resolved_values: list[Any] = []

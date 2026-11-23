@@ -26,6 +26,9 @@ def register_detector_dropdown_callbacks(
         Dash store ID containing the page state.
     """
 
+    system_model_id = getattr(ids, "system_model", None)
+    system_states = [dash.State(system_model_id, "value")] if system_model_id else []
+
     @dash.callback(
         dash.Output(
             ids.process_detector_dropdown_pattern(),
@@ -58,6 +61,7 @@ def register_detector_dropdown_callbacks(
             ids.process_detector_dropdown_pattern(),
             "value",
         ),
+        *system_states,
         prevent_initial_call=False,
     )
     def populate_detector_dropdowns(
@@ -68,6 +72,7 @@ def register_detector_dropdown_callbacks(
         detector_dropdown_ids: list[dict[str, Any]],
         current_detector_options: list[Any],
         current_detector_values: list[Any],
+        instrument_catalog_key: str | None = None,
     ) -> tuple[list[list[dict[str, Any]]], list[Any]]:
         page_state = adapter.get_page_state_from_payload(
             page_state_payload,
@@ -97,6 +102,7 @@ def register_detector_dropdown_callbacks(
                 else None
             ),
             current_detector_values=current_detector_values,
+            instrument_catalog_key=instrument_catalog_key,
             runtime_config_data=runtime_config_data,
             detector_selection_runtime_config_path=getattr(
                 adapter,

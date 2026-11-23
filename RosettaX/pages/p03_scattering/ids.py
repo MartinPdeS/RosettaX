@@ -255,14 +255,24 @@ class CalibrationSectionIds:
         return f"{self.prefix}-rosetta-validation-plot"
 
     @property
+    def compute_model_status(self) -> str:
+        return f"{self.prefix}-compute-model-status"
+
+    @property
     def compute_model_btn(self) -> str:
         return f"{self.prefix}-calibration-standard-table-compute-model-button"
+
+
+PAGE_NAME = "scattering_calibration"
+SYSTEM_MODEL_ID = f"{PAGE_NAME}-system-model"
 
 
 class PeakSectionIds(PeakIds):
     """
     Scattering peak section IDs.
     """
+
+    system_model = SYSTEM_MODEL_ID
 
     def __init__(
         self,
@@ -275,13 +285,13 @@ class PeakSectionIds(PeakIds):
         )
 
 
-PAGE_NAME = "scattering_calibration"
-
-
 class Ids:
     page_name = PAGE_NAME
 
     class State:
+        system_model = SYSTEM_MODEL_ID
+        system_file = f"{PAGE_NAME}-system-file"
+        system_status = f"{PAGE_NAME}-system-status"
         page_state_store = f"{PAGE_NAME}-page-state-store"
         workflow_progress = f"{PAGE_NAME}-workflow-progress"
         description_tooltip_target = f"{PAGE_NAME}-description-tooltip-target"

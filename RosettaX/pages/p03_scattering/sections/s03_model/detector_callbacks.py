@@ -5,7 +5,8 @@ import logging
 from . import services
 from .models import DetectorGeometryValues
 from dataclasses import replace
-from RosettaX.utils import RuntimeConfig, casting
+from RosettaX.utils import casting
+from RosettaX.workflow.detector.configuration import infer_detector_preset_from_metadata
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -179,43 +180,39 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         ),
         dash.Output(section.ids.detector_configuration_auto_detect_status, "children"),
         dash.Input(section.ids.detector_configuration_auto_detect_button, "n_clicks"),
-        dash.State("runtime-config-store", "data"),
-        dash.State(section.page.ids.Scattering.process_dropdown, "value"),
+        dash.Input(section.page.ids.Scattering.process_dropdown, "value"),
+        dash.Input(
+            section.page.ids.Scattering.process_detector_dropdown_pattern(),
+            "value",
+        ),
+        dash.Input(section.page.ids.State.system_model, "value"),
+        dash.State(section.page.ids.State.page_state_store, "data"),
         dash.State(
             section.page.ids.Scattering.process_detector_dropdown_pattern(),
             "id",
-        ),
-        dash.State(
-            section.page.ids.Scattering.process_detector_dropdown_pattern(),
-            "value",
         ),
         dash.State(section.ids.wavelength_nm, "value"),
         prevent_initial_call=True,
     )
     def auto_detect_detector_configuration_preset(
         n_clicks: Any,
-        runtime_config_data: Any,
         selected_peak_process_name: Any,
-        detector_dropdown_ids: list[dict[str, Any]],
         detector_dropdown_values: list[Any],
+        instrument_catalog_key: str | None,
+        page_state_payload: Any,
+        detector_dropdown_ids: list[dict[str, Any]],
         current_wavelength_nm: Any,
     ) -> tuple[Any, Any, str]:
-        if not n_clicks:
+        requested = dash.ctx.triggered_id == section.ids.detector_configuration_auto_detect_button
+        if requested and not n_clicks:
             return dash.no_update, dash.no_update, ""
 
-        runtime_config = RuntimeConfig.from_dict(
-            runtime_config_data if isinstance(runtime_config_data, dict) else None
-        )
-        uploaded_fcs_path = runtime_config.get_str(
-            "files.scattering_fcs_file_path",
-            default="",
-        )
-
+        uploaded_fcs_path = (page_state_payload or {}).get("uploaded_fcs_path")
         if not str(uploaded_fcs_path or "").strip():
             return (
                 dash.no_update,
                 dash.no_update,
-                "Upload a scattering FCS file before running detector auto-detect.",
+                "Upload a scattering FCS file to match an optical preset." if requested else "",
             )
 
         selected_detector_channel = services.resolve_selected_peak_detector_channel(
@@ -228,14 +225,13 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             return (
                 dash.no_update,
                 dash.no_update,
-                "Select the peak detector channel before running detector auto-detect.",
+                "Select the scatter channel in Detect peaks first." if requested else "",
             )
 
-        detected_preset = (
-            section.model_configuration.detect_detector_preset_from_uploaded_fcs(
-                uploaded_fcs_path=uploaded_fcs_path,
-                selected_detector_channel=selected_detector_channel,
-            )
+        detected_preset = infer_detector_preset_from_metadata(
+            metadata=None,
+            selected_detector_channel=selected_detector_channel,
+            instrument_catalog_key=instrument_catalog_key,
         )
 
         if not detected_preset:
@@ -247,13 +243,13 @@ def register_detector_configuration_callbacks(section: Model) -> None:
                     dash.no_update,
                     channel_wavelength_nm,
                     f"Detected {channel_wavelength_nm:g} nm from {selected_detector_channel}. "
-                    "No matching optical preset. Configure the detector geometry manually.",
+                    "No matching optical preset. Enter or verify the detector geometry.",
                 )
             return (
                 dash.no_update,
                 dash.no_update,
                 f"No matching optical preset for {selected_detector_channel}. "
-                "Configure the detector geometry and laser wavelength manually.",
+                "Enter or verify the detector geometry and wavelength.",
             )
 
         detected_wavelength_nm = (
@@ -263,18 +259,12 @@ def register_detector_configuration_callbacks(section: Model) -> None:
             )
         )
 
-        wavelength_status = (
-            f"{detected_wavelength_nm:g} nm"
-            if detected_wavelength_nm is not None
-            else "wavelength not detected"
-        )
-
         return (
             detected_preset,
             detected_wavelength_nm
             if detected_wavelength_nm is not None
             else current_wavelength_nm,
-            f"Detected {detected_preset}; {wavelength_status}; channel {selected_detector_channel}.",
+            "Detector preset applied." if requested else "",
         )
 
     @dash.callback(

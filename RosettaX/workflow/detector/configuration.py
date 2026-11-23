@@ -2,6 +2,7 @@ import logging
 import re
 from .catalog import (
     INSTRUMENT_CATALOG_PATH,
+    load_instrument_catalog,
     load_instrument_rules,
     match_instrument_rule,
 )
@@ -294,6 +295,7 @@ def infer_detector_preset_from_metadata(
     *,
     metadata: FCSMetadata | None,
     selected_detector_channel: Any,
+    instrument_catalog_key: str | None = None,
 ) -> str | None:
     """
     Heuristically infer one detector preset from the instrument name and selected channel.
@@ -301,6 +303,13 @@ def infer_detector_preset_from_metadata(
     instrument_name = extract_instrument_name_from_metadata(
         metadata=metadata,
     )
+    selected_instrument = None
+    if instrument_catalog_key is not None:
+        selected_instrument = load_instrument_catalog()["instruments"].get(instrument_catalog_key)
+        if not selected_instrument:
+            return None
+        aliases = selected_instrument.get("instrument_aliases", [])
+        instrument_name = aliases[0] if aliases else selected_instrument.get("model", "")
     selected_detector_channel_string = clean_optional_string(
         selected_detector_channel,
     )
@@ -325,6 +334,11 @@ def infer_detector_preset_from_metadata(
     best_score = 0
 
     for preset in _DETECTOR_PRESET_LOADER.load_presets().values():
+        if selected_instrument is not None and (
+            preset.get("instrument") != selected_instrument.get("model")
+            or preset.get("manufacturer") != selected_instrument.get("manufacturer")
+        ):
+            continue
         preset_score = score_detector_preset_match(
             instrument_name=instrument_name,
             preset=preset,

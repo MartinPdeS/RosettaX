@@ -106,6 +106,10 @@ def register_application_callbacks(app: Dash) -> None:
             {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
             "is_open",
         ),
+        State(
+            {"type": calibration_cards.COLLAPSE_ID_TYPE, "page": MATCH, "section": MATCH},
+            "id",
+        ),
         prevent_initial_call=True,
     )
 

@@ -41,6 +41,7 @@ class ReferenceTableActionConfig:
     button_color: str = "primary"
     button_style: dict[str, Any] | None = None
     position: str = "after"
+    status_id: str | None = None
 
 
 class ReferenceTableLayout:
@@ -241,6 +242,13 @@ class ReferenceTableLayout:
                     ),
                 ]
             )
+
+        if self.action_config.status_id:
+            children.append(dash.html.Span(
+                id=self.action_config.status_id,
+                role="status",
+                className="small text-warning-emphasis ms-3",
+            ))
 
         return dash.html.Div(
             children,

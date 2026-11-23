@@ -30,7 +30,7 @@ class UploadLayout:
         self.ids = ids
         self.config = config
 
-    def get_layout(self) -> dbc.Card:
+    def get_layout(self, *, extra_body_children: list[Any] | None = None) -> dbc.Card:
         """
         Build the upload section layout.
         """
@@ -45,12 +45,14 @@ class UploadLayout:
 
         return self._build_upload_card(
             initial_filename=initial_filename,
+            extra_body_children=extra_body_children or [],
         )
 
     def _build_upload_card(
         self,
         *,
         initial_filename: str,
+        extra_body_children: list[Any],
     ) -> dbc.Card:
         """
         Build the upload card.
@@ -80,6 +82,7 @@ class UploadLayout:
                             ),
                             type="default",
                         ),
+                        *extra_body_children,
                     ],
                     style=self._get_body_style(),
                 ),
