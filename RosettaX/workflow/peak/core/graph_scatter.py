@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 import numpy as np
 import plotly.graph_objs as go
+from ..scripts._events import read_peak_event_columns
 from ..scripts.base import (
     filter_edge_artifact_pairs,
 )
 from ..scripts.rosetta_mix import read_rosetta_events
 from ..scripts.rosetta_mix_models import RosettaPlotSource
 from RosettaX.utils import casting, plottings
-from RosettaX.utils.io import column_copy
+from RosettaX.workflow.plotting import transforms
 from RosettaX.workflow.plotting.axis_ranges import (
     apply_stable_2d_axis_ranges,
 )
@@ -62,28 +63,10 @@ def build_default_2d_scatter_figure(builder: PeakWorkflowGraphBuilder) -> go.Fig
         if payload_plot_values is not None:
             x_values, y_values = payload_plot_values
         else:
-            x_values = np.asarray(
-                column_copy(
-                    fcs_file_path=builder.backend.fcs_file_path,
-                    detector_column=str(
-                        x_detector_column,
-                    ),
-                    dtype=float,
-                    n=graph_settings.resolve_max_events_for_plots(builder),
-                ),
-                dtype=float,
-            )
-
-            y_values = np.asarray(
-                column_copy(
-                    fcs_file_path=builder.backend.fcs_file_path,
-                    detector_column=str(
-                        y_detector_column,
-                    ),
-                    dtype=float,
-                    n=graph_settings.resolve_max_events_for_plots(builder),
-                ),
-                dtype=float,
+            x_values, y_values = read_peak_event_columns(
+                fcs_file_path=builder.backend.fcs_file_path,
+                detector_columns=(x_detector_column, y_detector_column),
+                max_events=graph_settings.resolve_max_events_for_plots(builder),
             )
 
         if builder._edge_artifact_filter_is_enabled():
@@ -283,128 +266,13 @@ def read_rosetta_plot_values(
 
 
 def compute_2d_density_values(
-    builder: PeakWorkflowGraphBuilder,
-    *,
-    x_values: Any,
-    y_values: Any,
-    x_log_scale: bool,
-    y_log_scale: bool,
-    colormap_log_scale: bool,
-    number_of_bins: int,
+    builder: PeakWorkflowGraphBuilder, *, x_values: Any, y_values: Any,
+    x_log_scale: bool, y_log_scale: bool, colormap_log_scale: bool, number_of_bins: int,
 ) -> np.ndarray:
-    """
-    Compute local point density values for 2D scatter color mapping.
-    """
-    x_array = np.asarray(
-        x_values,
-        dtype=float,
-    )
-
-    y_array = np.asarray(
-        y_values,
-        dtype=float,
-    )
-
-    if x_array.size == 0 or y_array.size == 0:
-        return np.asarray(
-            [],
-            dtype=float,
-        )
-
-    density_x_values = x_array.copy()
-    density_y_values = y_array.copy()
-
-    if x_log_scale:
-        density_x_values = np.log10(
-            density_x_values,
-        )
-
-    if y_log_scale:
-        density_y_values = np.log10(
-            density_y_values,
-        )
-
-    finite_mask = np.isfinite(
-        density_x_values,
-    ) & np.isfinite(
-        density_y_values,
-    )
-
-    if not np.all(finite_mask):
-        density_values = np.zeros(
-            x_array.shape,
-            dtype=float,
-        )
-
-        valid_density_values = compute_2d_density_values(
-            builder,
-            x_values=x_array[finite_mask],
-            y_values=y_array[finite_mask],
-            x_log_scale=x_log_scale,
-            y_log_scale=y_log_scale,
-            colormap_log_scale=colormap_log_scale,
-            number_of_bins=number_of_bins,
-        )
-
-        density_values[finite_mask] = valid_density_values
-
-        return density_values
-
-    if x_array.size < 2:
-        return np.ones(
-            x_array.shape,
-            dtype=float,
-        )
-
-    histogram, x_edges, y_edges = np.histogram2d(
-        density_x_values,
-        density_y_values,
-        bins=number_of_bins,
-    )
-
-    x_bin_indices = (
-        np.searchsorted(
-            x_edges,
-            density_x_values,
-            side="right",
-        )
-        - 1
-    )
-
-    y_bin_indices = (
-        np.searchsorted(
-            y_edges,
-            density_y_values,
-            side="right",
-        )
-        - 1
-    )
-
-    x_bin_indices = np.clip(
-        x_bin_indices,
-        0,
-        histogram.shape[0] - 1,
-    )
-
-    y_bin_indices = np.clip(
-        y_bin_indices,
-        0,
-        histogram.shape[1] - 1,
-    )
-
-    raw_density_values = histogram[
-        x_bin_indices,
-        y_bin_indices,
-    ]
-
-    if colormap_log_scale:
-        return np.log10(
-            raw_density_values + 1.0,
-        )
-
-    return raw_density_values.astype(
-        float,
-        copy=False,
+    """Compute event colors using the shared scatter density transform."""
+    return transforms.compute_2d_density_values(
+        x_values=x_values, y_values=y_values, x_log_scale=x_log_scale, y_log_scale=y_log_scale,
+        colormap_log_scale=colormap_log_scale, number_of_bins=number_of_bins,
     )
 
 

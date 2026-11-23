@@ -456,12 +456,12 @@ class Test_PeakWorkflowGraphBuilder2DFiltering:
             "FL1-H": np.arange(100.0, 245.0),
         }
 
-        def read_column(*, fcs_file_path, detector_column, dtype, n):
+        def read_columns(*, fcs_file_path, detector_columns, max_events):
             """Read a detector prefix without touching the underlying signal."""
             assert fcs_file_path == backend.fcs_file_path
-            return signals[detector_column][:n].astype(dtype)
+            return tuple(signals[column][:max_events].copy() for column in detector_columns)
 
-        monkeypatch.setattr(rosetta_mix, "column_copy", read_column)
+        monkeypatch.setattr(rosetta_mix, "read_peak_event_columns", read_columns)
         settings = RosettaRunSettings.from_raw_values(
             peak_count=3, max_events_for_analysis=130,
             process_settings={"filter_edge_artifacts": filter_edge_artifacts},

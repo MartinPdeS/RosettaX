@@ -13,6 +13,7 @@ from .monotonic import (
     resolve_monotonic_target_mie_relation,
 )
 from RosettaX.workflow import scattering
+from RosettaX.workflow.scattering.numerical_arrays import _log_array_summary
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -100,6 +101,7 @@ def apply_scattering_calibration_to_dataframe(
     )
 
     _log_array_summary(
+        log=logger,
         name="apply_source_values",
         values=source_values,
     )
@@ -109,6 +111,7 @@ def apply_scattering_calibration_to_dataframe(
     )
 
     _log_array_summary(
+        log=logger,
         name="apply_estimated_coupling",
         values=estimated_coupling,
     )
@@ -119,6 +122,7 @@ def apply_scattering_calibration_to_dataframe(
     )
 
     _log_array_summary(
+        log=logger,
         name="apply_mie_equivalent_diameter_nm",
         values=mie_equivalent_diameter_nm,
     )
@@ -251,55 +255,4 @@ def _build_reference_peak_roundtrip_warning(
     return (
         "Reference peak round-trip check on saved calibration centroids: "
         f"{formatted_entries}."
-    )
-
-
-def _log_array_summary(
-    *,
-    name: str,
-    values: Any,
-) -> None:
-    """
-    Log a compact numerical summary of an array.
-    """
-    try:
-        array = np.asarray(
-            values,
-            dtype=float,
-        ).reshape(-1)
-    except Exception:
-        logger.debug(
-            "%s summary unavailable because conversion to float array failed. raw_type=%s",
-            name,
-            type(values).__name__,
-        )
-        return
-
-    finite_mask = np.isfinite(
-        array,
-    )
-
-    finite_values = array[finite_mask]
-
-    if finite_values.size == 0:
-        logger.debug(
-            "%s summary: size=%r finite_count=0 nan_count=%r inf_count=%r values=%r",
-            name,
-            array.size,
-            int(np.sum(np.isnan(array))),
-            int(np.sum(np.isinf(array))),
-            array.tolist(),
-        )
-        return
-
-    logger.debug(
-        "%s summary: size=%r finite_count=%r nan_count=%r inf_count=%r min=%r max=%r first_values=%r",
-        name,
-        array.size,
-        finite_values.size,
-        int(np.sum(np.isnan(array))),
-        int(np.sum(np.isinf(array))),
-        float(np.min(finite_values)),
-        float(np.max(finite_values)),
-        array[:10].tolist(),
     )

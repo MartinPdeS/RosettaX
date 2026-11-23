@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pandas as pd
 import re
-import weakref
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from RosettaX.utils.fcs_builder import FCSBuilder
@@ -50,7 +50,6 @@ class FCSFile:
     _file_handle: Any = field(init=False, default=None, repr=False)
     _mmap: mmap.mmap | None = field(init=False, default=None, repr=False)
     _records: np.ndarray | None = field(init=False, default=None, repr=False)
-    _finalizer: Any = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         self.file_path = str(self.file_path)
@@ -73,18 +72,15 @@ class FCSFile:
             delimiter=self.delimiter,
         )
 
-        logger.debug(
-            "Parsed FCS metadata: %r",
-            self.metadata.debug_summary(),
-        )
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Parsed FCS metadata: %r", self.metadata.debug_summary())
 
         self._open_mmap()
 
-        self._finalizer = weakref.finalize(
-            self,
-            type(self)._best_effort_close,
-            self,
-        )
+    def __del__(self) -> None:
+        """Release an open reader when a caller omits the context manager."""
+        if self._file_handle is not None:
+            self.close()
 
     def __enter__(self) -> Self:
         logger.debug("Entering FCSFile context for file_path=%r", self.file_path)
@@ -154,16 +150,11 @@ class FCSFile:
 
         raw = self._records[f"parameter_{column_index}"]
 
-        if dtype is None:
-            owned = np.asarray(raw).copy()
-        else:
-            owned = np.asarray(raw, dtype=dtype).copy()
-
         if start:
-            owned = owned[int(start) :]
-
+            raw = raw[int(start):]
         if n is not None:
-            owned = owned[: int(n)]
+            raw = raw[:int(n)]
+        owned = np.array(raw, dtype=dtype, copy=True)
 
         logger.debug(
             "Copied FCS column for file_path=%r, column_name=%r, result_shape=%r, result_dtype=%r",
@@ -243,11 +234,8 @@ class FCSFile:
 
         dataframe = pd.DataFrame(arrays, copy=False)
 
-        for (
-            attribute_name,
-            attribute_value,
-        ) in self.metadata.to_dataframe_attrs().items():
-            dataframe.attrs[attribute_name] = attribute_value
+        metadata_attrs = self.metadata.to_dataframe_attrs()
+        dataframe.attrs.update(deepcopy(metadata_attrs) if deep else metadata_attrs)
 
         logger.debug(
             "Copied FCS dataframe for file_path=%r, shape=%r, columns=%r",
@@ -255,9 +243,6 @@ class FCSFile:
             dataframe.shape,
             list(dataframe.columns),
         )
-
-        if deep:
-            return dataframe.copy(deep=True)
 
         return dataframe
 
@@ -548,6 +533,7 @@ class FCSFile:
                 access=access,
             )
         except Exception:
+            self.close()
             logger.exception(
                 "Failed to open mmap for file_path=%r, writable=%r",
                 self.file_path,
@@ -827,42 +813,6 @@ class FCSFile:
             self._records.shape,
             self._records.dtype,
         )
-
-    @staticmethod
-    def _best_effort_close(instance: "FCSFile") -> None:
-        try:
-            if instance._mmap is not None:
-                try:
-                    instance._mmap.close()
-                except Exception:
-                    logger.debug(
-                        "Best effort close failed while closing mmap for file_path=%r",
-                        instance.file_path,
-                        exc_info=True,
-                    )
-
-                instance._mmap = None
-
-            if instance._file_handle is not None:
-                try:
-                    instance._file_handle.close()
-                except Exception:
-                    logger.debug(
-                        "Best effort close failed while closing file handle for file_path=%r",
-                        instance.file_path,
-                        exc_info=True,
-                    )
-
-                instance._file_handle = None
-
-            instance._records = None
-
-        except Exception:
-            logger.debug(
-                "Best effort close failed for file_path=%r",
-                getattr(instance, "file_path", None),
-                exc_info=True,
-            )
 
     @classmethod
     def builder_from_dataframe(

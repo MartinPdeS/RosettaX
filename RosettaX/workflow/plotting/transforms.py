@@ -78,3 +78,53 @@ def smooth_histogram_counts(
 
     padded_counts = np.pad(counts, radius, mode="edge")
     return np.convolve(padded_counts, kernel, mode="valid")
+
+
+def compute_2d_density_values(
+    *, x_values: Any, y_values: Any, x_log_scale: bool, y_log_scale: bool,
+    colormap_log_scale: bool, number_of_bins: int,
+) -> np.ndarray:
+    """Return the histogram bin occupancy for each paired scatter event.
+
+    Returns
+    -------
+    np.ndarray
+        One density per input pair, in input order. Invalid coordinates receive
+        zero. A lone valid event has density one on either color scale.
+    """
+    x = np.asarray(x_values, dtype=float)
+    y = np.asarray(y_values, dtype=float)
+    if x.ndim != 1 or x.shape != y.shape:
+        raise ValueError("Scatter density requires paired one-dimensional coordinates.")
+
+    if number_of_bins < 1:
+        raise ValueError("Scatter density requires at least one bin.")
+
+    valid = np.isfinite(x) & np.isfinite(y)
+    if x_log_scale:
+        valid &= x > 0
+    if y_log_scale:
+        valid &= y > 0
+
+    valid_count = np.count_nonzero(valid)
+    if valid_count <= 1:
+        return valid.astype(float)
+    if valid_count != x.size:
+        x, y = x[valid], y[valid]
+    if x_log_scale:
+        x = np.log10(x)
+    if y_log_scale:
+        y = np.log10(y)
+
+    # Searching only interior edges includes the maxima in the final bin.
+    x_edges = np.linspace(x.min(), x.max(), number_of_bins + 1)
+    y_edges = np.linspace(y.min(), y.max(), number_of_bins + 1)
+    bin_ids = np.searchsorted(x_edges[1:-1], x, side="right") * number_of_bins
+    bin_ids += np.searchsorted(y_edges[1:-1], y, side="right")
+    counts = np.bincount(bin_ids)
+    density = np.log10(counts + 1.0) if colormap_log_scale else counts.astype(float)
+    if valid_count == valid.size:
+        return density[bin_ids]
+    result = np.zeros(valid.shape, dtype=float)
+    result[valid] = density[bin_ids]
+    return result

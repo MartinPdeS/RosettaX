@@ -6,7 +6,9 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 import numpy as np
+import pandas as pd
 import pytest
+from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.peak.scripts._events import (
     filter_finite_peak_events,
     read_peak_event_columns,
@@ -58,18 +60,13 @@ def test_standardization_retains_constant_features_and_reverses_scaling():
     assert inverse_transform_position(transformed_position=2.0, use_log_transform=False) == 2.0
 
 
-def test_paired_event_read_preserves_prefix_alignment_and_filter_count():
+def test_paired_event_read_preserves_prefix_alignment_and_filter_count(tmp_path):
     """Read the same event limit and remove whole rows with invalid channel values."""
     signals = {"scatter": [12.0, np.nan, 35.0, 46.0], "green": [120.0, 230.0, np.inf, 460.0]}
 
-    def read_column(*, fcs_file_path, detector_column, dtype, n):
-        """Simulate a detector read with a shared event limit."""
-        assert fcs_file_path == "sample.fcs"
-        return np.asarray(signals[detector_column][:n], dtype=dtype)
-
-    columns = read_peak_event_columns(
-        fcs_file_path="sample.fcs", detector_columns=("scatter", "green"), max_events=3, read_column=read_column,
-    )
+    path = tmp_path / "paired.fcs"
+    FCSFile.builder_from_dataframe(pd.DataFrame(signals)).write(path)
+    columns = read_peak_event_columns(fcs_file_path=str(path), detector_columns=("scatter", "green"), max_events=3)
     (scatter, green), removed = filter_finite_peak_events(columns=columns)
     np.testing.assert_array_equal(scatter, [12.0])
     np.testing.assert_array_equal(green, [120.0])

@@ -7,6 +7,7 @@ from .models import (
     ScatteringTargetModelParameters,
 )
 from RosettaX.workflow import scattering
+from RosettaX.workflow.scattering.numerical_arrays import _log_array_summary
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -754,6 +755,7 @@ def coupling_to_diameter_with_linear_extrapolation(
     ] = np.nan
 
     _log_array_summary(
+        log=logger,
         name="coupling_to_diameter_interpolated_diameter",
         values=interpolated_diameter,
     )
@@ -879,11 +881,13 @@ def get_finite_positive_mie_relation_arrays(
     sorted_theoretical_coupling_values = theoretical_coupling_values[sorting_indices]
 
     _log_array_summary(
+        log=logger,
         name="finite_positive_mie_relation_diameter_values_nm",
         values=sorted_diameter_values_nm,
     )
 
     _log_array_summary(
+        log=logger,
         name="finite_positive_mie_relation_theoretical_coupling_values",
         values=sorted_theoretical_coupling_values,
     )
@@ -1124,54 +1128,3 @@ def format_monotonic_interval_suggestions(
         )
 
     return f"Suggested monotonic intervals: {interval_text}."
-
-
-def _log_array_summary(
-    *,
-    name: str,
-    values: Any,
-) -> None:
-    """
-    Log a compact numerical summary of an array.
-    """
-    try:
-        array = np.asarray(
-            values,
-            dtype=float,
-        ).reshape(-1)
-    except Exception:
-        logger.debug(
-            "%s summary unavailable because conversion to float array failed. raw_type=%s",
-            name,
-            type(values).__name__,
-        )
-        return
-
-    finite_mask = np.isfinite(
-        array,
-    )
-
-    finite_values = array[finite_mask]
-
-    if finite_values.size == 0:
-        logger.debug(
-            "%s summary: size=%r finite_count=0 nan_count=%r inf_count=%r values=%r",
-            name,
-            array.size,
-            int(np.sum(np.isnan(array))),
-            int(np.sum(np.isinf(array))),
-            array.tolist(),
-        )
-        return
-
-    logger.debug(
-        "%s summary: size=%r finite_count=%r nan_count=%r inf_count=%r min=%r max=%r first_values=%r",
-        name,
-        array.size,
-        finite_values.size,
-        int(np.sum(np.isnan(array))),
-        int(np.sum(np.isinf(array))),
-        float(np.min(finite_values)),
-        float(np.max(finite_values)),
-        array[:10].tolist(),
-    )

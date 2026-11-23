@@ -8,9 +8,11 @@ if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v"]))
 
 
+import gc
 import numpy as np
 import pandas as pd
 import pytest
+import weakref
 from pathlib import Path
 from RosettaX.utils import directories
 from RosettaX.utils.reader import FCSFile
@@ -51,6 +53,27 @@ def test_fcs_reader_loads_sample_file(sample_fcs_file_path: Path) -> None:
     assert len(column_names) > 0
     assert all(isinstance(column_name, str) for column_name in column_names)
     assert all(column_name.strip() != "" for column_name in column_names)
+
+
+@pytest.mark.parametrize("explicit_close", [True, False])
+def test_reader_releases_resources_and_returns_owned_slices(sample_fcs_file_path, explicit_close):
+    """A bounded read must remain usable after the reader and its mapping close."""
+    reader = FCSFile(sample_fcs_file_path)
+    name = reader.get_column_names()[0]
+    expected = reader.column_copy(name, n=12)[5:12]
+    actual = reader.column_copy(name, start=5, n=7)
+    handle = reader._file_handle
+    mapping = reader._mmap
+    reader_ref = weakref.ref(reader)
+    if explicit_close:
+        reader.close()
+    del reader
+    gc.collect()
+
+    assert reader_ref() is None
+    assert handle.closed and mapping.closed
+    assert actual.flags.owndata
+    np.testing.assert_array_equal(actual, expected)
 
 
 def test_fcs_reader_returns_numeric_dataframe(sample_fcs_file_path: Path) -> None:

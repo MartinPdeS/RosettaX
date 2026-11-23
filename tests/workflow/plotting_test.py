@@ -19,6 +19,7 @@ from RosettaX.workflow.plotting.models import (
 )
 from RosettaX.workflow.plotting.transforms import (
     build_histogram_arrays,
+    compute_2d_density_values,
     finite_plot_values,
     smooth_histogram_counts,
 )
@@ -103,3 +104,41 @@ class TestPlottingTransforms:
         assert smoothed.shape == counts.shape
         assert not np.array_equal(smoothed, counts)
         assert np.all(np.isfinite(smoothed))
+
+
+@pytest.mark.parametrize("log_x", [False, True])
+@pytest.mark.parametrize("log_y", [False, True])
+@pytest.mark.parametrize("log_color", [False, True])
+def test_density_matches_histogram_with_invalid_pairs_and_bin_edges(log_x, log_y, log_color):
+    """Match NumPy bin counts, including exact internal edges and the right endpoint."""
+    x = np.array([-1, 0, 1, 1, 2, 4, 8, 16, np.inf, 16], dtype=float)
+    y = np.array([0, 1, 2, 2, 2, 4, 8, 16, 2, np.nan], dtype=float)
+    valid = np.isfinite(x) & np.isfinite(y)
+    if log_x:
+        valid &= x > 0
+    if log_y:
+        valid &= y > 0
+    xx = np.log10(x[valid]) if log_x else x[valid]
+    yy = np.log10(y[valid]) if log_y else y[valid]
+    counts, x_edges, y_edges = np.histogram2d(xx, yy, bins=4)
+    expected = np.zeros_like(x)
+    x_bin = np.clip(np.digitize(xx, x_edges) - 1, 0, counts.shape[0] - 1)
+    y_bin = np.clip(np.digitize(yy, y_edges) - 1, 0, counts.shape[1] - 1)
+    expected[valid] = counts[x_bin, y_bin]
+    if log_color:
+        expected = np.log10(1.0 + expected)
+    density = compute_2d_density_values(
+        x_values=x, y_values=y, x_log_scale=log_x, y_log_scale=log_y,
+        colormap_log_scale=log_color, number_of_bins=4,
+    )
+    np.testing.assert_array_equal(density, expected)
+
+
+def test_density_resolves_nearly_identical_coordinates():
+    """Keep distinct endpoints when the bin width falls below floating-point precision."""
+    x = [1.0, 1.0, np.nextafter(1.0, 2.0)]
+    values = compute_2d_density_values(
+        x_values=x, y_values=[1e16] * 3, x_log_scale=False, y_log_scale=False,
+        colormap_log_scale=False, number_of_bins=5,
+    )
+    np.testing.assert_array_equal(values, [2, 2, 1])

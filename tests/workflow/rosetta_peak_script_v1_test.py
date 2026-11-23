@@ -8,8 +8,11 @@ if __name__ == "__main__":
 
 
 import pytest
-from .rosetta_peak_script_test import _build_synthetic_dataset_with_two_markers
-from RosettaX.workflow.peak.scripts import rosetta_mix, rosetta_mix_v1
+from .rosetta_peak_script_test import (
+    _build_synthetic_dataset_with_two_markers,
+    _supply_rosetta_events,
+)
+from RosettaX.workflow.peak.scripts import rosetta_mix_v1
 from types import SimpleNamespace
 
 
@@ -202,24 +205,7 @@ class Test_RosettaPeakScriptV1:
         """Check a single detected marker stops size assignment."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix_v1.FluorescenceGuidedScatterPeakProcessV1()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")

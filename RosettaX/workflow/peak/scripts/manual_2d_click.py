@@ -11,7 +11,6 @@ from .base import (
     filter_edge_artifact_pairs,
     resolve_edge_artifact_filter_enabled,
 )
-from RosettaX.utils.io import column_copy
 from RosettaX.workflow.plotting.scatter2d import Scatter2DGraph
 from typing import Any
 
@@ -259,7 +258,7 @@ class Manual2DClickProcess(ManualPeakControls, BasePeakProcess):
         max_events, configured_bins = self._resolve_snap_settings(runtime_config_data=runtime_config_data)
         columns = read_peak_event_columns(
             fcs_file_path=backend.fcs_file_path, detector_columns=(x_detector_column, y_detector_column),
-            max_events=max_events, read_column=column_copy,
+            max_events=max_events,
         )
         x_values, y_values = columns
         if resolve_edge_artifact_filter_enabled(

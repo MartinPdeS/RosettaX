@@ -68,7 +68,6 @@ from .rosetta_mix_support import (
 from collections.abc import Callable
 from dataclasses import replace
 from functools import partial
-from RosettaX.utils.io import column_copy
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -558,7 +557,6 @@ def read_rosetta_events(
         fcs_file_path=source["fcs_file_path"],
         detector_columns=(source["scattering_column"], source["green_fluorescence_column"]),
         max_events=source["max_events_for_analysis"],
-        read_column=column_copy,
     )
     (scattering_values, green_fluorescence_values), removed_nonfinite = filter_finite_peak_events(columns=columns)
     scatter_edge_values = {}

@@ -72,6 +72,17 @@ def _build_dataset_without_markers() -> tuple[np.ndarray, np.ndarray]:
     return scattering.astype(float), fluorescence.astype(float)
 
 
+def _supply_rosetta_events(*, monkeypatch, scattering, fluorescence):
+    """Provide paired synthetic detector channels to the Rosetta script."""
+    signals = {"SSC-A": scattering, "FITC-A": fluorescence}
+
+    def read_columns(*, fcs_file_path, detector_columns, max_events):
+        """Select the requested prefix in detector order."""
+        return tuple(signals[column][:max_events].copy() for column in detector_columns)
+
+    monkeypatch.setattr(rosetta_mix, "read_peak_event_columns", read_columns)
+
+
 class Test_RosettaPeakScript:
     """Regression checks for Rosetta peak script."""
 
@@ -136,23 +147,6 @@ class Test_RosettaPeakScript:
         scattering, fluorescence = _build_dataset_without_markers()
         captured_fit_cv_thresholds: list[float] = []
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
         def fake_find_fit_validate_peaks_1d(**kwargs):
             """Return prepared peak-fit results for the detection scenario."""
             captured_fit_cv_thresholds.append(float(kwargs["fit_cv_threshold"]))
@@ -161,7 +155,7 @@ class Test_RosettaPeakScript:
                 "validated_peaks": [],
             }
 
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
         monkeypatch.setattr(
             rosetta_mix,
             "find_fit_validate_peaks_1d",
@@ -192,23 +186,6 @@ class Test_RosettaPeakScript:
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
         captured_fit_cv_thresholds: list[float] = []
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
         def fake_find_fit_validate_peaks_1d(**kwargs):
             """Return prepared peak-fit results for the detection scenario."""
             values = np.asarray(kwargs["values"], dtype=float)
@@ -235,7 +212,7 @@ class Test_RosettaPeakScript:
                 ],
             }
 
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
         monkeypatch.setattr(
             rosetta_mix,
             "find_fit_validate_peaks_1d",
@@ -268,23 +245,6 @@ class Test_RosettaPeakScript:
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
         captured_fit_r2_thresholds: list[float] = []
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
         def fake_find_fit_validate_peaks_1d(**kwargs):
             """Return prepared peak-fit results for the detection scenario."""
             values = np.asarray(kwargs["values"], dtype=float)
@@ -311,7 +271,7 @@ class Test_RosettaPeakScript:
                 ],
             }
 
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
         monkeypatch.setattr(
             rosetta_mix,
             "find_fit_validate_peaks_1d",
@@ -357,24 +317,7 @@ class Test_RosettaPeakScript:
             ]
         )
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")
@@ -420,24 +363,7 @@ class Test_RosettaPeakScript:
             ]
         )
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
         monkeypatch.setattr(
             rosetta_mix,
             "find_fit_validate_peaks_1d",
@@ -565,24 +491,7 @@ class Test_RosettaPeakScript:
         scattering = np.asarray([1000.0, 2000.0, 3000.0], dtype=float)
         fluorescence = np.asarray([100.0, 110.0, 120.0], dtype=float)
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
         monkeypatch.setattr(
             rosetta_mix,
             "find_fit_validate_peaks_1d",
@@ -660,24 +569,7 @@ class Test_RosettaPeakScript:
         """Check run automatic action detects non fluorescent scatter peaks."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")
@@ -719,24 +611,7 @@ class Test_RosettaPeakScript:
         """Check run automatic action can insert marker associated scatter peaks into table."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")
@@ -770,24 +645,7 @@ class Test_RosettaPeakScript:
         """Check run automatic action stops when no marker peaks found."""
         scattering, fluorescence = _build_dataset_without_markers()
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")
@@ -848,24 +706,7 @@ class Test_RosettaPeakScript:
         """Check baseline gate width changes payload y gate interval."""
         scattering, fluorescence = _build_synthetic_dataset_with_two_markers()
 
-        def fake_column_copy(*, fcs_file_path, detector_column, dtype=float, n=None):
-            """Return detector values prepared for this peak-detection test."""
-            del fcs_file_path
-            del dtype
-
-            if detector_column == "SSC-A":
-                values = scattering
-            elif detector_column == "FITC-A":
-                values = fluorescence
-            else:
-                raise AssertionError(f"Unexpected detector column: {detector_column}")
-
-            if n is None:
-                return values
-
-            return values[: int(n)]
-
-        monkeypatch.setattr(rosetta_mix, "column_copy", fake_column_copy)
+        _supply_rosetta_events(monkeypatch=monkeypatch, scattering=scattering, fluorescence=fluorescence)
 
         process = rosetta_mix.FluorescenceGuidedScatterPeakProcess()
         backend = SimpleNamespace(fcs_file_path="dummy.fcs")

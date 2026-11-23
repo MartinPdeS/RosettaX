@@ -35,6 +35,32 @@ def _signal_cache_key(
     )
 
 
+def _read_filtered_signal(
+    *, reader: FCSFile, detector_column: str, limit: int | None, positive_only: bool,
+) -> np.ndarray:
+    """Read enough events to satisfy a limit applied after signal filtering."""
+    # Negative limits retain the legacy Python slice semantics.
+    block_size = limit if limit is not None and limit >= 0 else None
+    start = 0
+    accepted_count = 0
+    blocks = []
+    while True:
+        raw = reader.column_copy(detector_column, dtype=float, start=start, n=block_size)
+        valid = np.isfinite(raw)
+        if positive_only:
+            valid &= raw > 0
+        block = raw if valid.all() else raw[valid]
+        blocks.append(block)
+        accepted_count += block.size
+        if block_size is None or accepted_count >= limit or raw.size < block_size:
+            break
+        start += raw.size
+        block_size = max(4096, limit - accepted_count)
+
+    signal = blocks[0] if len(blocks) == 1 else np.concatenate(blocks)
+    return signal[:limit]
+
+
 def load_signal(
     fcs_file_path: str,
     detector_column: str,
@@ -44,9 +70,8 @@ def load_signal(
     """
     Load a detector signal from an FCS file.
 
-    Reads all events for the requested detector column, strips non-finite
-    values, and optionally filters out non-positive values and truncates to a
-    maximum event count.
+    Return finite values in event order, optionally filtering out non-positive
+    values before applying the event limit.
 
     Parameters
     ----------
@@ -83,10 +108,11 @@ def load_signal(
     )
 
     file_path = Path(fcs_file_path).resolve()
+    limit = None if max_events_for_analysis is None else int(max_events_for_analysis)
     cache_key = _signal_cache_key(
         file_path,
         resolved_detector_column,
-        None if max_events_for_analysis is None else int(max_events_for_analysis),
+        limit,
         require_positive_values,
     )
     with _signal_cache_lock:
@@ -96,23 +122,17 @@ def load_signal(
             return cached_signal.copy()
 
     with FCSFile(file_path, writable=False) as fcs_file:
-        signal = fcs_file.column_copy(resolved_detector_column, dtype=float)
-
-    signal = np.asarray(signal, dtype=float).reshape(-1)
-    signal = signal[np.isfinite(signal)]
-
-    if require_positive_values:
-        signal = signal[signal > 0.0]
-
-    if max_events_for_analysis is not None:
-        signal = signal[: int(max_events_for_analysis)]
+        signal = _read_filtered_signal(
+            reader=fcs_file, detector_column=resolved_detector_column, limit=limit,
+            positive_only=require_positive_values,
+        )
 
     # A replacement during reading must never be cached under the old identity.
     try:
         unchanged = cache_key == _signal_cache_key(
             file_path,
             resolved_detector_column,
-            None if max_events_for_analysis is None else int(max_events_for_analysis),
+            limit,
             require_positive_values,
         )
     except OSError:
@@ -130,15 +150,9 @@ def load_signal(
             ):
                 _signal_cache.popitem(last=False)
 
-    logger.debug(
-        "load_signal returning detector_column=%r n_values=%r min=%r max=%r",
-        resolved_detector_column,
-        signal.size,
-        None if signal.size == 0 else float(np.min(signal)),
-        None if signal.size == 0 else float(np.max(signal)),
-    )
-
+    logger.debug("Loaded detector %r with %d values", resolved_detector_column, signal.size)
     return signal
+
 
 def column_copy(
     fcs_file_path: str,

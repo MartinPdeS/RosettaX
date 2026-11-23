@@ -95,3 +95,13 @@ def test_cache_evicts_by_bytes_and_skips_oversized_signals(signal_file, monkeypa
     io.load_signal(path, "SSC")
     assert reader.call_count == 5
     assert not io._signal_cache
+
+
+@pytest.mark.parametrize("limit", [0, 2, 20_000, -1, None])
+def test_signal_limits_follow_filtering_across_sparse_events(tmp_path, limit):
+    """Find valid signals across blocks and retain unrestricted and negative slicing."""
+    raw = np.full(10_000, np.nan)
+    raw[[100, 5000, 9000, 9999]] = [0, 1, 2, 3]
+    path = tmp_path / "sparse.fcs"
+    FCSFile.builder_from_dataframe(pd.DataFrame({"SSC": raw})).write(path)
+    np.testing.assert_array_equal(io.load_signal(path, "SSC", limit, True), [1, 2, 3][:limit])
