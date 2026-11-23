@@ -37,64 +37,68 @@
         "saturation_guard_enabled": true,
         "saturation_guard_fraction": 0.5
       },
-      "warning": false,
+      "warning": true,
       "rows": [
         {
+          "measured_peak_position": 2241.0324348205727,
+          "particle_diameter_nm": 70.0
+        },
+        {
           "measured_peak_position": 5265.376774777295,
-          "particle_diameter_nm": 100
+          "particle_diameter_nm": 100.0
         },
         {
           "measured_peak_position": 17621.22825436084,
-          "particle_diameter_nm": 125
+          "particle_diameter_nm": 125.0
         },
         {
           "measured_peak_position": 44356.16604888718,
-          "particle_diameter_nm": 147
+          "particle_diameter_nm": 147.0
         },
         {
           "measured_peak_position": 264347.4209869577,
-          "particle_diameter_nm": 203
+          "particle_diameter_nm": 203.0
         },
         {
           "measured_peak_position": 1508958.7958466327,
-          "particle_diameter_nm": 296
+          "particle_diameter_nm": 296.0
         }
       ],
       "payload": {
         "points": [
           {
             "x": 2241.0324348205727,
-            "y": 619,
+            "y": 619.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 5265.376774777295,
-            "y": 750,
+            "y": 750.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 17621.22825436084,
-            "y": 854,
+            "y": 854.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 44356.16604888718,
-            "y": 929,
+            "y": 929.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 264347.4209869577,
-            "y": 1040,
+            "y": 1040.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 1508958.7958466327,
-            "y": 1168,
+            "y": 1168.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 3580955.539911597,
-            "y": 1392,
+            "y": 1392.0,
             "kind": "non_fluorescent"
           },
           {
@@ -121,6 +125,11 @@
         ],
         "baseline_cutoff": 2710.8816535546434,
         "scatter_guide_annotations": [
+          {
+            "x": 2241.0324348205727,
+            "label": "70 nm",
+            "kind": "non_fluorescent"
+          },
           {
             "x": 5265.376774777295,
             "label": "100 nm",
@@ -158,11 +167,10 @@
           }
         ]
       },
-      "status_contains": "Saturation guard excluded 1 table peak(s)",
+      "status_contains": "Partial result: Found 1 validated scatter peaks above the 380 nm marker. Expected 4 (400, 600, 799, 994 nm), so this region was left unsized.",
       "expected_sizing": {
-        "state": "assigned",
-        "needs_confirmation": true,
-        "excluded_lowest_diameter_nm": 70
+        "state": "partial",
+        "needs_confirmation": false
       },
       "historical_global_scatter_positions": [
         2301.0954321777417,

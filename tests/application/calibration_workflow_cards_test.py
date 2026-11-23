@@ -75,7 +75,7 @@ def _collect_text(component: Any) -> list[str]:
             "RosettaX.pages.p03_scattering.main",
             "ScatterCalibrationPage",
             "scattering_calibration",
-            ("1", "2", "3", "4", "5", "6"),
+            ("1", "2", "3", "4", "5"),
         ),
         (
             "RosettaX.pages.p04_calibrate.main",
@@ -91,14 +91,14 @@ def _collect_text(component: Any) -> list[str]:
         ),
     ],
 )
-def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
+def test_calibration_workflow_cards_have_expected_open_state_and_tooltips(
     monkeypatch,
     module_name: str,
     page_class_name: str,
     page_name: str,
     section_keys: tuple[str, ...],
 ) -> None:
-    """Check calibration workflow cards start collapsed with descriptions in tooltips."""
+    """Check the scattering upload opens by default and all cards have tooltips."""
     monkeypatch.setattr(dash, "register_page", lambda *args, **kwargs: None)
     sections_callback_module_name = module_name.rsplit(".", 1)[0] + ".sections.callbacks"
     if page_name != "cross-calibration":
@@ -128,8 +128,9 @@ def test_calibration_workflow_cards_start_collapsed_with_description_tooltips(
 
         assert isinstance(card, dbc.Card)
         assert isinstance(card.children[1], dbc.Collapse)
-        assert card.children[1].kwargs["is_open"] is False
-        assert calibration_cards.collapse_label(is_open=False) in _collect_text(
+        initially_open = page_name == "scattering_calibration" and section_key == "1"
+        assert card.children[1].kwargs["is_open"] is initially_open
+        assert calibration_cards.collapse_label(is_open=initially_open) in _collect_text(
             card.children[0]
         )
         tooltip = _find_component_by_type(card.children[0], dbc.Tooltip)

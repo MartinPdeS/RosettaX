@@ -40,6 +40,10 @@
       "warning": true,
       "rows": [
         {
+          "measured_peak_position": 9514.035416499883,
+          "particle_diameter_nm": ""
+        },
+        {
           "measured_peak_position": 406685.7046460726,
           "particle_diameter_nm": ""
         }
@@ -48,12 +52,12 @@
         "points": [
           {
             "x": 9514.035416499883,
-            "y": 506,
+            "y": 506.0,
             "kind": "non_fluorescent"
           },
           {
             "x": 406685.7046460726,
-            "y": 740,
+            "y": 740.0,
             "kind": "non_fluorescent"
           },
           {
@@ -87,11 +91,10 @@
           }
         ]
       },
-      "status_contains": "No assigned diameters remain after excluding the lowest non-fluorescent peak.",
+      "status_contains": "Warning: No sizes assigned: Found 1 validated scatter peaks between the 140 nm and 380 nm markers. Expected 3 (147, 203, 296 nm), so this region was left unsized. Found 1 validated scatter peaks below the 140 nm marker. Expected 3 (125, 100, 70 nm), so this region was left unsized. Found 0 validated scatter peaks above the 380 nm marker. Expected 4 (400, 600, 799, 994 nm), so this region was left unsized.",
       "expected_sizing": {
         "state": "unresolved",
-        "needs_confirmation": true,
-        "excluded_lowest_diameter_nm": 125
+        "needs_confirmation": false
       },
       "historical_global_scatter_positions": [
         9365.043857484628,

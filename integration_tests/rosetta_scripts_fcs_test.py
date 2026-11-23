@@ -110,9 +110,7 @@ def test_script_outcome_and_table_match_baseline(script_run):
         assert sizing["state"] == expected["expected_sizing"]["state"]
         assert sizing["needs_confirmation"] == expected["expected_sizing"]["needs_confirmation"]
         assert sizing["assigned_row_count"] == sum(bool(row["particle_diameter_nm"]) for row in rows)
-        excluded = payload["rosetta_lowest_peak_exclusion"]
-        assert excluded["diameter_nm"] == expected["expected_sizing"]["excluded_lowest_diameter_nm"]
-        assert excluded["position"] not in positions
+        assert "rosetta_lowest_peak_exclusion" not in payload
 
 
 def test_script_graph_markers_and_labels_match_baseline(script_run):

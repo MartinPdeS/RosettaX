@@ -71,30 +71,30 @@ METVES_SIZING_FLUORESCENCE = {"apogee_microplus_metves_07g1.fcs": "488-Grn(Peak)
 
 # Fixed-input review outcomes for the default Rosetta mode, not bead-identity labels.
 CHECKED_METVES_OUTCOMES = {
-    'beckman_coulter_cytoflex_s_metves_23w1.fcs': ([], 'The scatter peak assignments are sensitive'),
-    'beckman_coulter_cytoflex_s_metves_16p1.fcs': ([], 'The scatter peak assignments are sensitive'),
-    'beckman_coulter_cytoflex_lx_metves_14n1.fcs': ([], 'No stable fluorescence valley'),
-    'beckman_coulter_cytoflex_lx_metves_05e1.fcs': ([], 'The scatter peak assignments are sensitive'),
-    'cytek_aurora_metves_23w2.fcs': ([], 'No stable fluorescence valley'),
-    'bd_facslyric_metves_20t1.fcs': ([147, 203, 296, 400, 600, 799], ''),
-    'apogee_microplus_metves_06f2.fcs': (['', 400, 600], 'Partial result'),
-    'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([], 'No stable fluorescence valley'),
-    'apogee_a50_micro_metves_19s1.fcs': ([], 'The scatter peak assignments are sensitive'),
-    'cytek_aurora_metves_11k2.fcs': ([], 'No stable fluorescence valley'),
-    'apogee_microplus_metves_04d1.fcs': ([400, 600, 799, 994], 'Partial result'),
-    'bd_facsymphony_a1_metves_25y2.fcs': ([100, 125, 147, 203, 296, 400, 600, 799, 994], ''),
-    'apogee_microplus_metves_07g1.fcs': ([], 'No stable fluorescence valley'),
-    'bd_facscelesta_sorp_metves_09i1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], ''),
-    'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([], 'The scatter peak assignments are sensitive'),
-    'beckman_coulter_moflo_astrios_metves_21u1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
-    'apogee_microplus_metves_07g2.fcs': (['', '', 147, 203, 296, 400, 600], ''),
-    'cytek_aurora_metves_12l1.fcs': ([], 'No stable fluorescence valley'),
-    'cytek_northern_lights_metves_22v2.fcs': ([], 'No stable fluorescence valley'),
-    'bd_facsymphony_a1_metves_25y1.fcs': ([100, 125, 147, 203, 296, 400, 600, 799, 994], ''),
-    'apogee_a60_micro_metves_22v1.fcs': ([100, 125, 147, 203, 296], ''),
-    'cytek_aurora_metves_18r1.fcs': ([147, 203, 296, 400, 600, 799, 994], ''),
-    'beckman_coulter_cytoflex_lx_metves_16p2.fcs': ([], 'No stable fluorescence valley'),
-    'bd_facsymphony_a5_metves_08h1.fcs': ([], 'No stable fluorescence valley'),
+    'beckman_coulter_cytoflex_s_metves_23w1.fcs': (['', 147, 203, 296, '', ''], 'Partial result: Found'),
+    'beckman_coulter_cytoflex_s_metves_16p1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'beckman_coulter_cytoflex_lx_metves_14n1.fcs': (['', '', ''], 'Diameters are blank'),
+    'beckman_coulter_cytoflex_lx_metves_05e1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], 'Partial result: Found'),
+    'cytek_aurora_metves_23w2.fcs': (['', '', 147, 203, 296], 'Partial result: Found'),
+    'bd_facslyric_metves_20t1.fcs': (['', '', '', '', '', '', ''], 'Diameters are blank'),
+    'apogee_microplus_metves_06f2.fcs': (['', '', '', ''], 'No sizes assigned'),
+    'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([400, 600, 799, 994], 'Partial result: Found'),
+    'apogee_a50_micro_metves_19s1.fcs': (['', '', '', '', 400, 600, 799, 994], 'Partial result: Found'),
+    'cytek_aurora_metves_11k2.fcs': (['', '', 147, 203, 296], 'Partial result: Found'),
+    'apogee_microplus_metves_04d1.fcs': (['', 400, 600, 799, 994], 'Partial result: Found'),
+    'bd_facsymphony_a1_metves_25y2.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'apogee_microplus_metves_07g1.fcs': (['', '', '', '', '', ''], 'No sizes assigned'),
+    'bd_facscelesta_sorp_metves_09i1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'beckman_coulter_moflo_astrios_metves_21u1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'apogee_microplus_metves_07g2.fcs': (['', '', '', '', '', '', '', ''], 'Diameters are blank'),
+    'cytek_aurora_metves_12l1.fcs': (['', '', '', ''], 'Diameters are blank'),
+    'cytek_northern_lights_metves_22v2.fcs': (['', '', '', ''], 'Diameters are blank'),
+    'bd_facsymphony_a1_metves_25y1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'apogee_a60_micro_metves_22v1.fcs': ([70, 100, 125, 147, 203, 296], 'Partial result: Found'),
+    'cytek_aurora_metves_18r1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
+    'beckman_coulter_cytoflex_lx_metves_16p2.fcs': ([147, 203, 296, 400, 600, 799, 994], 'Partial result: Found'),
+    'bd_facsymphony_a5_metves_08h1.fcs': (['', 147, 203, 296, 400, 600, 799], 'Partial result: Found'),
 }
 
 
@@ -246,12 +246,12 @@ def run_sample_in_subprocess(**sample) -> dict:
 # Expected behavior at the default settings. These outcomes check the workflow
 # against fixed recordings and are not independent bead identity annotations.
 EXPECTED_OUTCOMES = {
-    'apogee_a60_micro_cal003_2022-01-31.fcs': ('', [100, 125, 147, 203, 296]),
-    'bd_facsymphony_a1_cal003_2022-02-11.fcs': ('The scatter peak assignments are sensitive', []),
-    'bd_facsymphony_a1_cal003_2022-02-18.fcs': ('', [203, 296, 400, 600, 799, 994]),
-    'bd_facsymphony_a1_cal003_2022-11-16.fcs': ('', [100, 125, 147, 203, 296, 400, 600, 799, 994]),
-    'miltenyi_macsquant_cal003_2022-05-13.fcs': ('', [296, 400, 600, 799, 994]),
-    'beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs': ('The scatter peak assignments are sensitive', []),
+    'apogee_a60_micro_cal003_2022-01-31.fcs': ('Partial result: Found', [70, 100, 125, 147, 203, 296]),
+    'bd_facsymphony_a1_cal003_2022-02-11.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
+    'bd_facsymphony_a1_cal003_2022-02-18.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
+    'bd_facsymphony_a1_cal003_2022-11-16.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
+    'miltenyi_macsquant_cal003_2022-05-13.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
+    'beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs': ('Partial result: Found', ['', '', 147, 203, 296, 400, 600, 799, 994]),
     'bd_facscalibur_cal003_2023-02-08.fcs': ('0 fluorescent marker peaks', []),
 }
 
@@ -287,7 +287,7 @@ def test_rosetta_bead_positions_sizes_and_scattering_fit(
 def test_metves_rosetta_assignments_and_warnings(
     *, filename: str, scatter: str, fluorescence: str,
 ) -> None:
-    """Check provisional diameters or the reason sizing stops on each METVES recording."""
+    """Check assigned and unassigned rows and warnings for each METVES recording."""
     result = run_sample_in_subprocess(
         filename=filename,
         scatter=scatter,
@@ -305,8 +305,6 @@ def test_metves_rosetta_assignments_and_warnings(
         assert warning_fragment in result["status"]
 
     if filename == "apogee_microplus_metves_04d1.fcs":
-        # The plotted trough spans approximately 1,500 to 8,000 a.u.
-        # The sizing warning still shows a cutoff between the bands.
-        lower, upper = result["gate_interval"]
-        assert 1_500 < lower < result["gate"] < upper < 8_000
-        assert 2_500 < result["gate"] < 5_000
+        # The fitted baseline gate is used while stable valley validation is disabled.
+        assert result["gate_interval"] is None
+        assert 1_500 < result["gate"] < 8_000

@@ -116,7 +116,7 @@ def test_settled_and_empty_selectors_skip_unchanged_values(registered_callbacks)
 @pytest.mark.parametrize(
     ("channel", "expected_wavelength", "expected_status"),
     [
-        ("SSC LogH", dash.no_update, "Configure the detector geometry and laser wavelength manually."),
+        ("SSC LogH", dash.no_update, "Enter or verify the detector geometry and wavelength."),
         ("488 SSC-H", 488, "Detected 488 nm from 488 SSC-H."),
     ],
 )
@@ -125,15 +125,16 @@ def test_detector_auto_detect_handles_channels_without_optical_preset(
 ):
     """Keep the preset unchanged and use only a wavelength encoded in the channel."""
     callbacks, _, section = registered_callbacks
-    monkeypatch.setattr(
-        section.model_configuration, "detect_detector_preset_from_uploaded_fcs", lambda **_: None,
-    )
+    monkeypatch.setattr(dash, "ctx", SimpleNamespace(
+        triggered_id=section.ids.detector_configuration_auto_detect_button,
+    ))
     preset, wavelength, status = callbacks["auto_detect_detector_configuration_preset"](
         1,
-        {"files": {"scattering_fcs_file_path": "sample.fcs"}},
         "Rosetta Script",
-        [{"process": "Rosetta Script", "channel": "scattering"}],
         [channel],
+        "",
+        {"uploaded_fcs_path": "sample.fcs"},
+        [{"process": "Rosetta Script", "channel": "scattering"}],
         405,
     )
     assert preset is dash.no_update

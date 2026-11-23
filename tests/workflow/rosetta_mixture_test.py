@@ -151,13 +151,13 @@ def test_mixture_script_routes_both_scatter_stages_through_new_fitter(monkeypatc
     assert right[1] == np.inf
     assert result is not None
     assert result.warning
-    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == [""]
-    assert result.peak_lines_payload["rosetta_assignment_evidence"]["scatter"]
+    assert [row["particle_diameter_nm"] for row in result.table_prefill_rows] == ["", ""]
+    assert not result.peak_lines_payload["rosetta_sizing"]["needs_confirmation"]
     assert result.peak_lines_payload["rosetta_sizing"]["state"] == "unresolved"
     assert result.peak_lines_payload["rosetta_sizing"]["assigned_row_count"] == 0
     assert result.peak_lines_payload["rosetta_sizing"]["rejection_reasons"]
-    assert "Found 1 validated scatter peak between" in result.status
-    assert "expected exactly 3 (147, 203, 296 nm)" in result.status
+    assert "Found 1 validated scatter peaks between" in result.status
+    assert "Expected 3 (147, 203, 296 nm)" in result.status
 
 
 def test_overlapping_populations_recover_distinct_observed_modes():
@@ -278,11 +278,11 @@ def test_incomplete_or_extra_middle_populations_leave_outer_sizes(complete_mixtu
     rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
     assert [row["particle_diameter_nm"] for row in rows] == [70, 100, 125, "", "", "", 400, 600, 799, 994]
     assert warning.startswith(f"Partial result: Found {len(middle)} validated scatter peak")
-    assert "expected exactly 3 (147, 203, 296 nm)" in warning
+    assert "Expected 3 (147, 203, 296 nm)" in warning
 
 
 @pytest.mark.parametrize("below_count,above_count", [(0, 0), (1, 0), (0, 1), (2, 1), (3, 4)])
-def test_optional_outer_populations_expand_from_anchors(complete_mixture_detection, below_count, above_count):
+def test_incomplete_outer_regions_stay_unsized(complete_mixture_detection, below_count, above_count):
     """Missing outer populations must not fail an otherwise complete middle group."""
     below = [100, 200, 300][-below_count:] if below_count else []
     above = [11000, 15000, 20000, 30000][:above_count]
@@ -298,10 +298,11 @@ def test_optional_outer_populations_expand_from_anchors(complete_mixture_detecti
         table_prefill_rows=[{"measured_peak_position": x} for x in positions],
     )
     rows, warning = MixtureRosettaScatterPeakProcess().assign_particle_sizes(result=result)
-    assert ("are provisional" in warning) == (0 < below_count < 3 or 0 < above_count < 4)
-    expected_below = [70, 100, 125][-below_count:] if below_count else []
+    assert bool(warning) == (below_count != 3 or above_count != 4)
+    expected_below = [70, 100, 125] if below_count == 3 else [""] * below_count
+    expected_above = [400, 600, 799, 994] if above_count == 4 else [""] * above_count
     assert [row["particle_diameter_nm"] for row in rows] == [
-        *expected_below, 147, 203, 296, *[400, 600, 799, 994][:above_count],
+        *expected_below, 147, 203, 296, *expected_above,
     ]
 
 
@@ -429,9 +430,9 @@ def test_complete_scatter_ladder_identifies_single_marker_by_rank():
     assert "dim fluorescent marker was not resolved" in status
 
 
-@pytest.mark.parametrize(("higher_peaks", "expected"), [(0, []), (2, [147, 203]), (3, [147, 203, 296]), (4, [147, 203, 296, ""])])
-def test_confirmed_dim_marker_assigns_nearest_populations_in_both_directions(*, higher_peaks, expected):
-    """Assign consecutive middle sizes only when a distinct bright gate identifies the dim gate."""
+@pytest.mark.parametrize("higher_peaks", [0, 2, 3, 4])
+def test_dim_marker_alone_leaves_peaks_unsized(*, higher_peaks):
+    """Leave sizes blank when only the dim marker has a usable scatter position."""
     scatter_positions = [12.5, 25.0, 50.0, 75.0, *[200.0 + 100.0 * index for index in range(higher_peaks)]]
     scatter_points = [{"x": position, "y": 20.0, "kind": "non_fluorescent"} for position in scatter_positions]
     detection = PeakProcessResult(
@@ -447,28 +448,24 @@ def test_confirmed_dim_marker_assigns_nearest_populations_in_both_directions(*, 
                     "marker_role": "Dim marker", "validated": True,
                     "fluorescence_position": 1500.0, "selected_peak": {"mean": 100.0},
                 },
-                {"marker_role": "Bright marker", "validated": False, "fluorescence_position": 4000.0},
+                {"marker_role": "Bright marker", "validated": False, "fluorescence_position": 4000.0, "gated_event_count": 100},
             ],
         },
     )
     _, rows, status = MixtureRosettaScatterPeakProcess().resolve_particle_sizes(result=detection)
-    assert [row["particle_diameter_nm"] for row in rows] == ["", 70, 100, 125, *expected]
-    assert "assumes no intermediate populations were missed" in status
+    assert [row["particle_diameter_nm"] for row in rows] == [""] * len(scatter_positions)
+    assert "Diameters are blank" in status
 
 
 @pytest.mark.parametrize(
-    ("usable_marker", "removed_positions", "expected_shift"),
-    [
-        ("Dim marker", {1100}, {3000: (203, 147), 9000: (296, 203), 11000: (400, 296)}),
-        ("Bright marker", {9000}, {300: (125, 147), 1100: (147, 203), 3000: (203, 296)}),
-        ("Dim marker", {30000}, {}),
-        ("Bright marker", {100}, {}),
-    ],
+    ("usable_marker", "removed_positions"),
+    [("Dim marker", {1100}), ("Bright marker", {9000}), ("Dim marker", {30000}),
+     ("Bright marker", {100}), ("Bright marker", {15000})],
 )
-def test_single_marker_rank_compares_bead_identity_to_two_marker_reference(
-    *, complete_mixture_detection, usable_marker, removed_positions, expected_shift,
+def test_single_marker_does_not_shift_bead_identities(
+    *, complete_mixture_detection, usable_marker, removed_positions,
 ):
-    """Compare assignments by known peak identity with one marker or one bead missing."""
+    """Keep matching bright-side sizes or leave ambiguous peaks unsized."""
     process = MixtureRosettaScatterPeakProcess()
     reference, reference_rows, _ = process.resolve_particle_sizes(result=complete_mixture_detection)
     reference_by_position = {
@@ -516,20 +513,18 @@ def test_single_marker_rank_compares_bead_identity_to_two_marker_reference(
     resolved, rows, status = process.resolve_particle_sizes(result=detection)
     assignments = {row["measured_peak_position"]: row["particle_diameter_nm"] for row in rows}
     assigned_sizes = [diameter for diameter in assignments.values() if diameter]
-    if usable_marker == "Bright marker" and not expected_shift:
-        assert assigned_sizes == [147, 203, 296, 400, 600, 799, 994]
-    assert {
-        position: (reference_by_position[position], diameter)
-        for position, diameter in assignments.items()
-        if diameter and diameter != reference_by_position[position]
-    } == expected_shift
-    provenance = resolved.peak_lines_payload["rosetta_size_assignments"]
+    bright_ladder_complete = usable_marker == "Bright marker" and not removed_positions.intersection(
+        {11000, 15000, 20000, 30000},
+    )
+    assert assigned_sizes == ([400, 600, 799, 994] if bright_ladder_complete else [])
+    assert all(
+        diameter == reference_by_position[position]
+        for position, diameter in assignments.items() if diameter
+    )
+    provenance = resolved.peak_lines_payload.get("rosetta_size_assignments", [])
     assert len(provenance) == len(assigned_sizes)
-    assert {entry["method"] for entry in provenance} == {"Estimated by rank from one marker"}
-    assert {tuple(entry["marker_diameters_nm"]) for entry in provenance} == {
-        (380.0,) if usable_marker == "Bright marker" else (140.0,),
-    }
-    assert "assumes no intermediate populations were missed" in status
+    assert all(entry["marker_diameters_nm"] == [380.0] for entry in provenance)
+    assert ("dim fluorescent marker was not resolved" if bright_ladder_complete else "Diameters are blank") in status
 
 
 @pytest.mark.parametrize(("dim_count", "overlap", "retained"), [(300, 0.0, ["Bright marker"]), (850, 0.0, []), (300, 0.7, [])])
