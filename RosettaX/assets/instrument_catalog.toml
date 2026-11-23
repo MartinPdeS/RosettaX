@@ -242,6 +242,7 @@ green_fluorescence = ["FITC-A", "FITC-H"]
 
 [instruments.bd_facslyric.detectors.fsc]
 preset_name = "BD FACSLyric FSC"
+detector_figure = "detector_figures/bd_facslyric_fsc.png"
 channel = "FSC"
 description = "FSC detector modeling preset for BD FACSLyric, assumed to use the same optical configuration as the BD FACSCanto II preset. Geometry and wavelength are modeling assumptions and have not been verified for this instrument."
 detector_type = "photodiode"
@@ -255,6 +256,7 @@ detector_gamma_angle_degree = 0.0
 
 [instruments.bd_facslyric.detectors.ssc]
 preset_name = "BD FACSLyric SSC"
+detector_figure = "detector_figures/bd_facslyric_ssc.png"
 channel = "SSC"
 description = "SSC detector modeling preset for BD FACSLyric, assumed to use the same optical configuration as the BD FACSCanto II preset. Geometry and wavelength are modeling assumptions and have not been verified for this instrument."
 detector_type = "PMT"
@@ -286,8 +288,7 @@ green_fluorescence = ["BB515-H", "B530/30-A"]
 
 [instruments.bd_facsymphony_a1.detectors.ssc]
 preset_name = "BD FACSymphony A1 SSC"
-detector_figure = "detector_figures/bd_facscanto2_ssc.png"
-detector_figure_label = "FACSCanto II SSC reference geometry"
+detector_figure = "detector_figures/bd_facsymphony_a1_ssc.png"
 channel = "SSC"
 description = "Assumed FACSymphony A1 SSC model using the FACSCanto II wavelength and collection geometry. The settings have not been independently measured on the FACSymphony A1."
 detector_type = "PMT"

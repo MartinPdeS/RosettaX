@@ -1,48 +1,137 @@
-
 import dash
 import dash_bootstrap_components as dbc
-from collections import Counter
-from dash import Input, Output, State, callback, ctx, html, no_update
+import json
+import re
+from dash import dcc, html
 from RosettaX.pages.p07_documentation.components import (
     build_documentation_card,
     build_documentation_container,
     build_documentation_guide_header,
 )
+from RosettaX.workflow.detector.catalog import load_instrument_catalog
 from RosettaX.workflow.detector.loader import (
-    load_detector_configuration_preset_catalog,
     load_detector_configuration_presets,
 )
+from RosettaX.workflow.scattering import ModelConfiguration
 
 PAGE_NAME = "documentation-supported-cytometers"
 
-FIGURE_ENTRIES_BY_BRAND: dict[str, list[tuple[str, str]]] = {}
-for preset in load_detector_configuration_presets().values():
-    if figure_path := preset.get("detector_figure"):
-        FIGURE_ENTRIES_BY_BRAND.setdefault(preset["manufacturer"], []).append(
-            (f"/assets/{figure_path}", preset.get("detector_figure_label", preset["name"]))
-        )
-
-
-def _build_figure_button_id(brand_name: str, figure_label: str) -> str:
-    cleaned_value = "".join(
-        character.lower() if character.isalnum() else "-"
-        for character in f"{brand_name}-{figure_label}"
-    )
-    while "--" in cleaned_value:
-        cleaned_value = cleaned_value.replace("--", "-")
-    return f"{PAGE_NAME}-figure-open-{cleaned_value.strip('-')}"
-
-
-FIGURE_BUTTON_MAP: dict[str, tuple[str, str, str]] = {
-    _build_figure_button_id(brand_name, figure_label): (brand_name, figure_src, figure_label)
-    for brand_name, entries in FIGURE_ENTRIES_BY_BRAND.items()
-    for figure_src, figure_label in entries
+SUPPORTED_CYTOMETERS = {
+    "Apogee": ("A50 Micro", "A60 Micro", "MicroPLUS"),
+    "BD": ("FACSCalibur", "FACSCelesta SORP", "FACSLyric", "FACSymphony A1", "FACSymphony A5"),
+    "Beckman Coulter": ("CytoFLEX S", "CytoFLEX LX", "MoFlo Astrios"),
+    "Cytek": ("Aurora", "Northern Lights"),
+    "Miltenyi Biotec": ("MACSQuant Analyzer 16",),
 }
 
-FIGURE_MODAL_ID = f"{PAGE_NAME}-figure-modal"
-FIGURE_MODAL_IMAGE_ID = f"{PAGE_NAME}-figure-modal-image"
-FIGURE_MODAL_TITLE_ID = f"{PAGE_NAME}-figure-modal-title"
-FIGURE_MODAL_CLOSE_ID = f"{PAGE_NAME}-figure-modal-close"
+SUPPORTED_PRESET_MODELS = {
+    ("Apogee", "A60 - Micro"),
+    ("BD Biosciences", "FACSLyric"),
+    ("BD Biosciences", "FACSymphony A1"),
+    ("Cytek Biosciences", "Aurora"),
+}
+SUPPORTED_DETECTOR_PRESETS = {
+    name: preset
+    for name, preset in load_detector_configuration_presets().items()
+    if (preset.get("manufacturer"), preset.get("instrument")) in SUPPORTED_PRESET_MODELS
+}
+
+CATALOG_PATH = "/documentation/supported-cytometers"
+def model_slug(*, brand: str, model: str) -> str:
+    """Return the stable URL segment for a supported instrument."""
+    manufacturer = {"Beckman Coulter": "beckman-coulter", "Miltenyi Biotec": "miltenyi"}.get(brand, brand)
+    return re.sub(r"[^a-z0-9]+", "-", f"{manufacturer}-{model}".lower()).strip("-")
+
+
+MODEL_DETAILS = {
+    model_slug(brand=brand, model=model): (brand, model)
+    for brand, models in SUPPORTED_CYTOMETERS.items()
+    for model in models
+}
+
+
+def build_model_detail_page(*, model: str = "", **_kwargs) -> dbc.Container:
+    """Show the Rosetta channels and any packaged detector geometry."""
+    back_link = html.A("Supported cytometers", href=CATALOG_PATH)
+    if model not in MODEL_DETAILS:
+        return build_documentation_container([html.H2("Detector model unavailable"), back_link])
+
+    brand, display_name = MODEL_DETAILS[model]
+    preset_model = {"A60 Micro": "A60 - Micro", "A50 Micro": "A50-Micro", "MicroPLUS": "Micro-PLUS"}.get(
+        display_name, display_name,
+    )
+    instruments = load_instrument_catalog()["instruments"]
+    instrument = next((entry for entry in instruments.values() if entry.get("model") == preset_model), {})
+    channels = instrument.get("rosetta_channels", {})
+    if not channels:
+        channels = {
+            "FACSymphony A5": {"scattering": ["SSC-H"], "green_fluorescence": ["BB515-H"]},
+            "Northern Lights": {"scattering": ["SSC-H"], "green_fluorescence": ["B2-H"]},
+        }.get(display_name, {})
+    detector_cards = []
+    for preset_name, preset in SUPPORTED_DETECTOR_PRESETS.items():
+        if preset["instrument"] != preset_model:
+            continue
+        figure = ModelConfiguration.build_optical_configuration_preview_figure(
+            detector_numerical_aperture=preset["detector_numerical_aperture"],
+            detector_cache_numerical_aperture=preset.get("detector_cache_numerical_aperture", 0),
+            blocker_bar_numerical_aperture=preset.get("blocker_bar_numerical_aperture", 0),
+            medium_refractive_index=1.333,
+            detector_phi_angle_degree=preset.get("detector_phi_angle_degree", 0),
+            detector_gamma_angle_degree=preset.get("detector_gamma_angle_degree", 0),
+            detector_sampling=preset["detector_sampling"],
+            detector_configuration_preset=preset_name,
+        )
+        preset_settings = {key: value for key, value in preset.items() if key != "description"}
+        preset_json = json.dumps(preset_settings, indent=2, sort_keys=True)
+        detector_cards.append(html.Section(
+            [
+                html.H2(preset_name, className="h5 mb-2"),
+                dbc.Row([
+                    dbc.Col(dcc.Graph(
+                        figure=figure,
+                        config={"responsive": True, "displaylogo": False},
+                        style={"height": "380px"},
+                    ), lg=8),
+                    dbc.Col([
+                        html.Pre(
+                            preset_json,
+                            className="small overflow-auto mb-0 p-3 border rounded",
+                            style={"height": "340px", "whiteSpace": "pre-wrap", "overflowWrap": "anywhere"},
+                        ),
+                    ], lg=4),
+                ], className="g-3 align-items-center"),
+            ],
+            className="border rounded p-3",
+        ))
+    return build_documentation_container(
+        [
+            build_documentation_guide_header(
+                hero_id=f"{PAGE_NAME}-{model}",
+                title=f"{brand} {display_name}",
+                description="Rosetta channels and detector geometry.",
+                related=[("Supported cytometers", CATALOG_PATH)],
+            ),
+            html.Div([
+                build_documentation_card(
+                    title="Rosetta detector channels",
+                    subtitle="Channel names used by Rosetta for this model.",
+                    body=[html.Dl([
+                        html.Dt("Scattering"), html.Dd(", ".join(channels.get("scattering") or []) or "Select from the FCS file"),
+                        html.Dt("Green fluorescence"), html.Dd(", ".join(channels.get("green_fluorescence") or []) or "Select from the FCS file"),
+                    ], className="mb-0")],
+                    min_height="unset",
+                ),
+                html.Div(detector_cards, className="d-grid gap-3", style={"gridAutoRows": "1fr"}) if detector_cards else None,
+                *([] if detector_cards else [dbc.Alert(
+                    "A 3D preview is available when RosettaX has a dedicated geometry preset for the model. "
+                    "This model has a validation recording but no packaged geometry preset.",
+                    color="secondary", className="mb-0",
+                )]),
+            ], className="d-grid gap-3 mt-3"),
+        ],
+        class_name="rosettax-docs-guide",
+    )
 
 
 class SupportedCytometersDocumentationPage:
@@ -63,13 +152,13 @@ class SupportedCytometersDocumentationPage:
                 build_documentation_guide_header(
                     hero_id=self._id("hero"),
                     title="Supported Flow Cytometers",
-                    description="Find the packaged scattering presets for your instrument and inspect the detector geometry.",
+                    description="See which instruments have FCS recordings in the Rosetta validation suite and browse packaged detector presets.",
                     related=[
                         ("Peak scripts", "/documentation/peak-scripts"),
                         ("Regression models", "/documentation/regression-models"),
                     ],
                 ),
-                self._catalog_card(),
+                self._supported_cytometers_card(),
                 html.Div(style={"height": "18px"}),
                 dbc.Row(
                     [
@@ -86,141 +175,30 @@ class SupportedCytometersDocumentationPage:
                     ],
                     className="g-3",
                 ),
-                self._figure_preview_modal(),
             ],
             class_name="rosettax-docs-guide",
         )
 
-    def _catalog_card(self) -> dbc.Card:
-        catalog = load_detector_configuration_preset_catalog()
-        grouped_rows: dict[str, list[str]] = {}
-        label_counts = Counter((item["brand"], item["label"]) for item in catalog)
-
-        for item in catalog:
-            if item["brand"] == "Custom":
-                continue
-            brand = item["brand"]
-            label = item["label"]
-            if label_counts[brand, label] > 1:
-                label = f"{label} ({item['detector_type']})"
-            grouped_rows.setdefault(brand, []).append(label)
-
-        table = dbc.Table(
-            [
-                html.Thead(
-                    html.Tr(
-                        [
-                            html.Th("Brand", style={"width": "22%"}),
-                            html.Th("Detector presets"),
-                            html.Th("Geometry previews"),
-                        ]
-                    )
-                ),
-                html.Tbody(
-                    [
-                        html.Tr(
-                            [
-                                html.Th(brand_name, scope="row"),
-                                html.Td(html.Ul([html.Li(label) for label in model_labels], className="rosettax-docs-preset-list")),
-                                html.Td(self._build_brand_figure_cell(brand_name)),
-                            ]
-                        )
-                        for brand_name, model_labels in sorted(grouped_rows.items(), key=lambda entry: entry[0].casefold())
-                    ]
-                ),
-            ],
-            bordered=False,
-            hover=True,
-            responsive=True,
-            className="rosettax-docs-table rosettax-docs-detector-table",
-            size="sm",
-            style={"marginBottom": "0px"},
-        )
-
+    def _supported_cytometers_card(self) -> dbc.Card:
+        """List instrument models represented in cross-device Rosetta validation."""
         return build_documentation_card(
-            title="Packaged detector preset catalog",
-            subtitle=f"{sum(len(labels) for labels in grouped_rows.values())} presets across {len(grouped_rows)} brands. Select a figure to enlarge it.",
-            body=[table],
-        )
-
-    def _build_brand_figure_cell(self, brand_name: str) -> html.Div:
-        figure_entries = FIGURE_ENTRIES_BY_BRAND.get(brand_name, [])
-
-        if not figure_entries:
-            return html.Div(
-                "No preview available",
-                style={
-                    "fontStyle": "italic",
-                    "opacity": 0.72,
-                },
-            )
-
-        return html.Div(
-            [
-                dbc.Button(
-                    [
-                        html.Img(
-                            src=figure_src,
-                            alt=f"{brand_name} {figure_label} detector geometry figure",
-                            style={
-                                "width": "100%",
-                                "height": "auto",
-                                "borderRadius": "8px",
-                                "border": "1px solid rgba(0, 0, 0, 0.14)",
-                                "display": "block",
-                            },
-                        ),
-                        html.Div(
-                            figure_label,
-                            style={
-                                "fontSize": "0.74rem",
-                                "opacity": 0.78,
-                                "marginTop": "4px",
-                                "textAlign": "center",
-                            },
-                        ),
-                    ],
-                    id=_build_figure_button_id(brand_name, figure_label),
-                    className="rosettax-docs-figure-button",
-                    n_clicks=0,
-                )
-                for figure_src, figure_label in figure_entries
-            ],
-            className="rosettax-docs-figures",
-        )
-
-    def _figure_preview_modal(self) -> dbc.Modal:
-        return dbc.Modal(
-            [
-                dbc.ModalHeader(dbc.ModalTitle("Detector geometry preview", id=FIGURE_MODAL_TITLE_ID)),
-                dbc.ModalBody(
-                    html.Img(
-                        id=FIGURE_MODAL_IMAGE_ID,
-                        src="",
-                        alt="Detector geometry preview",
-                        style={
-                            "width": "100%",
-                            "height": "auto",
-                            "borderRadius": "8px",
-                            "border": "1px solid rgba(0, 0, 0, 0.14)",
-                            "display": "block",
-                        },
-                    )
-                ),
-                dbc.ModalFooter(
-                    dbc.Button(
-                        "Close",
-                        id=FIGURE_MODAL_CLOSE_ID,
-                        className="ms-auto",
-                        n_clicks=0,
-                    )
-                ),
-            ],
-            id=FIGURE_MODAL_ID,
-            is_open=False,
-            size="xl",
-            centered=True,
-            scrollable=True,
+            title="Supported cytometers",
+            subtitle="Each model has a recording in the Rosetta validation suite. Some recordings exercise warning paths when the data cannot support sizing.",
+            body=[dbc.Table(
+                [
+                    html.Thead(html.Tr([html.Th("Manufacturer"), html.Th("Model"), html.Th("3D geometry")])),
+                    html.Tbody([
+                        html.Tr([
+                            html.Td(brand),
+                            html.Td(html.A(model, href=f"{CATALOG_PATH}/{model_slug(brand=brand, model=model)}")),
+                            html.Td("Available" if model in {"A60 Micro", "FACSLyric", "FACSymphony A1", "Aurora"} else "—"),
+                        ])
+                        for brand, models in SUPPORTED_CYTOMETERS.items()
+                        for model in models
+                    ]),
+                ],
+                responsive=True, hover=True, className="rosettax-docs-table mb-0",
+            )],
         )
 
     def _support_meaning_card(self) -> dbc.Card:
@@ -229,7 +207,7 @@ class SupportedCytometersDocumentationPage:
             subtitle="A supported cytometer is not a promise that every vendor option has been fully reverse engineered.",
             body=[
                 html.Div(
-                    "In RosettaX, support means there is a documented detector preset family that can be selected, reviewed, and reused consistently. That preset combines an instrument alias strategy with an explicit scattering geometry assumption.",
+                    "The supported list reflects the models represented in the cross-device FCS validation suite. A dedicated detector geometry preset is available for some models.",
                 ),
                 html.Div(
                     "The point is reproducibility. Two users should be able to see the same preset label and know which geometry assumptions were used when the scattering calibration was fit.",
@@ -299,34 +277,15 @@ layout = _page.layout
 
 dash.register_page(
     __name__,
-    path="/documentation/supported-cytometers",
+    path=CATALOG_PATH,
     name="Supported Cytometers Documentation",
     layout=layout,
 )
 
 
-@callback(
-    Output(FIGURE_MODAL_ID, "is_open"),
-    Output(FIGURE_MODAL_IMAGE_ID, "src"),
-    Output(FIGURE_MODAL_IMAGE_ID, "alt"),
-    Output(FIGURE_MODAL_TITLE_ID, "children"),
-    [Input(button_id, "n_clicks") for button_id in FIGURE_BUTTON_MAP] + [Input(FIGURE_MODAL_CLOSE_ID, "n_clicks")],
-    State(FIGURE_MODAL_ID, "is_open"),
-    prevent_initial_call=True,
+dash.register_page(
+    f"{__name__}.detector_model",
+    path_template=f"{CATALOG_PATH}/<model>",
+    name="Cytometer detector geometry",
+    layout=build_model_detail_page,
 )
-def _toggle_figure_preview_modal(*callback_args):
-    triggered_id = ctx.triggered_id
-
-    if triggered_id == FIGURE_MODAL_CLOSE_ID:
-        return False, no_update, no_update, no_update
-
-    if triggered_id in FIGURE_BUTTON_MAP:
-        brand_name, figure_src, figure_label = FIGURE_BUTTON_MAP[triggered_id]
-        return (
-            True,
-            figure_src,
-            f"{brand_name} {figure_label} detector geometry preview",
-            f"{brand_name} - {figure_label}",
-        )
-
-    return no_update, no_update, no_update, no_update

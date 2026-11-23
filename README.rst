@@ -70,6 +70,34 @@ parameters such as particle size, refractive index, detector configuration, and
 scattering intensity.
 
 
+Supported cytometers
+********************
+
+These models have FCS recordings in the Rosetta cross-device validation suite.
+Some recordings exercise warnings when automatic sizing cannot proceed.
+
+.. supported-cytometers-start
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 72
+
+   * - Manufacturer
+     - Cytometer models
+   * - Apogee
+     - A50 Micro, A60 Micro, MicroPLUS
+   * - BD
+     - FACSCalibur, FACSCelesta SORP, FACSLyric, FACSymphony A1, FACSymphony A5
+   * - Beckman Coulter
+     - CytoFLEX S, CytoFLEX LX, MoFlo Astrios
+   * - Cytek
+     - Aurora, Northern Lights
+   * - Miltenyi Biotec
+     - MACSQuant Analyzer 16
+
+.. supported-cytometers-end
+
+
 Features
 ********
 

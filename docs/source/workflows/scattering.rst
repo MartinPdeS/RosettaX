@@ -28,12 +28,8 @@ corrections before the coupling values are computed.
 Supported cytometer presets
 ---------------------------
 
-RosettaX currently ships detector presets for these grouped instrument families:
-
-* BD Biosciences: FACSCanto II - FSC, FACSCanto II - SSC
-* Beckman Coulter Life Sciences: CytoFLEX - Fluorescence, CytoFLEX - SSC
-* Custom: Generic detector
-* Apogee A60 Micro: Forward, Side; A60 MicroPLUS with Kairos: SALS, MALS, LALS
+See :doc:`systems` for the cytometers covered by Rosetta validation and their
+available geometry previews.
 
 In the scattering workflow, the optical preset selector is split into brand and
 model. Choose a brand first, then choose the supported model under that brand.
@@ -45,8 +41,6 @@ maintainer with an example FCS file, the detector naming you want recognized,
 and any public optical-geometry documentation that should inform the preset.
 
 
-For the full per-system detector geometry overview (one card per cytometer
-system with 3D figures and placeholders), see :doc:`systems`.
 
 
 How the calibration-standard relation is built

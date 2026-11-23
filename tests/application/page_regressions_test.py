@@ -673,8 +673,9 @@ class Test_DocumentationDeepDivePages:
         hrefs = _collect_component_hrefs(layout)
 
         assert "Supported Flow Cytometers" in text_nodes
-        assert "Packaged detector preset catalog" in text_nodes
-        assert "Cytek Biosciences" in text_nodes
+        assert "FACSCanto II" not in text_nodes
+        assert "FACSymphony A5" in text_nodes
+        assert "/documentation/supported-cytometers/bd-facsymphony-a1" in hrefs
         assert f"mailto:{page.contact_email}" in hrefs
 
     def test_regression_models_page_layout_contains_fit_descriptions(
