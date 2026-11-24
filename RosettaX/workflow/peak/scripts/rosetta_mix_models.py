@@ -47,6 +47,7 @@ class RosettaSizeAssignment:
     needs_confirmation: bool = False
     clipped_marker_nm: int | None = None
     failure_code: str | None = None
+    unsized_reasons: dict[float, str] = field(default_factory=dict)
 
     @property
     def status(self) -> str:
@@ -67,6 +68,7 @@ class RosettaSizeAssignment:
             "rejection_reasons": list(self.rejection_reasons),
             "clipped_marker_nm": self.clipped_marker_nm,
             "failure_code": self.failure_code,
+            "unsized_peaks": [{"position": x, "reason": reason} for x, reason in self.unsized_reasons.items()],
         }
 
 

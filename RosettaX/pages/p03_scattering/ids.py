@@ -33,6 +33,10 @@ class ParameterSectionIds:
         return f"{self.prefix}-detector-configuration-preset"
 
     @property
+    def detector_configuration_summary(self) -> str:
+        return f"{self.prefix}-detector-configuration-summary"
+
+    @property
     def detector_configuration_brand(self) -> str:
         return f"{self.prefix}-detector-configuration-brand"
 

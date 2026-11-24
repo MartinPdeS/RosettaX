@@ -128,9 +128,9 @@ class Test_PeakMutationStatus:
             },
         )
         assert "app-diagnostics-inline" in panel.className
-        assert panel.children[0].children[0].children == "Review Rosetta assignments"
+        assert panel.children[0].children[0].children == "Rosetta detection complete · 5 sizes assigned"
         assert len(panel.children[0].children) == 1
-        assert panel.children[2].children[1].children[0].children.startswith("Table filled with provisional results. Use Compute model")
+        assert panel.children[2].children[1].children[0].children.startswith("Calibration table updated. The assigned diameters are provisional.")
 
     def test_ambiguous_gate_explanation_stays_in_fit_details(self) -> None:
         """Keep only the outcome outside the collapsed fit information."""

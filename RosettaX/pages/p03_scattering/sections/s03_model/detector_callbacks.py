@@ -6,6 +6,7 @@ from . import services
 from .models import DetectorGeometryValues
 from dataclasses import replace
 from RosettaX.utils import casting
+from RosettaX.workflow.detector import load_detector_configuration_preset_catalog
 from RosettaX.workflow.detector.configuration import infer_detector_preset_from_metadata
 from typing import TYPE_CHECKING, Any
 
@@ -29,6 +30,23 @@ def register_detector_configuration_callbacks(section: Model) -> None:
     """
     Register detector configuration callbacks.
     """
+
+    @dash.callback(
+        dash.Output(section.ids.detector_configuration_summary, "children"),
+        dash.Input(section.ids.detector_configuration_preset, "value"),
+        dash.Input(section.ids.wavelength_nm, "value"),
+    )
+    def summarize_detector_preset(preset_name: Any, wavelength_nm: Any) -> str:
+        """Describe the active preset and current wavelength beside its selector."""
+        if not preset_name:
+            return "No preset selected"
+        summary = str(preset_name)
+        if preset_name != section.model_configuration.custom_detector_preset_name:
+            for preset in load_detector_configuration_preset_catalog():
+                if preset["value"] == preset_name:
+                    summary = f"{preset['brand']} {preset['model']} · {preset['detector_type']}"
+                    break
+        return f"{summary} · {wavelength_nm} nm" if wavelength_nm else summary
 
     @dash.callback(
         dash.Output(section.ids.detector_configuration_brand, "value"),

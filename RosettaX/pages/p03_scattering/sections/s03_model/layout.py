@@ -117,90 +117,73 @@ def build_optical_configuration_controls(section: Model) -> dash.html.Div:
                     "marginBottom": styling.get_spacing_token("xs"),
                 },
             ),
-            dash.html.Div(
-                [
-                    dash.html.Div(
-                        dash.html.Div(
-                            [
-                                dash.dcc.Dropdown(
-                                    id=section.ids.detector_configuration_brand,
-                                    options=[
-                                        {
-                                            "label": "No preset",
-                                            "value": "",
-                                        },
-                                        *section.model_configuration.build_detector_preset_brand_options(),
-                                    ],
-                                    value="",
-                                    placeholder="Select brand",
-                                    clearable=False,
-                                    searchable=False,
-                                    persistence=True,
-                                    persistence_type="session",
-                                    style={
-                                        "width": "220px",
-                                    },
-                                ),
-                                dash.dcc.Dropdown(
-                                    id=section.ids.detector_configuration_model,
-                                    options=[],
-                                    value=None,
-                                    placeholder="Select model",
-                                    clearable=True,
-                                    searchable=False,
-                                    disabled=True,
-                                    persistence=True,
-                                    persistence_type="session",
-                                    style={
-                                        "width": "220px",
-                                        "marginLeft": "10px",
-                                    },
-                                ),
-                                dash.dcc.Dropdown(
-                                    id=section.ids.detector_configuration_type,
-                                    options=[],
-                                    value=None,
-                                    placeholder="Select detector type",
-                                    clearable=True,
-                                    searchable=False,
-                                    disabled=True,
-                                    persistence=True,
-                                    persistence_type="session",
-                                    style={
-                                        "width": "220px",
-                                        "marginLeft": "10px",
-                                    },
-                                ),
-                                dash.dcc.Dropdown(
-                                    id=section.ids.detector_configuration_preset,
-                                    options=[
-                                        {
-                                            "label": "No preset",
-                                            "value": "",
-                                        },
-                                        *section.model_configuration.build_detector_preset_options(),
-                                    ],
-                                    value="",
-                                    clearable=True,
-                                    searchable=False,
-                                    persistence=True,
-                                    persistence_type="session",
-                                    style={
-                                        "display": "none",
-                                    },
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "alignItems": "center",
-                                "gap": "10px",
-                                "flexWrap": "wrap",
-                                "overflow": "visible",
+            dash.html.Details([
+                dash.html.Summary([
+                    dash.html.Strong("No preset selected", id=section.ids.detector_configuration_summary),
+                    dash.html.Span("Change preset", className="detector-preset-action"),
+                ]),
+                dash.html.Div([
+                    dash.dcc.Dropdown(
+                        id=section.ids.detector_configuration_brand,
+                        options=[
+                            {
+                                "label": "No preset",
+                                "value": "",
                             },
-                        ),
+                            *section.model_configuration.build_detector_preset_brand_options(),
+                        ],
+                        value="",
+                        placeholder="Select brand",
+                        clearable=False,
+                        searchable=False,
+                        persistence=True,
+                        persistence_type="session",
+                        style={
+                            "width": "min(220px, 100%)",
+                        },
                     ),
-                ],
-            ),
+                    dash.dcc.Dropdown(
+                        id=section.ids.detector_configuration_model,
+                        options=[],
+                        value=None,
+                        placeholder="Select model",
+                        clearable=True,
+                        searchable=False,
+                        disabled=True,
+                        persistence=True,
+                        persistence_type="session",
+                        style={
+                            "width": "min(220px, 100%)",
+                        },
+                    ),
+                    dash.dcc.Dropdown(
+                        id=section.ids.detector_configuration_type,
+                        options=[],
+                        value=None,
+                        placeholder="Select detector type",
+                        clearable=True,
+                        searchable=False,
+                        disabled=True,
+                        persistence=True,
+                        persistence_type="session",
+                        style={
+                            "width": "min(220px, 100%)",
+                        },
+                    ),
+                    dash.dcc.Dropdown(
+                        id=section.ids.detector_configuration_preset,
+                        options=[
+                            {
+                                "label": "No preset",
+                                "value": "",
+                            },
+                            *section.model_configuration.build_detector_preset_options(),
+                        ],
+                        value="", clearable=True, searchable=False, persistence=True,
+                        persistence_type="session", style={"display": "none"},
+                    ),
+                ], className="detector-preset-selectors"),
+            ], className="detector-preset-picker"),
             dash.html.Div(
                 dash.html.Div(
                     [

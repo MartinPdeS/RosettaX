@@ -34,30 +34,26 @@ def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = No
     unassigned_count = max(0, measured_count - assigned_count)
     needs_confirmation = isinstance(sizing, dict) and sizing.get("needs_confirmation")
 
-    review_detail = ""
+    failed = isinstance(sizing, dict) and sizing.get("state") == "failed"
     if ready:
         title, tone = "Rosetta ready", "preview"
         summary = "Select Detect peaks to begin."
     elif preview:
         title, tone = "Rosetta preview", "preview"
         summary = "Select Detect peaks to update the calibration table."
-    elif detection_issue or (status and not isinstance(sizing, dict)):
+    elif failed or (assigned_count == 0 and (detection_issue or not measured_count)):
         title, tone = "Rosetta detection stopped", "error"
         summary = "Table unchanged."
     elif assigned_count == 0:
-        title, tone = "No diameters assigned", "review"
-        summary = "Review the measured peaks."
-    elif needs_confirmation or unassigned_count:
-        title, tone = "Review Rosetta assignments", "review"
-        summary = "Table filled with provisional results."
-        review_detail = (
-            "Use Compute model to check provisional sizes against the detector model."
-            if peak_lines_payload.get("rosetta_assignment_evidence")
-            else "Check the assigned sizes against the detected peaks."
-        )
+        title, tone = "Rosetta detected peaks · No sizes assigned", "review"
+        summary = "Measured positions are available in the calibration table."
     else:
-        title, tone = "Rosetta detection complete", "complete"
+        sizes = "size" if assigned_count == 1 else "sizes"
+        title = f"Rosetta detection complete · {assigned_count} {sizes} assigned"
+        tone = "complete"
         summary = "Calibration table updated."
+        if needs_confirmation:
+            summary += " The assigned diameters are provisional."
 
     excluded_count = len(peak_lines_payload.get("saturation_guard_excluded_positions") or [])
     if peak_lines_payload.get("rosetta_lowest_peak_exclusion"):
@@ -86,7 +82,7 @@ def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = No
         className="peak-result-metrics",
     )
     unassigned_detail = f"Peaks without a diameter: {unassigned_count}." if unassigned_count else ""
-    detail_message = " ".join(filter(None, (summary, status, review_detail, unassigned_detail)))
+    detail_message = " ".join(filter(None, (summary, status, unassigned_detail)))
     details = build_rosetta_debug_panel(
         peak_lines_payload=peak_lines_payload,
         status=detail_message,
@@ -231,21 +227,29 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
             exclusion_reasons[lowest_peak["position"]] = (
                 f"Excluded as the lowest detected non-fluorescent peak{assigned_size}."
             )
+        sizing = peak_lines_payload.get("rosetta_sizing") or {}
+        unsized_reasons = {item["position"]: item["reason"] for item in sizing.get("unsized_peaks", [])}
+        failure_reason = {
+            "unreliable_markers": "The available marker anchors could not establish a unique bead order.",
+            "conflicting_markers": "The fluorescent markers give conflicting scatter order.",
+            "size_range_exceeded": "The detected peaks exceed the available bead sizes.",
+        }.get(sizing.get("failure_code"))
         displayed_rows = []
         for row in scatter_rows:
             position = row.get("position")
             label = labels_by_position.get(position)
-            reason = exclusion_reasons.get(position)
-            if reason and not label:
-                displayed_rows.append(dict(row, graph_result="Excluded", rejection_reasons=[reason]))
-            elif row.get("validated") and not label:
-                displayed_rows.append(dict(
-                    row,
-                    graph_result="No size assigned",
-                    rejection_reasons=["The fit passed, but this peak did not receive a diameter in the final sizing result."],
-                ))
-            else:
-                displayed_rows.append(dict(row, graph_result=label or "No guide"))
+            reasons = list(row.get("rejection_reasons") or [])
+            if not label:
+                reason = exclusion_reasons.get(position) or unsized_reasons.get(position)
+                if not reason and row.get("validated"):
+                    reason = failure_reason or (
+                        "Size assignment has not run for this preview."
+                        if peak_lines_payload.get("rosetta_settings_preview") and not sizing
+                        else "No diameter was recorded for this peak."
+                    )
+                if reason:
+                    reasons.append(reason)
+            displayed_rows.append(dict(row, assigned_size=label or "Unassigned", rejection_reasons=reasons))
         sections.append(
             _build_rosetta_debug_table(
                 title="Non-fluorescent scatter candidates",
@@ -278,22 +282,31 @@ def _build_rosetta_debug_table(*, title: str, rows: list[dict[str, Any]]) -> Any
         A heading and responsive Bootstrap table.
     """
     headers = ["Peak", "Position [a.u.]", "Events", "R²", "CV", "Result", "Reason"]
-    show_graph_result = any("graph_result" in row for row in rows)
-    if show_graph_result:
-        headers.insert(-1, "Graph")
+    scatter_candidates = any("assigned_size" in row for row in rows)
+    if scatter_candidates:
+        headers[-2:] = ["Peak fit", "Assigned size", "Reason"]
     body_rows = []
     for row in rows:
         reasons = row.get("rejection_reasons") or []
+        position = row.get("position", row.get("mean"))
+        position_cell = _format_position(value=position)
+        if scatter_candidates and isinstance(position, (int, float)) and math.isfinite(position):
+            position_cell = html.Button(
+                position_cell, type="button", className="peak-position-button",
+                **{"data-scatter-position": position, "aria-pressed": "false",
+                   "aria-label": f"Highlight {row.get('population', 'peak')} at {position_cell} a.u."},
+            )
+        fit_result = ("Detected" if scatter_candidates else "Accepted") if row.get("validated") else "Rejected"
         body_rows.append(
             html.Tr(
                 [
                     html.Td(row.get("population", "—")),
-                    html.Td(_format_position(value=row.get("position", row.get("mean")))),
+                    html.Td(position_cell),
                     html.Td(_format_debug_value(row.get("events", row.get("count")))),
                     html.Td(_format_debug_value(row.get("r2"))),
                     html.Td(_format_debug_value(row.get("cv"))),
-                    html.Td("Accepted" if row.get("validated") else "Rejected"),
-                    *([html.Td(row.get("graph_result", "—"))] if show_graph_result else []),
+                    html.Td(fit_result),
+                    *([html.Td(row["assigned_size"])] if scatter_candidates else []),
                     html.Td("; ".join(str(reason) for reason in reasons) or "—"),
                 ]
             )

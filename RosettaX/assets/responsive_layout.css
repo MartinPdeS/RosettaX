@@ -575,3 +575,19 @@
     height: 100%;
     pointer-events: none;
 }
+
+.peak-position-button {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    text-decoration: underline dotted;
+    text-underline-offset: .2em;
+}
+.peak-result tr:has(.peak-position-button) { cursor: pointer; }
+.peak-result tr:has([aria-pressed="true"]) > td { --bs-table-bg-state: var(--bs-warning-bg-subtle, #fff0ca); }
+
+.detector-preset-picker { margin-block: .5rem .75rem; }
+.detector-preset-picker summary { cursor: pointer; }
+.detector-preset-action { margin-inline-start: .75rem; text-decoration: underline; }
+.detector-preset-selectors { display: flex; flex-wrap: wrap; gap: .625rem; margin-top: .5rem; }

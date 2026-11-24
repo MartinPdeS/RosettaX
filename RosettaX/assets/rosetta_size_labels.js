@@ -61,12 +61,23 @@
         } catch (_) {
             return;
         }
-        if (!guides || guides.revision !== layout.uirevision) return;
         svg.style.width = `${layout.width}px`;
         svg.style.height = `${layout.height}px`;
         svg.setAttribute("viewBox", `0 0 ${layout.width} ${layout.height}`);
         const left = xAxis._offset, right = left + xAxis._length;
         const top = yAxis._offset, bottom = top + yAxis._length;
+        const button = state.highlight;
+        if (button?.isConnected && button.closest("details")?.open && state.revision === layout.uirevision) {
+            const position = Number(button.dataset.scatterPosition);
+            const x = left + xAxis.d2p(position);
+            if ((xAxis.type !== "log" || position > 0) && x >= left && x <= right) {
+                addSvg(svg, "line", {
+                    class: "rosetta-inspected-peak", x1: x, x2: x, y1: top, y2: bottom,
+                    stroke: "#d97706", "stroke-width": 5, opacity: 0.8,
+                });
+            }
+        }
+        if (!guides || guides.revision !== layout.uirevision) return;
         const dashes = {dot: "2 4", dash: "7 5", dashdot: "7 4 2 4"};
         for (const shape of guides.lines) {
             const vertical = shape.xref === "x";
@@ -133,6 +144,39 @@
         }
         schedulePlacement(plot);
     }
+
+    function clearHighlight(plot) {
+        const state = overlays.get(plot);
+        if (!state?.highlight) return;
+        clearTimeout(state.timer);
+        state.highlight.setAttribute("aria-pressed", "false");
+        state.highlight = null;
+        schedulePlacement(plot);
+    }
+
+    document.addEventListener("click", event => {
+        const workflow = event.target.closest(".peak-workflow");
+        const plot = workflow?.querySelector(guideSelector + " .js-plotly-plot");
+        const state = overlays.get(plot);
+        if (!state) return;
+        const button = event.target.closest("tr")?.querySelector("[data-scatter-position]");
+        if (!button || !workflow.contains(button)) {
+            if (event.target.closest("summary, .peak-action-button")) clearHighlight(plot);
+            return;
+        }
+        const alreadySelected = state.highlight === button;
+        clearHighlight(plot);
+        if (alreadySelected) return;
+        state.highlight = button;
+        state.revision = plot._fullLayout?.uirevision;
+        button.setAttribute("aria-pressed", "true");
+        schedulePlacement(plot);
+        const bounds = plot.getBoundingClientRect();
+        if (bounds.top > window.innerHeight * 0.75 || bounds.bottom < 0) {
+            plot.scrollIntoView({block: "center"});
+        }
+        state.timer = setTimeout(() => clearHighlight(plot), 6000);
+    });
 
     const observer = new MutationObserver(records => {
         const containers = new Set();

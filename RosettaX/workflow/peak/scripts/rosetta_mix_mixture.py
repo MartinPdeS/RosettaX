@@ -131,6 +131,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
         )
         assignments = {}
         unresolved = []
+        unsized_reasons = {}
         for label, positions, diameters in regions:
             if len(positions) != len(diameters):
                 expected = ", ".join(str(size) for size in diameters)
@@ -138,6 +139,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                     f"Found {len(positions)} validated scatter peaks {label}. "
                     f"Expected {len(diameters)} ({expected} nm), so this region was left unsized."
                 )
+                unsized_reasons.update(dict.fromkeys(positions, unresolved[-1]))
                 continue
             assignments.update(
                 (position, float(diameter)) for position, diameter in zip(positions, diameters)
@@ -145,6 +147,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
 
         if any(x == lower or x == upper for x in scatter_positions):
             unresolved.append("A scatter peak coincides with a marker anchor and was left unsized.")
+            unsized_reasons.update(dict.fromkeys({lower, upper}.intersection(scatter_positions), unresolved[-1]))
 
         row_metadata = match_table_points_to_peak_metadata(
             table_points=result.peak_positions, peak_metadata=metadata,
@@ -178,6 +181,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             notices=tuple(notices),
             rejection_reasons=tuple(unresolved),
             clipped_marker_nm=bounded_marker,
+            unsized_reasons=unsized_reasons,
         )
 
     def _record_size_assignments(
@@ -339,6 +343,10 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             )
             return result, RosettaSizeAssignment(
                 rows=rows, state=RosettaAssignmentState.PARTIAL,
+                unsized_reasons=dict.fromkeys(
+                    (position for position in scatter_positions if position < marker_position),
+                    "Below the assumed 380 nm marker. The dim fluorescent marker was not resolved.",
+                ),
                 detail="The dim fluorescent marker was not resolved. Sizes below the assumed 380 nm bright marker were excluded.",
             )
         status = (

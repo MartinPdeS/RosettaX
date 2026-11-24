@@ -31,10 +31,8 @@ Supported cytometer presets
 See :doc:`systems` for the cytometers covered by Rosetta validation and their
 available geometry previews.
 
-In the scattering workflow, the optical preset selector is split into brand and
-model. Choose a brand first, then choose the supported model under that brand.
-The selected model still resolves to the same saved detector preset name inside
-the calibration payload.
+Step 3 shows the active detector preset and wavelength. Select **Change preset**
+to choose a brand, model and detector type. The geometry is displayed separately.
 
 If your company would like RosettaX to support another cytometer, contact the
 maintainer with an example FCS file, the detector naming you want recognized,

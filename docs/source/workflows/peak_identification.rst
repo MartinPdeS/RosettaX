@@ -183,8 +183,11 @@ The script stops with an informative status message if:
 Changing Marker fit strictness previews the peak graph. Select **Detect peaks**
 to apply the current settings to the calibration table. The Rosetta result
 above the graph shows the sized rows, excluded peaks, and event count. Open
-**Fit details** to inspect the accepted fits and the reasons candidates were
-rejected.
+**Fit details** to compare **Peak fit** with **Assigned size**. A detected
+population can have an unassigned diameter. The reason appears in its row.
+Select a scatter candidate to highlight its position briefly on the plot.
+A completed run reports how many sizes were assigned, even when other
+candidates remain unsized.
 
 When you replace the FCS file or change the Rosetta detector channels, run
 **Detect peaks** again to measure peak positions for the new selection.

@@ -118,7 +118,7 @@ class FluorescenceGuidedScatterPeakProcessV1(FluorescenceGuidedScatterPeakProces
             }
             if isinstance(debug_diagnostics, dict):
                 warning_payload["rosetta_debug_diagnostics"] = debug_diagnostics
-            warning_payload["rosetta_sizing"] = assignment.to_diagnostics()
+            warning_payload["rosetta_sizing"] = replace(assignment, state=RosettaAssignmentState.FAILED, rows=[]).to_diagnostics()
             return replace(
                 result,
                 peak_positions=[],
