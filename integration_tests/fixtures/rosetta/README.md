@@ -8,7 +8,7 @@ Run them with real dependencies in an isolated process:
 ```
 
 The normal unit suite invokes them through
-`tests/workflow/rosetta_real_data_test.py`, alongside the existing scattering
+`tests/reference/rosetta_real_data_test.py`, alongside the existing scattering
 calibration checks. The real-dependency integration CI job also discovers them.
 No FCS reader, fitter, backend, or script is mocked. Scripts are resolved through
 the production registry, so moving implementation files should preserve these

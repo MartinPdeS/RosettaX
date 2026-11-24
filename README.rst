@@ -448,7 +448,7 @@ Run an individual test file directly with its pytest entry point:
 
 .. code-block:: bash
 
-   python tests/runtime/config_test.py
+   python tests/api/runtime/config_test.py
    python integration_tests/scattering_fcs_test.py
 
 Each entry point runs only that file, without the default coverage options,

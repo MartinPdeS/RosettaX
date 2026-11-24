@@ -13,7 +13,7 @@ from pathlib import Path
 
 specification = importlib.util.spec_from_file_location(
     "profile_navigation",
-    Path(__file__).resolve().parents[2] / "tools/profile_navigation.py",
+    Path(__file__).resolve().parents[3] / "tools/profile_navigation.py",
 )
 profile_navigation = importlib.util.module_from_spec(specification)
 specification.loader.exec_module(profile_navigation)

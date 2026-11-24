@@ -48,10 +48,10 @@ These instructions apply to the whole RosettaX repository. Keep changes narrow, 
 - Install development dependencies with `pip install -e .[testing,dev]`.
 - Use `make editable` for editable local installs and `make quick` when compiled/build-system behavior matters.
 - Run the smallest relevant test slice first:
-	- upload workflow: `pytest tests/upload/services_test.py tests/upload/services_guardrails_test.py`
-	- runtime config or profiles: `pytest tests/runtime/config_test.py tests/runtime/profile_contract_test.py`
+	- upload workflow: `pytest tests/workflow/upload/services_test.py tests/workflow/upload/services_guardrails_test.py`
+	- runtime config or profiles: `pytest tests/api/runtime/config_test.py tests/api/runtime/profile_contract_test.py`
 	- application shell, routes, or page composition: `pytest tests/application/main_test.py tests/application/routes_test.py tests/application/page_regressions_test.py`
-	- scattering modeling or detector behavior: `pytest tests/scattering/calibration_services_test.py tests/scattering/model_configuration_test.py tests/scattering/backend_cache_test.py tests/apply_calibration/scattering_mie_relation_builder_test.py`
+	- scattering modeling or detector behavior: `pytest tests/workflow/scattering/calibration_services_test.py tests/workflow/scattering/model_configuration_test.py tests/numerics/backend_cache_test.py tests/numerics/scattering_mie_relation_builder_test.py`
 - Use full `pytest` only when a change crosses multiple workflows or shared infrastructure.
 
 ## Documentation

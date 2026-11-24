@@ -22,7 +22,7 @@ the resulting calibration, and applies it to detected peaks and real events.
 No reader, fitting, detector geometry, or PyMieSim functions are mocked.
 The existing integration CI job collects these tests automatically.
 The normal unit suite also runs all these checks in a separate Python process
-via `tests/workflow/rosetta_real_data_test.py`. This keeps the unit suite's
+via `tests/reference/rosetta_real_data_test.py`. This keeps the unit suite's
 dependency stubs out of the real-data checks.
 
 ## Initial Apogee Rosetta baseline
