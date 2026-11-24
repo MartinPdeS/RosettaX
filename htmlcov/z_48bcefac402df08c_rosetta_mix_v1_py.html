@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_f518cbf7a6e8c30f_services_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-23 23:56 +0000
+            created at 2026-11-24 10:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -202,7 +202,7 @@
     <p class="run run2"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">            <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">debug_diagnostics</span><span class="op">,</span> <span class="nam">dict</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">                <span class="nam">warning_payload</span><span class="op">[</span><span class="str">&quot;rosetta_debug_diagnostics&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="nam">debug_diagnostics</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">            <span class="nam">warning_payload</span><span class="op">[</span><span class="str">&quot;rosetta_sizing&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="nam">assignment</span><span class="op">.</span><span class="nam">to_diagnostics</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">            <span class="nam">warning_payload</span><span class="op">[</span><span class="str">&quot;rosetta_sizing&quot;</span><span class="op">]</span> <span class="op">=</span> <span class="nam">replace</span><span class="op">(</span><span class="nam">assignment</span><span class="op">,</span> <span class="nam">state</span><span class="op">=</span><span class="nam">RosettaAssignmentState</span><span class="op">.</span><span class="nam">FAILED</span><span class="op">,</span> <span class="nam">rows</span><span class="op">=</span><span class="op">[</span><span class="op">]</span><span class="op">)</span><span class="op">.</span><span class="nam">to_diagnostics</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">            <span class="key">return</span> <span class="nam">replace</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">                <span class="nam">result</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">                <span class="nam">peak_positions</span><span class="op">=</span><span class="op">[</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -275,7 +275,7 @@
             <a class="nav" href="z_f518cbf7a6e8c30f_services_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.17.3">coverage.py v7.17.3</a>,
-            created at 2026-11-23 23:56 +0000
+            created at 2026-11-24 10:50 +0000
         </p>
     </div>
 </footer>
