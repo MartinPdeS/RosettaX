@@ -177,12 +177,6 @@ def build_recent_visit_rows(
     """
     Convert the most recent visit events into DataTable rows.
     """
-    workflows = {
-        "/scattering": "Scattering calibration",
-        "/fluorescence": "Fluorescence calibration",
-        "/calibrate": "Apply calibration",
-        "/cross-calibration": "Cross calibration",
-    }
     return [
         {
             "visited_at": format_visit_timestamp_for_display(event.visited_at),
@@ -190,7 +184,6 @@ def build_recent_visit_rows(
             "location": event.location or "N/A",
             "organization": event.organization or "N/A",
             "path": event.path,
-            "workflow": workflows.get(event.path.rstrip("/"), "Site navigation"),
             "id": hashlib.sha256(repr(event).encode("utf-8")).hexdigest(),
             "details": "View details",
             "user_agent": event.user_agent or "N/A",

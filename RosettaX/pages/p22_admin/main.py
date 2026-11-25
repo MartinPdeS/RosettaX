@@ -348,14 +348,12 @@ class AdminPage:
                         id=self.ids.recent_visits_table,
                         columns=[
                             {"name": "Time (UTC)", "id": "visited_at"},
-                            {"name": "Workflow", "id": "workflow"},
                             {"name": "Location", "id": "location"},
                             {"name": "Page", "id": "path"},
                             {"name": "Details", "id": "details"},
                         ],
                         data=recent_visit_rows,
                         page_size=200,
-                        filter_action="native",
                         sort_action="native",
                         style_table={"overflowX": "auto"},
                         style_header={

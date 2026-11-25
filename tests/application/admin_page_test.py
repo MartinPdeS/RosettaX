@@ -345,7 +345,6 @@ class Test_AdminServices:
                 "organization": "N/A",
                 "path": "/help",
                 "user_agent": "N/A",
-                "workflow": "Site navigation",
                 "details": "View details",
             },
             {
@@ -355,7 +354,6 @@ class Test_AdminServices:
                 "organization": "AS15169 Google LLC",
                 "path": "/",
                 "user_agent": "Mozilla/5.0",
-                "workflow": "Site navigation",
                 "details": "View details",
             },
         ]
