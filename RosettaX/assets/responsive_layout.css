@@ -591,3 +591,28 @@
 .detector-preset-picker summary { cursor: pointer; }
 .detector-preset-action { margin-inline-start: .75rem; text-decoration: underline; }
 .detector-preset-selectors { display: flex; flex-wrap: wrap; gap: .625rem; margin-top: .5rem; }
+
+#page-content {
+    position: relative;
+    isolation: isolate;
+}
+
+#page-content::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: min(50%, 50svh);
+    transform: translate(-50%, -50%);
+    width: min(52%, 29rem, 50svh);
+    aspect-ratio: 70.5 / 87.3;
+    background: url("logo/amsterdam-umc-flower.svg") center / contain no-repeat;
+    opacity: 0.075;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@media print {
+    #page-content::before {
+        display: none;
+    }
+}
