@@ -6,9 +6,9 @@ if __name__ == "__main__":
 
     raise SystemExit(pytest.main([__file__, "-o", "addopts=", "-v", "-rx", "-s"]))
 
+import hashlib
 import json
 import logging
-import math
 import pytest
 import subprocess
 import sys
@@ -16,99 +16,27 @@ from pathlib import Path
 from RosettaX.workflow.peak.core.detectors import (
     populate_peak_script_detector_dropdowns,
 )
-from RosettaX.workflow.peak.scripts.rosetta_mix_mixture import (
-    MixtureRosettaScatterPeakProcess,
-)
-from RosettaX.workflow.peak.scripts.rosetta_mix_sizing import (
-    ROSETTA_MIX_PARTICLE_DIAMETERS_NM,
-)
-from types import SimpleNamespace
+from RosettaX.workflow.recording_validation import check_outcome
+from RosettaX.workflow.validation_recordings import reviewed_recordings
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SAMPLE_DIRECTORY = REPOSITORY_ROOT / "RosettaX" / "assets" / "sample-files" / "cross_device"
 
-# Scatter and green fluorescence are the channels used by the Rosetta script.
-SAMPLES = [
-    ("sony_id7000_experiment_1_beads.fcs", "SSC-H", "FITC-H"),
-    ("sony_id7000_experiment_1_di_water.fcs", "SSC-H", "FITC-H"),
-    ("sony_id7000_experiment_2_beads.fcs", "SSC-H", "FITC-H"),
-    ("sony_id7000_experiment_2_di_water.fcs", "SSC-H", "FITC-H"),
-    ("apogee_a60_micro_cal003_2022-01-31.fcs", "405LALS(Peak)", "405Grn(Peak)"),
-    ("bd_facsymphony_a1_cal003_2022-02-11.fcs", "SSC-H", "B530/30-A"),
-    ("bd_facsymphony_a1_cal003_2022-02-18.fcs", "SSC-H", "B530/30-A"),
-    ("bd_facsymphony_a1_cal003_2022-11-16.fcs", "SSC-H", "BB515-H"),
-    ("miltenyi_macsquant_cal003_2022-05-13.fcs", "SSC-H", "FL6-H"),
-    ("beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs", "SSC_1-H", "FL1-H"),
-    ("bd_facscalibur_cal003_2023-02-08.fcs", "SSC-H", "FL1-H"),
-]
-
-
-METVES_SAMPLES = [
-    ('beckman_coulter_cytoflex_s_metves_23w1.fcs', 'SSC_1-H', 'FL1-H'),
-    ('beckman_coulter_cytoflex_s_metves_16p1.fcs', 'SSC_1-H', 'FL1-H'),
-    ('beckman_coulter_cytoflex_lx_metves_14n1.fcs', 'SSC_1-H', 'FL1-H'),
-    ('beckman_coulter_cytoflex_lx_metves_05e1.fcs', 'FL12-H', 'FL1-H'),
-    ('cytek_aurora_metves_23w2.fcs', 'SSC-H', 'B2-H'),
-    ('bd_facslyric_metves_20t1.fcs', 'SSC-H', 'FITC-H'),
-    ('apogee_microplus_metves_06f2.fcs', 'LALS(Peak)', '405-Grn(Peak)'),
-    ('beckman_coulter_cytoflex_s_metves_05e2.fcs', 'SSC_1-H', 'FL5-H'),
-    ('apogee_a50_micro_metves_19s1.fcs', '405-LALS(Peak)', '405-Grn(Peak)'),
-    ('cytek_aurora_metves_11k2.fcs', 'SSC-H', 'B2-H'),
-    ('apogee_microplus_metves_04d1.fcs', 'LALS(Peak)', '405-Grn(Peak)'),
-    ('bd_facsymphony_a1_metves_25y2.fcs', 'SSC-H', 'BB515-H'),
-    ('apogee_microplus_metves_07g1.fcs', '405-LALS(Peak)', '405-Grn(Peak)'),
-    ('bd_facscelesta_sorp_metves_09i1.fcs', 'SSC-H', 'B530/30-A'),
-    ('beckman_coulter_cytoflex_s_metves_06f1.fcs', 'SSC_1-H', 'FL1-H'),
-    ('beckman_coulter_moflo_astrios_metves_21u1.fcs', 'SSC1-Height', 'FL12-Height'),
-    ('apogee_microplus_metves_07g2.fcs', 'LALS(Peak)', '488Grn(Peak)'),
-    ('cytek_aurora_metves_12l1.fcs', 'SSC-H', 'B2-H'),
-    ('cytek_northern_lights_metves_22v2.fcs', 'SSC-H', 'B2-H'),
-    ('bd_facsymphony_a1_metves_25y1.fcs', 'SSC-H', 'BB515-H'),
-    ('apogee_a60_micro_metves_22v1.fcs', '405LALS(Peak)', '405Grn(Peak)'),
-    ('cytek_aurora_metves_18r1.fcs', 'SSC-H', 'B2-A'),
-    ('beckman_coulter_cytoflex_lx_metves_16p2.fcs', 'SSC_1-H', 'FL1-H'),
-    ('bd_facsymphony_a5_metves_08h1.fcs', 'SSC-H', 'BB515-H'),
-]
-
-# This recording resolves a marker on 488 green. Auto-select still prefers 405.
-METVES_SIZING_FLUORESCENCE = {"apogee_microplus_metves_07g1.fcs": "488-Grn(Peak)"}
-
-# Fixed-input review outcomes for the default Rosetta mode, not bead-identity labels.
-CHECKED_METVES_OUTCOMES = {
-    'beckman_coulter_cytoflex_s_metves_23w1.fcs': (['', 147, 203, 296, '', ''], 'Partial result: Found'),
-    'beckman_coulter_cytoflex_s_metves_16p1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'beckman_coulter_cytoflex_lx_metves_14n1.fcs': (['', '', ''], 'Diameters are blank'),
-    'beckman_coulter_cytoflex_lx_metves_05e1.fcs': (['', 147, 203, 296, 400, 600, 799, 994], 'Partial result: Found'),
-    'cytek_aurora_metves_23w2.fcs': (['', '', 147, 203, 296], 'Partial result: Found'),
-    'bd_facslyric_metves_20t1.fcs': (['', '', '', '', '', '', ''], 'Diameters are blank'),
-    'apogee_microplus_metves_06f2.fcs': (['', '', '', ''], 'No sizes assigned'),
-    'beckman_coulter_cytoflex_s_metves_05e2.fcs': ([400, 600, 799, 994], 'Partial result: Found'),
-    'apogee_a50_micro_metves_19s1.fcs': (['', '', '', '', 400, 600, 799, 994], 'Partial result: Found'),
-    'cytek_aurora_metves_11k2.fcs': (['', '', 147, 203, 296], 'Partial result: Found'),
-    'apogee_microplus_metves_04d1.fcs': (['', 400, 600, 799, 994], 'Partial result: Found'),
-    'bd_facsymphony_a1_metves_25y2.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'apogee_microplus_metves_07g1.fcs': (['', '', '', '', '', ''], 'No sizes assigned'),
-    'bd_facscelesta_sorp_metves_09i1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'beckman_coulter_cytoflex_s_metves_06f1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'beckman_coulter_moflo_astrios_metves_21u1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'apogee_microplus_metves_07g2.fcs': (['', '', '', '', '', '', '', ''], 'Diameters are blank'),
-    'cytek_aurora_metves_12l1.fcs': (['', '', '', ''], 'Diameters are blank'),
-    'cytek_northern_lights_metves_22v2.fcs': (['', '', '', ''], 'Diameters are blank'),
-    'bd_facsymphony_a1_metves_25y1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'apogee_a60_micro_metves_22v1.fcs': ([70, 100, 125, 147, 203, 296], 'Partial result: Found'),
-    'cytek_aurora_metves_18r1.fcs': ([400, 600, 799, 994], 'The dim fluorescent marker was not resolved'),
-    'beckman_coulter_cytoflex_lx_metves_16p2.fcs': ([147, 203, 296, 400, 600, 799, 994], 'Partial result: Found'),
-    'bd_facsymphony_a5_metves_08h1.fcs': (['', 147, 203, 296, 400, 600, 799], 'Partial result: Found'),
-}
+# Each reviewed recording contributes a channel-selection test and a sizing test.
+RECORDINGS = {Path(path).relative_to("cross_device").as_posix(): record for path, record in reviewed_recordings().items()}
+SAMPLES = [(name, record["scatter"], record["fluorescence"]) for name, record in RECORDINGS.items()]
 
 
 @pytest.mark.parametrize(
     ("filename", "scatter", "fluorescence"),
-    SAMPLES + METVES_SAMPLES,
-    ids=[sample[0] for sample in SAMPLES + METVES_SAMPLES],
+    SAMPLES,
+    ids=[sample[0] for sample in SAMPLES],
 )
-def test_cross_device_catalog_auto_selects_fcs_channels(*, filename: str, scatter: str, fluorescence: str) -> None:
+def test_cross_device_catalog_auto_selects_fcs_channels(*, filename: str, scatter: str, fluorescence: str, request) -> None:
     """Resolve the expected channels from each FCS file through Rosetta auto-select."""
+    request.node.user_properties.append(("recording", filename))
+    with (SAMPLE_DIRECTORY / filename).open("rb") as recording:
+        assert hashlib.file_digest(recording, "sha256").hexdigest() == RECORDINGS[filename]["sha256"]
     _, selected = populate_peak_script_detector_dropdowns(
         uploaded_fcs_path=str(SAMPLE_DIRECTORY / filename),
         detector_dropdown_ids=[
@@ -122,119 +50,15 @@ def test_cross_device_catalog_auto_selects_fcs_channels(*, filename: str, scatte
     assert selected == [scatter, fluorescence]
 
 
-def resolve_test_optical_settings(*, filename: str, scatter: str) -> dict | None:
-    """Select an instrument preset for the test fixture's solid-sphere standard."""
-    from RosettaX.workflow.detector.configuration import (
-        detect_detector_preset_from_uploaded_fcs,
-        resolve_detector_configuration_values,
-        resolve_detector_preset_wavelength_nm,
-    )
-    from RosettaX.workflow.parameters.refractive_index import (
-        calculate_sellmeier_refractive_index,
-    )
-
-    sample_path = str(SAMPLE_DIRECTORY / filename)
-    preset_name = detect_detector_preset_from_uploaded_fcs(
-        uploaded_fcs_path=sample_path, selected_detector_channel=scatter,
-    )
-    if not preset_name:
-        return None
-    wavelength_nm = resolve_detector_preset_wavelength_nm(preset_name=preset_name)
-    assert wavelength_nm is not None, f"No wavelength for {preset_name}"
-    (
-        numerical_aperture,
-        cache_aperture,
-        blocker_aperture,
-        detector_sampling,
-        phi_angle_degree,
-        gamma_angle_degree,
-    ) = (
-        resolve_detector_configuration_values(
-            preset_name=preset_name,
-            current_detector_numerical_aperture=None,
-            current_detector_cache_numerical_aperture=None,
-            current_blocker_bar_numerical_aperture=None,
-            current_detector_sampling=None,
-            current_detector_phi_angle_degree=None,
-            current_detector_gamma_angle_degree=None,
-        )
-    )
-    return dict(
-        mie_model="Solid Sphere",
-        medium_refractive_index=calculate_sellmeier_refractive_index("water", wavelength_nm=wavelength_nm),
-        particle_refractive_index=calculate_sellmeier_refractive_index("polystyrene", wavelength_nm=wavelength_nm),
-        core_refractive_index=None,
-        shell_refractive_index=None,
-        wavelength_nm=wavelength_nm,
-        detector_numerical_aperture=numerical_aperture,
-        detector_cache_numerical_aperture=cache_aperture,
-        blocker_bar_numerical_aperture=blocker_aperture,
-        detector_sampling=detector_sampling,
-        detector_phi_angle_degree=phi_angle_degree,
-        detector_gamma_angle_degree=gamma_angle_degree,
-        detector_configuration_preset=preset_name,
-        logger=logging.getLogger(__name__),
-    )
-
-
-def run_real_calibration(*, filename: str, scatter: str, rows: list[dict]) -> float | None:
-    """Return the unrounded fit R² when a detector geometry is available."""
-    from RosettaX.pages.p03_scattering.sections.s05_calibration.services import (
-        run_scattering_calibration,
-    )
-
-    settings = resolve_test_optical_settings(filename=filename, scatter=scatter)
-    if settings is None:
-        return None
-    calibration = run_scattering_calibration(
-        uploaded_fcs_path=str(SAMPLE_DIRECTORY / filename),
-        detector_column=scatter,
-        bead_table_data=rows,
-        simulated_curve_point_count=100,
-        **settings,
-    )
-    assert calibration.calibration_store is not None, calibration.apply_status
-    return float(calibration.calibration_store["instrument_response"]["r_squared"])
-
-
-def run_real_sample(
-    *, filename: str, scatter: str, fluorescence: str, fit_calibration: bool = True,
-) -> dict:
-    """Run the Rosetta detection and, when possible, the scattering fit."""
-    result = MixtureRosettaScatterPeakProcess().run_automatic_action(
-        backend=SimpleNamespace(fcs_file_path=str(SAMPLE_DIRECTORY / filename)),
-        detector_channels={"scattering": scatter, "green_fluorescence": fluorescence},
-        peak_count=10,
-        max_events_for_analysis=100_000,
-        process_settings={},
-    )
-    assert result is not None
-    rows = result.table_prefill_rows or []
-    provisional = result.peak_lines_payload.get("rosetta_sizing", {}).get("needs_confirmation", False)
-    can_fit = (
-        fit_calibration and len(rows) >= 3 and all(row["particle_diameter_nm"] for row in rows)
-        and not result.warning and not provisional
-    )
-    return {
-        "warning": result.warning,
-        "status": result.status,
-        "rows": rows,
-        "provisional": provisional,
-        "gate": result.peak_lines_payload.get("baseline_cutoff"),
-        "gate_interval": result.peak_lines_payload.get("rosetta_gate_interval"),
-        "r_squared": run_real_calibration(filename=filename, scatter=scatter, rows=rows) if can_fit else None,
-    }
-
-
 def run_sample_in_subprocess(**sample) -> dict:
     """Use real PyMieSim independently of the suite's dependency stubs."""
     process = subprocess.run(
         [
             sys.executable, "-c",
-            "import json, runpy, sys; "
-            "run_sample = runpy.run_path(sys.argv[1])['run_real_sample']; "
-            "print(json.dumps(run_sample(**json.load(sys.stdin))))",
-            str(Path(__file__).resolve()),
+            "import json, sys; from pathlib import Path; "
+            "from RosettaX.workflow.recording_validation import run_real_sample; "
+            "sample = json.load(sys.stdin); sample['path'] = Path(sample['path']); "
+            "print(json.dumps(run_real_sample(**sample)))",
         ],
         cwd=REPOSITORY_ROOT,
         input=json.dumps(sample),
@@ -247,72 +71,20 @@ def run_sample_in_subprocess(**sample) -> dict:
     return json.loads(process.stdout.strip().splitlines()[-1])
 
 
-# Expected behavior at the default settings. These outcomes check the workflow
-# against fixed recordings and are not independent bead identity annotations.
-EXPECTED_OUTCOMES = {
-    "sony_id7000_experiment_1_beads.fcs": ("The dim fluorescent marker was not resolved", [400, 600, 799, 994]),
-    "sony_id7000_experiment_1_di_water.fcs": ("0 fluorescent marker peaks", []),
-    "sony_id7000_experiment_2_beads.fcs": ("The dim fluorescent marker was not resolved", [400, 600, 799, 994]),
-    "sony_id7000_experiment_2_di_water.fcs": ("0 fluorescent marker peaks", []),
-    'apogee_a60_micro_cal003_2022-01-31.fcs': ('Partial result: Found', [70, 100, 125, 147, 203, 296]),
-    'bd_facsymphony_a1_cal003_2022-02-11.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
-    'bd_facsymphony_a1_cal003_2022-02-18.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
-    'bd_facsymphony_a1_cal003_2022-11-16.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
-    'miltenyi_macsquant_cal003_2022-05-13.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
-    'beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs': ('Partial result: Found', ['', '', 147, 203, 296, 400, 600, 799, 994]),
-    'bd_facscalibur_cal003_2023-02-08.fcs': ('0 fluorescent marker peaks', []),
-}
-
-
 @pytest.mark.parametrize(("filename", "scatter", "fluorescence"), SAMPLES, ids=[sample[0] for sample in SAMPLES])
 def test_rosetta_bead_positions_sizes_and_scattering_fit(
-    *, filename: str, scatter: str, fluorescence: str,
+    *, filename: str, scatter: str, fluorescence: str, request,
 ) -> None:
     """Check assigned sizes, known diagnostic paths, and supported calibrations."""
-    result = run_sample_in_subprocess(filename=filename, scatter=scatter, fluorescence=fluorescence)
-    warning_fragment, expected_diameters = EXPECTED_OUTCOMES[filename]
-    rows = result["rows"]
-    assert [row["particle_diameter_nm"] for row in rows] == expected_diameters
-    positions = [row["measured_peak_position"] for row in rows]
-    assert all(math.isfinite(position) and position > 0 for position in positions)
-    assert positions == sorted(set(positions))
-    assert all(not diameter or diameter in ROSETTA_MIX_PARTICLE_DIAMETERS_NM for diameter in expected_diameters)
-
-    assert result["warning"] == bool(warning_fragment), result["status"]
-    if warning_fragment:
-        assert warning_fragment in result["status"]
-
-    if rows and not warning_fragment and not result["provisional"]:
-        r_squared = result["r_squared"]
-        assert r_squared is not None and math.isfinite(r_squared) and r_squared > 0.90
-    else:
-        assert result["r_squared"] is None
-
-
-@pytest.mark.parametrize(
-    ("filename", "scatter", "fluorescence"), METVES_SAMPLES, ids=[sample[0] for sample in METVES_SAMPLES],
-)
-def test_metves_rosetta_assignments_and_warnings(
-    *, filename: str, scatter: str, fluorescence: str,
-) -> None:
-    """Check assigned and unassigned rows and warnings for each METVES recording."""
+    request.node.user_properties.append(("recording", filename))
+    record = RECORDINGS[filename]
     result = run_sample_in_subprocess(
-        filename=filename,
-        scatter=scatter,
-        fluorescence=METVES_SIZING_FLUORESCENCE.get(filename, fluorescence),
-        fit_calibration=False,
+        path=str(SAMPLE_DIRECTORY / filename), scatter=scatter, fluorescence=record.get("sizing_fluorescence", fluorescence),
+        fit_calibration=record["fit_calibration"],
     )
-    expected_diameters, warning_fragment = CHECKED_METVES_OUTCOMES[filename]
-    rows = result["rows"]
-    assert [row["particle_diameter_nm"] for row in rows] == expected_diameters
-    positions = [row["measured_peak_position"] for row in rows]
-    assert all(math.isfinite(position) and position > 0 for position in positions)
-    assert positions == sorted(set(positions))
-    assert result["warning"] == bool(warning_fragment), result["status"]
-    if warning_fragment:
-        assert warning_fragment in result["status"]
-
-    if filename == "apogee_microplus_metves_04d1.fcs":
-        # The fitted baseline gate is used while stable valley validation is disabled.
-        assert result["gate_interval"] is None
-        assert 1_500 < result["gate"] < 8_000
+    request.node.user_properties.extend([
+        ("diameters_nm", json.dumps([row["particle_diameter_nm"] for row in result["rows"]])),
+        ("r_squared", json.dumps(result["r_squared"])),
+        ("fit_note", result["fit_note"]),
+    ])
+    check_outcome(result=result, record=record, fixture_name=filename)

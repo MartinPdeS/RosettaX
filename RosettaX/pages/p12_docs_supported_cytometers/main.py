@@ -13,30 +13,11 @@ from RosettaX.workflow.detector.loader import (
     load_detector_configuration_presets,
 )
 from RosettaX.workflow.scattering import ModelConfiguration
+from RosettaX.workflow.validation_recordings import supported_cytometers
 
 PAGE_NAME = "documentation-supported-cytometers"
 
-SUPPORTED_CYTOMETERS = {
-    "Apogee": ("A50 Micro", "A60 Micro", "MicroPLUS"),
-    "BD": ("FACSCalibur", "FACSCelesta SORP", "FACSLyric", "FACSymphony A1", "FACSymphony A5"),
-    "Beckman Coulter": ("CytoFLEX S", "CytoFLEX LX", "MoFlo Astrios"),
-    "Cytek": ("Aurora", "Northern Lights"),
-    "Miltenyi Biotec": ("MACSQuant Analyzer 16",),
-    "Sony": ("ID7000",),
-}
-
-SUPPORTED_PRESET_MODELS = {
-    ("Apogee", "A60 - Micro"),
-    ("BD Biosciences", "FACSLyric"),
-    ("BD Biosciences", "FACSymphony A1"),
-    ("Cytek Biosciences", "Aurora"),
-    ("Sony Biosciences", "ID7000"),
-}
-SUPPORTED_DETECTOR_PRESETS = {
-    name: preset
-    for name, preset in load_detector_configuration_presets().items()
-    if (preset.get("manufacturer"), preset.get("instrument")) in SUPPORTED_PRESET_MODELS
-}
+SUPPORTED_CYTOMETERS = supported_cytometers()
 
 CATALOG_PATH = "/documentation/supported-cytometers"
 def model_slug(*, brand: str, model: str) -> str:
@@ -59,7 +40,7 @@ def build_model_detail_page(*, model: str = "", **_kwargs) -> dbc.Container:
         return build_documentation_container([html.H2("Detector model unavailable"), back_link])
 
     brand, display_name = MODEL_DETAILS[model]
-    preset_model = {"A60 Micro": "A60 - Micro", "A50 Micro": "A50-Micro", "MicroPLUS": "Micro-PLUS"}.get(
+    preset_model = {"A60 Micro": "A60-Micro Standard", "A50 Micro": "A50-Micro Standard", "MicroPLUS": "MicroPLUS Standard"}.get(
         display_name, display_name,
     )
     instruments = load_instrument_catalog()["instruments"]
@@ -71,7 +52,7 @@ def build_model_detail_page(*, model: str = "", **_kwargs) -> dbc.Container:
             "Northern Lights": {"scattering": ["SSC-H"], "green_fluorescence": ["B2-H"]},
         }.get(display_name, {})
     detector_cards = []
-    for preset_name, preset in SUPPORTED_DETECTOR_PRESETS.items():
+    for preset_name, preset in load_detector_configuration_presets().items():
         if preset["instrument"] != preset_model:
             continue
         figure = ModelConfiguration.build_optical_configuration_preview_figure(

@@ -601,43 +601,7 @@ class Test_DocumentationDeepDivePages:
             "BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)",
         ):
             assert instrument in text_nodes
-        filenames = (
-            "cross_device/sony_id7000_experiment_1_beads.fcs",
-            "cross_device/sony_id7000_experiment_1_di_water.fcs",
-            "cross_device/sony_id7000_experiment_2_beads.fcs",
-            "cross_device/sony_id7000_experiment_2_di_water.fcs",
-            "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs",
-            "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs",
-            "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs",
-            "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs",
-            "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs",
-            "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs",
-            "cross_device/bd_facscalibur_cal003_2023-02-08.fcs",
-            "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs",
-            "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs",
-            "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs",
-            "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs",
-            "cross_device/cytek_aurora_metves_23w2.fcs",
-            "cross_device/bd_facslyric_metves_20t1.fcs",
-            "cross_device/apogee_microplus_metves_06f2.fcs",
-            "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs",
-            "cross_device/apogee_a50_micro_metves_19s1.fcs",
-            "cross_device/cytek_aurora_metves_11k2.fcs",
-            "cross_device/apogee_microplus_metves_04d1.fcs",
-            "cross_device/bd_facsymphony_a1_metves_25y2.fcs",
-            "cross_device/apogee_microplus_metves_07g1.fcs",
-            "cross_device/bd_facscelesta_sorp_metves_09i1.fcs",
-            "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs",
-            "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs",
-            "cross_device/apogee_microplus_metves_07g2.fcs",
-            "cross_device/cytek_aurora_metves_12l1.fcs",
-            "cross_device/cytek_northern_lights_metves_22v2.fcs",
-            "cross_device/bd_facsymphony_a1_metves_25y1.fcs",
-            "cross_device/apogee_a60_micro_metves_22v1.fcs",
-            "cross_device/cytek_aurora_metves_18r1.fcs",
-            "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs",
-            "cross_device/bd_facsymphony_a5_metves_08h1.fcs",
-        )
+        filenames = [name for name, metadata in sample_files_main.SAMPLE_FILE_METADATA.items() if "validation" in metadata]
         assert hrefs == {f"/assets/sample-files/{filename}" for filename in filenames}
         for filename in filenames:
             sample_path = sample_files_main.SAMPLE_FILES_DIRECTORY / filename

@@ -462,7 +462,7 @@ green_fluorescence = ["B530/30-A"]
 [instruments.bd_facsymphony_a1]
 manufacturer = "BD Biosciences"
 model = "FACSymphony A1"
-instrument_aliases = ["facsymphony a1"]
+instrument_aliases = ["facsymphony a1", "BD FACSymphony A1"]
 
 [instruments.bd_facsymphony_a1.rosetta_channels]
 scattering = ["SSC-H"]

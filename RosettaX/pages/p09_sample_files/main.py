@@ -1,18 +1,18 @@
 import dash
 import dash_bootstrap_components as dbc
-import json
 from dash import html
 from pathlib import PurePosixPath
 from RosettaX.utils import directories, styling, ui_forms
 from RosettaX.utils.upload_limits import format_upload_size
+from RosettaX.workflow.validation_recordings import load_sample_metadata
 
 SAMPLE_FILES_BASE_URL = (
     "https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/"
     "RosettaX/assets/sample-files"
 )
 SAMPLE_FILES_DIRECTORY = directories.asset_directory / "sample-files"
-with (SAMPLE_FILES_DIRECTORY / "sample_file_metadata.json").open(encoding="utf-8") as metadata_file:
-    SAMPLE_FILE_METADATA = json.load(metadata_file)
+SAMPLE_FILE_METADATA = load_sample_metadata()
+BRAND_COLORS = {"Apogee": "green", "Beckman Coulter": "purple", "Cytek": "cyan", "Miltenyi Biotec": "pink"}
 
 
 class SampleFilesPage:
@@ -98,51 +98,16 @@ class SampleFilesPage:
                     [
                         dbc.Col(
                             self._build_download_card(
-                                title=instrument,
+                                title=record["title"],
                                 subtitle="",
-                                color_name=color_name,
+                                color_name=BRAND_COLORS.get(record["manufacturer"], "blue"),
                                 items=[{"download": filename}],
                             ),
                             md=6,
                             xl=4,
                         )
-                        for instrument, color_name, filename in (
-                            ("Sony ID7000 (experiment 1, beads)", "blue", "cross_device/sony_id7000_experiment_1_beads.fcs"),
-                            ("Sony ID7000 (experiment 1, DI-water control)", "blue", "cross_device/sony_id7000_experiment_1_di_water.fcs"),
-                            ("Sony ID7000 (experiment 2, beads)", "blue", "cross_device/sony_id7000_experiment_2_beads.fcs"),
-                            ("Sony ID7000 (experiment 2, DI-water control)", "blue", "cross_device/sony_id7000_experiment_2_di_water.fcs"),
-                            ("Apogee A60-Micro (2022-01-31)", "green", "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs"),
-                            ("BD FACSymphony A1 (2022-02-11)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs"),
-                            ("BD FACSymphony A1 (2022-02-18)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs"),
-                            ("Miltenyi MACSQuant (2022-05-13)", "pink", "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs"),
-                            ("BD FACSymphony A1 (2022-11-16)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs"),
-                            ("Beckman Coulter CytoFLEX S (2023-01-05)", "purple", "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs"),
-                            ("BD FACSCalibur (2023-02-08)", "blue", "cross_device/bd_facscalibur_cal003_2023-02-08.fcs"),
-                            ("Beckman Coulter CytoFLEX S (METVES 23W1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs"),
-                            ("Beckman Coulter CytoFLEX S (METVES 16P1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs"),
-                            ("Beckman Coulter CytoFLEX LX (METVES 14N1)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs"),
-                            ("Beckman Coulter CytoFLEX LX (METVES 05E1)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs"),
-                            ("Cytek Aurora (METVES 23W2)", "cyan", "cross_device/cytek_aurora_metves_23w2.fcs"),
-                            ("BD FACSLyric (METVES 20T1)", "blue", "cross_device/bd_facslyric_metves_20t1.fcs"),
-                            ("Apogee Micro-PLUS (METVES 06F2)", "green", "cross_device/apogee_microplus_metves_06f2.fcs"),
-                            ("Beckman Coulter CytoFLEX S (METVES 05E2)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs"),
-                            ("Apogee A50-Micro (METVES 19S1)", "green", "cross_device/apogee_a50_micro_metves_19s1.fcs"),
-                            ("Cytek Aurora (METVES 11K2)", "cyan", "cross_device/cytek_aurora_metves_11k2.fcs"),
-                            ("Apogee A60 Micro-PLUS (METVES 04D1)", "green", "cross_device/apogee_microplus_metves_04d1.fcs"),
-                            ("BD FACSymphony A1 (METVES 25Y2)", "blue", "cross_device/bd_facsymphony_a1_metves_25y2.fcs"),
-                            ("Apogee Micro-PLUS (METVES 07G1)", "green", "cross_device/apogee_microplus_metves_07g1.fcs"),
-                            ("BD FACSCelesta SORP (METVES 09I1)", "blue", "cross_device/bd_facscelesta_sorp_metves_09i1.fcs"),
-                            ("Beckman Coulter CytoFLEX S (METVES 06F1)", "purple", "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs"),
-                            ("Beckman Coulter MoFlo Astrios (METVES 21U1)", "purple", "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs"),
-                            ("Apogee Micro-PLUS (METVES 07G2)", "green", "cross_device/apogee_microplus_metves_07g2.fcs"),
-                            ("Cytek Aurora (METVES 12L1)", "cyan", "cross_device/cytek_aurora_metves_12l1.fcs"),
-                            ("Cytek Northern Lights (METVES 22V2)", "cyan", "cross_device/cytek_northern_lights_metves_22v2.fcs"),
-                            ("BD FACSymphony A1 (METVES 25Y1)", "blue", "cross_device/bd_facsymphony_a1_metves_25y1.fcs"),
-                            ("Apogee A60-Micro (METVES 22V1)", "green", "cross_device/apogee_a60_micro_metves_22v1.fcs"),
-                            ("Cytek Aurora (METVES 18R1)", "cyan", "cross_device/cytek_aurora_metves_18r1.fcs"),
-                            ("Beckman Coulter CytoFLEX LX (METVES 16P2)", "purple", "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs"),
-                            ("BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)", "blue", "cross_device/bd_facsymphony_a5_metves_08h1.fcs"),
-                        )
+                        for filename, metadata in SAMPLE_FILE_METADATA.items()
+                        if (record := metadata.get("validation"))
                     ],
                     className="g-2",
                 ),

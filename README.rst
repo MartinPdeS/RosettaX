@@ -89,7 +89,7 @@ Some recordings exercise warnings when automatic sizing cannot proceed.
    * - BD
      - FACSCalibur, FACSCelesta SORP, FACSLyric, FACSymphony A1, FACSymphony A5
    * - Beckman Coulter
-     - CytoFLEX S, CytoFLEX LX, MoFlo Astrios
+     - CytoFLEX LX, CytoFLEX S, MoFlo Astrios
    * - Cytek
      - Aurora, Northern Lights
    * - Miltenyi Biotec
@@ -102,6 +102,37 @@ Some recordings exercise warnings when automatic sizing cannot proceed.
 On two Sony ID7000 bead runs, the default workflow assigned the four upper
 diameters (400, 600, 799 and 994 nm) and flagged the unresolved dim marker.
 Both paired DI-water controls returned zero fluorescent marker peaks.
+
+
+Maintaining the validation inventory
+------------------------------------
+
+From a source checkout with the test dependencies installed, use:
+
+.. code-block:: console
+
+   python tools/scan_fcs.py check-all
+   python tools/scan_fcs.py check path/to/recording.fcs
+   python tools/scan_fcs.py add path/to/recording.fcs --title "Sony ID7000 bead run"
+
+``check-all`` reports one line per recording with pass/fail, observed bead
+diameters in nm, and the scattering calibration-curve R². For fit-enabled recordings with an
+optical preset, the curve uses the assigned standards (at least two), including
+partial sizing results. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
+selection and sizing on the supplied file, including a calibration fit when
+eligible. For a known fingerprint it compares the result with the reviewed
+baseline. For new data it prints the observed outcome for review.
+
+``add`` runs the same checks, prints the proposed expectations, and asks for
+confirmation before copying the recording, registering its download and
+refreshing the supported-systems table. Use ``--accept`` for noninteractive
+registration of an already reviewed outcome. An expected warning or blank
+control can be registered. New instrument aliases and channel recommendations
+belong in ``instrument_catalog.toml``. Use ``--manufacturer`` and ``--model``
+to override display labels when the acquisition metadata is ambiguous.
+
+For a fast inventory check use ``python tools/scan_fcs.py audit --check``.
+It checks SHA-256 fingerprints and README consistency without running sizing.
 
 
 Features

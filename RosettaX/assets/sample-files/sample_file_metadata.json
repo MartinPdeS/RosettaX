@@ -5,7 +5,27 @@
       "405-LALS(Peak)",
       "405-Grn(Peak)"
     ],
-    "size_bytes": 2812038
+    "size_bytes": 2812038,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "A50 Micro",
+      "title": "Apogee A50-Micro (METVES 19S1)",
+      "sha256": "05ad44a3a881daf0231d5129f6eac4e3752c52a53524940492115b103b182a2f",
+      "scatter": "405-LALS(Peak)",
+      "fluorescence": "405-Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        "",
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs": {
     "detectors": [
@@ -13,7 +33,25 @@
       "405LALS(Peak)",
       "405Grn(Peak)"
     ],
-    "size_bytes": 1915050
+    "size_bytes": 1915050,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "A60 Micro",
+      "title": "Apogee A60-Micro (2022-01-31)",
+      "sha256": "8ea14a8895e5cfc2bcf8a3deaeca7781507f5c4fe4fb0240bf305665e68f8a10",
+      "scatter": "405LALS(Peak)",
+      "fluorescence": "405Grn(Peak)",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        70,
+        100,
+        125,
+        147,
+        203,
+        296
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/apogee_a60_micro_metves_22v1.fcs": {
     "detectors": [
@@ -21,7 +59,25 @@
       "405LALS(Peak)",
       "405Grn(Peak)"
     ],
-    "size_bytes": 1981704
+    "size_bytes": 1981704,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "A60 Micro",
+      "title": "Apogee A60-Micro (METVES 22V1)",
+      "sha256": "7eacc67273030d6151fdac574d3ed62cfec71b0c874d28bc9c227a6cc0a94eed",
+      "scatter": "405LALS(Peak)",
+      "fluorescence": "405Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        70,
+        100,
+        125,
+        147,
+        203,
+        296
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/apogee_microplus_metves_04d1.fcs": {
     "detectors": [
@@ -30,7 +86,24 @@
       "405-Grn(Peak)",
       "488-Grn(Peak)"
     ],
-    "size_bytes": 1396317
+    "size_bytes": 1396317,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "MicroPLUS",
+      "title": "Apogee A60 Micro-PLUS (METVES 04D1)",
+      "sha256": "665f8aa0ff3166c2e914427ee9bbcd253e5d3e87152543fd06fdf3709fd6896f",
+      "scatter": "LALS(Peak)",
+      "fluorescence": "405-Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/apogee_microplus_metves_06f2.fcs": {
     "detectors": [
@@ -38,7 +111,23 @@
       "LALS(Peak)",
       "405-Grn(Peak)"
     ],
-    "size_bytes": 1167049
+    "size_bytes": 1167049,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "MicroPLUS",
+      "title": "Apogee Micro-PLUS (METVES 06F2)",
+      "sha256": "7f324c12f3f7233b867e29b69153df83d600e2a04c273e936eaeb0dab945961d",
+      "scatter": "LALS(Peak)",
+      "fluorescence": "405-Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "No sizes assigned"
+    }
   },
   "cross_device/apogee_microplus_metves_07g1.fcs": {
     "detectors": [
@@ -47,7 +136,26 @@
       "405-Grn(Peak)",
       "488-Grn(Peak)"
     ],
-    "size_bytes": 1096247
+    "size_bytes": 1096247,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "MicroPLUS",
+      "title": "Apogee Micro-PLUS (METVES 07G1)",
+      "sha256": "cb138a7f1d6a8bdc2b9ba627693be01540925165686ad32241f599fa106050d3",
+      "scatter": "405-LALS(Peak)",
+      "fluorescence": "405-Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "No sizes assigned",
+      "sizing_fluorescence": "488-Grn(Peak)"
+    }
   },
   "cross_device/apogee_microplus_metves_07g2.fcs": {
     "detectors": [
@@ -55,7 +163,27 @@
       "LALS(Peak)",
       "488Grn(Peak)"
     ],
-    "size_bytes": 1041544
+    "size_bytes": 1041544,
+    "validation": {
+      "manufacturer": "Apogee",
+      "model": "MicroPLUS",
+      "title": "Apogee Micro-PLUS (METVES 07G2)",
+      "sha256": "bc8e5b9c914b42d8af7773785caa93299e14c059676fa1bd3a2ee7d5644e65e4",
+      "scatter": "LALS(Peak)",
+      "fluorescence": "488Grn(Peak)",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "Diameters are blank"
+    }
   },
   "cross_device/bd_facscalibur_cal003_2023-02-08.fcs": {
     "detectors": [
@@ -63,7 +191,18 @@
       "SSC-H",
       "FL1-H"
     ],
-    "size_bytes": 520692
+    "size_bytes": 520692,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSCalibur",
+      "title": "BD FACSCalibur (2023-02-08)",
+      "sha256": "dcc4f4b482fcbd5d91206b2eb622f8231f7db59b5b6cc680e66d2cd9ce2b2c90",
+      "scatter": "SSC-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [],
+      "expected_warning": "0 fluorescent marker peaks"
+    }
   },
   "cross_device/bd_facscelesta_sorp_metves_09i1.fcs": {
     "detectors": [
@@ -71,7 +210,23 @@
       "SSC-H",
       "B530/30-A"
     ],
-    "size_bytes": 9487268
+    "size_bytes": 9487268,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSCelesta SORP",
+      "title": "BD FACSCelesta SORP (METVES 09I1)",
+      "sha256": "93cb4800239bca901f4d931e4c3d93edb305f1d03b563872cb549d683b0878c9",
+      "scatter": "SSC-H",
+      "fluorescence": "B530/30-A",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facslyric_metves_20t1.fcs": {
     "detectors": [
@@ -79,7 +234,26 @@
       "SSC-H",
       "FITC-H"
     ],
-    "size_bytes": 5313113
+    "size_bytes": 5313113,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSLyric",
+      "title": "BD FACSLyric (METVES 20T1)",
+      "sha256": "585ab85fa3c625877a75069e1378c75baf3858bbc09924df14b13cfd5ebc2f50",
+      "scatter": "SSC-H",
+      "fluorescence": "FITC-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "Diameters are blank"
+    }
   },
   "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs": {
     "detectors": [
@@ -87,7 +261,23 @@
       "SSC-H",
       "B530/30-A"
     ],
-    "size_bytes": 361820
+    "size_bytes": 361820,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A1",
+      "title": "BD FACSymphony A1 (2022-02-11)",
+      "sha256": "781f908361b140ee45256e72099b618adafefad61c896751b193f8613b724a46",
+      "scatter": "SSC-H",
+      "fluorescence": "B530/30-A",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs": {
     "detectors": [
@@ -95,7 +285,23 @@
       "SSC-H",
       "B530/30-A"
     ],
-    "size_bytes": 2545258
+    "size_bytes": 2545258,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A1",
+      "title": "BD FACSymphony A1 (2022-02-18)",
+      "sha256": "26619035123f1afea41ace00328cc5704c71a62791e805618681415c662bff48",
+      "scatter": "SSC-H",
+      "fluorescence": "B530/30-A",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facsymphony_a1_cal003_2022-11-16.fcs": {
     "detectors": [
@@ -103,7 +309,23 @@
       "SSC-H",
       "BB515-H"
     ],
-    "size_bytes": 11168861
+    "size_bytes": 11168861,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A1",
+      "title": "BD FACSymphony A1 (2022-11-16)",
+      "sha256": "774890eeee4de89e9c2ccea2473d97a0de8e256e53f7a44ed4169c0591cf7565",
+      "scatter": "SSC-H",
+      "fluorescence": "BB515-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facsymphony_a1_metves_25y1.fcs": {
     "detectors": [
@@ -111,7 +333,23 @@
       "SSC-H",
       "BB515-H"
     ],
-    "size_bytes": 4196285
+    "size_bytes": 4196285,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A1",
+      "title": "BD FACSymphony A1 (METVES 25Y1)",
+      "sha256": "0afa933a81f0ecd0f3d67da50786cda22191207ecd12b25e254548764b41a3d2",
+      "scatter": "SSC-H",
+      "fluorescence": "BB515-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facsymphony_a1_metves_25y2.fcs": {
     "detectors": [
@@ -119,7 +357,23 @@
       "SSC-H",
       "BB515-H"
     ],
-    "size_bytes": 11168861
+    "size_bytes": 11168861,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A1",
+      "title": "BD FACSymphony A1 (METVES 25Y2)",
+      "sha256": "774890eeee4de89e9c2ccea2473d97a0de8e256e53f7a44ed4169c0591cf7565",
+      "scatter": "SSC-H",
+      "fluorescence": "BB515-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/bd_facsymphony_a5_metves_08h1.fcs": {
     "detectors": [
@@ -127,7 +381,26 @@
       "SSC-H",
       "BB515-H"
     ],
-    "size_bytes": 11684233
+    "size_bytes": 11684233,
+    "validation": {
+      "manufacturer": "BD",
+      "model": "FACSymphony A5",
+      "title": "BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)",
+      "sha256": "776586e9d138bb064955e7f4bdbe05a408ac359becc7bc59bc165cbee3442143",
+      "scatter": "SSC-H",
+      "fluorescence": "BB515-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        147,
+        203,
+        296,
+        400,
+        600,
+        799
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_lx_metves_05e1.fcs": {
     "detectors": [
@@ -135,7 +408,27 @@
       "FL12-H",
       "FL1-H"
     ],
-    "size_bytes": 771324
+    "size_bytes": 771324,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX LX",
+      "title": "Beckman Coulter CytoFLEX LX (METVES 05E1)",
+      "sha256": "56b91d7c9a824e68f50b48d4e8b8c9f9da6c652755593eeea7d60d032a23ce35",
+      "scatter": "FL12-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        147,
+        203,
+        296,
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_lx_metves_14n1.fcs": {
     "detectors": [
@@ -143,7 +436,22 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 19298034
+    "size_bytes": 19298034,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX LX",
+      "title": "Beckman Coulter CytoFLEX LX (METVES 14N1)",
+      "sha256": "d24df9b58fe500bf20df15c157b3199e7c9d9353918a938fc81f8f0c08ab0afe",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "Diameters are blank"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_lx_metves_16p2.fcs": {
     "detectors": [
@@ -151,7 +459,26 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 12989048
+    "size_bytes": 12989048,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX LX",
+      "title": "Beckman Coulter CytoFLEX LX (METVES 16P2)",
+      "sha256": "e7813b0ee3fa52662a59724f051d2b00266220e44b55c3c675cfbe2320883805",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        147,
+        203,
+        296,
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_s_cal003_2023-01-05.fcs": {
     "detectors": [
@@ -159,7 +486,28 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 12006058
+    "size_bytes": 12006058,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX S",
+      "title": "Beckman Coulter CytoFLEX S (2023-01-05)",
+      "sha256": "428f0b6206c5f800f80a525b6832f16a1404dbbf6232b00df893804de5396e04",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        "",
+        "",
+        147,
+        203,
+        296,
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_s_metves_05e2.fcs": {
     "detectors": [
@@ -167,7 +515,23 @@
       "SSC_1-H",
       "FL5-H"
     ],
-    "size_bytes": 11728742
+    "size_bytes": 11728742,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX S",
+      "title": "Beckman Coulter CytoFLEX S (METVES 05E2)",
+      "sha256": "c1866ccb77cb8a774cfca5a1029c8e1543571eee4301cff91f2faf0dfcf93fc1",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL5-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_s_metves_06f1.fcs": {
     "detectors": [
@@ -175,7 +539,23 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 3320547
+    "size_bytes": 3320547,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX S",
+      "title": "Beckman Coulter CytoFLEX S (METVES 06F1)",
+      "sha256": "a9f5cf0da001e40e7fb505ddbf83fd77a0dd79434e18b8b5298d476522410811",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_s_metves_16p1.fcs": {
     "detectors": [
@@ -183,7 +563,23 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 6443830
+    "size_bytes": 6443830,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX S",
+      "title": "Beckman Coulter CytoFLEX S (METVES 16P1)",
+      "sha256": "59171448af9f2cdc2f609fc4776d37563818001240458e891c4c3912a7cacc49",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/beckman_coulter_cytoflex_s_metves_23w1.fcs": {
     "detectors": [
@@ -191,7 +587,25 @@
       "SSC_1-H",
       "FL1-H"
     ],
-    "size_bytes": 6520163
+    "size_bytes": 6520163,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "CytoFLEX S",
+      "title": "Beckman Coulter CytoFLEX S (METVES 23W1)",
+      "sha256": "cb7bb7d695039cba69ee8567d6a4be4cd16b207cb6f69843427107f8ccf08638",
+      "scatter": "SSC_1-H",
+      "fluorescence": "FL1-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        147,
+        203,
+        296,
+        "",
+        ""
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/beckman_coulter_moflo_astrios_metves_21u1.fcs": {
     "detectors": [
@@ -199,7 +613,23 @@
       "SSC1-Height",
       "FL12-Height"
     ],
-    "size_bytes": 1753645
+    "size_bytes": 1753645,
+    "validation": {
+      "manufacturer": "Beckman Coulter",
+      "model": "MoFlo Astrios",
+      "title": "Beckman Coulter MoFlo Astrios (METVES 21U1)",
+      "sha256": "3917e2dd040651860c70c5a0291f36525187c57f0f36be13ae2b84d30cd4af6c",
+      "scatter": "SSC1-Height",
+      "fluorescence": "FL12-Height",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/cytek_aurora_metves_11k2.fcs": {
     "detectors": [
@@ -207,7 +637,24 @@
       "SSC-H",
       "B2-H"
     ],
-    "size_bytes": 8707036
+    "size_bytes": 8707036,
+    "validation": {
+      "manufacturer": "Cytek",
+      "model": "Aurora",
+      "title": "Cytek Aurora (METVES 11K2)",
+      "sha256": "094910c7d9863df7fb429e9881e61312c8fd3138a1117457caa41959e2177ab4",
+      "scatter": "SSC-H",
+      "fluorescence": "B2-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        147,
+        203,
+        296
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/cytek_aurora_metves_12l1.fcs": {
     "detectors": [
@@ -215,7 +662,23 @@
       "SSC-H",
       "B2-H"
     ],
-    "size_bytes": 10853292
+    "size_bytes": 10853292,
+    "validation": {
+      "manufacturer": "Cytek",
+      "model": "Aurora",
+      "title": "Cytek Aurora (METVES 12L1)",
+      "sha256": "36bf40fa3c886240e0ef75b09509101bffb81ff8b71253e956793367046c65cf",
+      "scatter": "SSC-H",
+      "fluorescence": "B2-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "Diameters are blank"
+    }
   },
   "cross_device/cytek_aurora_metves_18r1.fcs": {
     "detectors": [
@@ -223,7 +686,23 @@
       "SSC-H",
       "B2-A"
     ],
-    "size_bytes": 803275
+    "size_bytes": 803275,
+    "validation": {
+      "manufacturer": "Cytek",
+      "model": "Aurora",
+      "title": "Cytek Aurora (METVES 18R1)",
+      "sha256": "c3f197a4c8084f0cbe9134db79b075eadb89484becf6b4db0a39cdf546f79176",
+      "scatter": "SSC-H",
+      "fluorescence": "B2-A",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/cytek_aurora_metves_23w2.fcs": {
     "detectors": [
@@ -231,7 +710,24 @@
       "SSC-H",
       "B2-H"
     ],
-    "size_bytes": 7897529
+    "size_bytes": 7897529,
+    "validation": {
+      "manufacturer": "Cytek",
+      "model": "Aurora",
+      "title": "Cytek Aurora (METVES 23W2)",
+      "sha256": "a729a745c04bf434f432cb985e05db2a0788c98856695a849809a15f590ac556",
+      "scatter": "SSC-H",
+      "fluorescence": "B2-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        147,
+        203,
+        296
+      ],
+      "expected_warning": "Partial result: Found"
+    }
   },
   "cross_device/cytek_northern_lights_metves_22v2.fcs": {
     "detectors": [
@@ -239,7 +735,23 @@
       "SSC-H",
       "B2-H"
     ],
-    "size_bytes": 11472125
+    "size_bytes": 11472125,
+    "validation": {
+      "manufacturer": "Cytek",
+      "model": "Northern Lights",
+      "title": "Cytek Northern Lights (METVES 22V2)",
+      "sha256": "d15b88e74876f3aecec82d8e7b637b3e0a1fb5c2e517b4654daee489d6e32fc5",
+      "scatter": "SSC-H",
+      "fluorescence": "B2-H",
+      "fit_calibration": false,
+      "expected_diameters_nm": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "expected_warning": "Diameters are blank"
+    }
   },
   "cross_device/miltenyi_macsquant_cal003_2022-05-13.fcs": {
     "detectors": [
@@ -247,7 +759,23 @@
       "SSC-H",
       "FL6-H"
     ],
-    "size_bytes": 6144856
+    "size_bytes": 6144856,
+    "validation": {
+      "manufacturer": "Miltenyi Biotec",
+      "model": "MACSQuant Analyzer 16",
+      "title": "Miltenyi MACSQuant (2022-05-13)",
+      "sha256": "80b80a7712096a7d4dbdcc2fc0253a09ba91f3e8e95b6257deacf911438ac5e5",
+      "scatter": "SSC-H",
+      "fluorescence": "FL6-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved"
+    }
   },
   "cross_device/sony_id7000_experiment_1_beads.fcs": {
     "detectors": [
@@ -265,7 +793,24 @@
       "FITC-W",
       "TIME"
     ],
-    "size_bytes": 17212408
+    "size_bytes": 17212408,
+    "validation": {
+      "manufacturer": "Sony",
+      "model": "ID7000",
+      "title": "Sony ID7000 (experiment 1, beads)",
+      "sha256": "332bc81593a9ba2b9c6f63d55cd14874f90b08dbf9b4f59bdbfd310fb2aa2adb",
+      "scatter": "SSC-H",
+      "fluorescence": "FITC-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved",
+      "expected_curve_r_squared": 0.989676
+    }
   },
   "cross_device/sony_id7000_experiment_1_di_water.fcs": {
     "detectors": [
@@ -283,7 +828,18 @@
       "FITC-W",
       "TIME"
     ],
-    "size_bytes": 2941424
+    "size_bytes": 2941424,
+    "validation": {
+      "manufacturer": "Sony",
+      "model": "ID7000",
+      "title": "Sony ID7000 (experiment 1, DI-water control)",
+      "sha256": "c4526494671b9559e1b037c7e692e481c01ce1da10cbc5a5dd96937771a0fad2",
+      "scatter": "SSC-H",
+      "fluorescence": "FITC-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [],
+      "expected_warning": "0 fluorescent marker peaks"
+    }
   },
   "cross_device/sony_id7000_experiment_2_beads.fcs": {
     "detectors": [
@@ -301,7 +857,24 @@
       "FITC-W",
       "TIME"
     ],
-    "size_bytes": 3105796
+    "size_bytes": 3105796,
+    "validation": {
+      "manufacturer": "Sony",
+      "model": "ID7000",
+      "title": "Sony ID7000 (experiment 2, beads)",
+      "sha256": "495615be9fdeb554223b7d63a38509f230f6bf2c8692c7acae2b6b1f3d320a9b",
+      "scatter": "SSC-H",
+      "fluorescence": "FITC-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [
+        400,
+        600,
+        799,
+        994
+      ],
+      "expected_warning": "The dim fluorescent marker was not resolved",
+      "expected_curve_r_squared": 0.98898
+    }
   },
   "cross_device/sony_id7000_experiment_2_di_water.fcs": {
     "detectors": [
@@ -319,7 +892,18 @@
       "FITC-W",
       "TIME"
     ],
-    "size_bytes": 151936
+    "size_bytes": 151936,
+    "validation": {
+      "manufacturer": "Sony",
+      "model": "ID7000",
+      "title": "Sony ID7000 (experiment 2, DI-water control)",
+      "sha256": "09c6a643c808ec7e61dbecae1e6a8b5b6174924e5ac02aa0f4247aa9bb9b0dad",
+      "scatter": "SSC-H",
+      "fluorescence": "FITC-H",
+      "fit_calibration": true,
+      "expected_diameters_nm": [],
+      "expected_warning": "0 fluorescent marker peaks"
+    }
   },
   "summer_school/apogee_mixed_reference_beads.fcs": {
     "detectors": [
