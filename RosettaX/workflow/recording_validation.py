@@ -107,7 +107,7 @@ def run_real_sample(
     assigned_rows = [row for row in rows if row.get("particle_diameter_nm")]
     r_squared = None
     if not fit_calibration:
-        fit_note = "disabled for fixture"
+        fit_note = "calibration fit skipped by test configuration"
     elif len(assigned_rows) < 2:
         fit_note = "fewer than 2 assigned peaks"
     else:

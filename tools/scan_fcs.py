@@ -333,8 +333,10 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
         lines = ["# Cross-device FCS validation", "",
                  "Scatter and fluorescence are the FCS channels used for bead sizing. "
                  "R² is the scattering calibration-curve fit for the assigned bead sizes.", ""]
+        size_column = headers.index("Sizes (nm)")
         for row in table:
             cells = [cell.replace("\\", "\\\\").replace("|", "\\|") for cell in row]
+            cells[size_column] = cells[size_column].replace(" ", "&nbsp;")
             lines.append("| " + " | ".join(cells) + " |")
         lines.extend(["", "\n\n".join(footer), ""])
         markdown.write_text("\n".join(lines), encoding="utf-8")
