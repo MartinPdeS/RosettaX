@@ -78,8 +78,14 @@ def test_rosetta_bead_positions_sizes_and_scattering_fit(
     """Check assigned sizes, known diagnostic paths, and supported calibrations."""
     request.node.user_properties.append(("recording", filename))
     record = RECORDINGS[filename]
+    sizing_fluorescence = record.get("sizing_fluorescence", fluorescence)
+    request.node.user_properties.extend([
+        ("model", f"{record['manufacturer']} {record['model']}"),
+        ("scatter", scatter),
+        ("fluorescence", sizing_fluorescence),
+    ])
     result = run_sample_in_subprocess(
-        path=str(SAMPLE_DIRECTORY / filename), scatter=scatter, fluorescence=record.get("sizing_fluorescence", fluorescence),
+        path=str(SAMPLE_DIRECTORY / filename), scatter=scatter, fluorescence=sizing_fluorescence,
         fit_calibration=record["fit_calibration"],
     )
     request.node.user_properties.extend([

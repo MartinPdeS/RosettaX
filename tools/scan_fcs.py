@@ -265,7 +265,7 @@ def check_file(*, args: argparse.Namespace) -> int:
     return 0
 
 
-def run_all_checks() -> int:
+def run_all_checks(*, markdown: Path | None = None) -> int:
     """Run the reference suite once and report observed results per recording."""
     with TemporaryDirectory() as directory:
         report = Path(directory) / "results.xml"
@@ -287,6 +287,9 @@ def run_all_checks() -> int:
             print(process.stdout, file=sys.stderr)
             return process.returncode or 1
         result = results.setdefault(filename, {"sizes": "unavailable", "fit": "—", "fit_note": "fit unavailable", "issues": []})
+        for field in ("model", "scatter", "fluorescence"):
+            if field in properties:
+                result[field] = properties[field]
         if "diameters_nm" in properties:
             diameters = json.loads(properties["diameters_nm"])
             size_labels = []
@@ -303,20 +306,38 @@ def run_all_checks() -> int:
                 message = issue.get("message") or issue.tag
                 result["issues"].append(" ".join(message.split())[:180])
 
-    filename_width = max([len("Recording"), *map(len, results)])
-    sizes_width = max([len("Sizes (nm)"), *(len(result["sizes"]) for result in results.values())])
-    fit_width = max([len("R²"), *(len(result["fit"]) for result in results.values())])
-    row_format = f"{{:<6}}  {{:<{filename_width}}}  {{:<{sizes_width}}}  {{:>{fit_width}}}  {{}}"
-    print(row_format.format("Status", "Recording", "Sizes (nm)", "R²", "Notes"))
+    headers = ("Status", "Recording", "Model", "Scatter", "Fluorescence", "Sizes (nm)", "R²", "Notes")
+    rows = []
     failures = 0
     for filename, result in results.items():
         issues = result["issues"]
         failures += bool(issues)
         notes = "; ".join(filter(None, [result["fit_note"], *issues]))
-        print(row_format.format("FAIL" if issues else "PASS", filename, result["sizes"], result["fit"], notes).rstrip())
+        rows.append(("FAIL" if issues else "PASS", filename, result.get("model", "—"),
+                     result.get("scatter", "—"), result.get("fluorescence", "—"),
+                     result["sizes"], result["fit"], notes))
+
+    widths = [max(map(len, column)) for column in zip(headers, *rows)]
+    for row in [headers, *rows]:
+        cells = [cell.rjust(width) if header == "R²" else cell.ljust(width)
+                 for header, cell, width in zip(headers, row, widths)]
+        print("  ".join(cells).rstrip())
+    footer = []
     if any("?" in result["sizes"] for result in results.values()):
-        print("? = detected peak with no assigned diameter")
-    print(f"{len(results) - failures}/{len(results)} recordings passed ({len(cases)} checks).")
+        footer.append("? = detected peak with no assigned diameter")
+    footer.append(f"{len(results) - failures}/{len(results)} recordings passed ({len(cases)} checks).")
+    print("\n".join(footer))
+
+    if markdown is not None:
+        table = [headers, ["---"] * len(headers), *rows]
+        lines = ["# Cross-device FCS validation", "",
+                 "Scatter and fluorescence are the FCS channels used for bead sizing. "
+                 "R² is the scattering calibration-curve fit for the assigned bead sizes.", ""]
+        for row in table:
+            cells = [cell.replace("\\", "\\\\").replace("|", "\\|") for cell in row]
+            lines.append("| " + " | ".join(cells) + " |")
+        lines.extend(["", "\n\n".join(footer), ""])
+        markdown.write_text("\n".join(lines), encoding="utf-8")
     return process.returncode or int(bool(failures))
 
 
@@ -324,7 +345,8 @@ def main() -> int:
     """Dispatch a workflow check, reviewed-fixture registration, or inventory audit."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("check-all", help="Run the real workflow tests for every registered recording.")
+    check_all = commands.add_parser("check-all", help="Run the real workflow tests for every registered recording.")
+    check_all.add_argument("--markdown", type=Path, metavar="PATH", help="Write the same results as a Markdown report.")
     single = commands.add_parser("check", help="Run one FCS and compare with its reviewed expectations when available.")
     single.add_argument("file", type=Path)
     add = commands.add_parser("add", help="Run one FCS and register its reviewed outcome.")
@@ -346,7 +368,7 @@ def main() -> int:
         if args.command == "audit":
             return audit_inventory(args=args)
         if args.command == "check-all":
-            return run_all_checks()
+            return run_all_checks(markdown=args.markdown)
         return check_file(args=args)
     except (ValueError, RuntimeError, OSError, EOFError) as error:
         print(f"Error: {error}", file=sys.stderr)

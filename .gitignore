@@ -24,6 +24,7 @@
 !meta.yaml
 !pyproject.toml
 !README.rst
+!/VALIDATION.md
 !AGENTS.md
 !notebook.ipynb
 !CMakeLists.txt

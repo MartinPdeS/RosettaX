@@ -16,6 +16,8 @@ RosettaX
      - |docs|
    * - Continuous integration
      - |ci/cd|
+   * - Cross-device validation
+     - |validation-report|
    * - Test coverage
      - |coverage|
    * - PyPI package
@@ -110,12 +112,12 @@ From a source checkout with the test dependencies installed, use:
 
 .. code-block:: console
 
-   python tools/scan_fcs.py check-all
+   python tools/scan_fcs.py check-all --markdown VALIDATION.md
    python tools/scan_fcs.py check path/to/recording.fcs
    python tools/scan_fcs.py add path/to/recording.fcs --title "Sony ID7000 bead run"
 
-``check-all`` reports one line per recording with pass/fail, observed bead
-diameters in nm, and the scattering calibration-curve R². For fit-enabled recordings with an
+``check-all`` reports one line per recording with pass/fail, cytometer model, scatter and
+fluorescence channels used for sizing, observed bead diameters in nm, and the scattering calibration-curve R². For fit-enabled recordings with an
 optical preset, the curve uses the assigned standards (at least two), including
 partial sizing results. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
 selection and sizing on the supplied file, including a calibration fit when
@@ -600,6 +602,10 @@ See the repository ``LICENSE`` file for the full license text.
 Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
 
+
+.. |validation-report| image:: https://img.shields.io/badge/FCS_validation-view_report-blue
+   :alt: View the cross-device FCS validation report
+   :target: VALIDATION.md
 
 .. |zenodo| image:: https://zenodo.org/badge/19846629.svg
    :alt: Cite RosettaX on Zenodo
