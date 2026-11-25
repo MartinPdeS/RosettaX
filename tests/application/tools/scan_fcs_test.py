@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def test_scan_uses_file_contents_for_review_status(*, tmp_path):
     """Recognize a renamed recording and reject different bytes under a reviewed name."""
-    fixture = ROOT / "RosettaX/assets/sample-files/cross_device/sony_id7000_experiment_2_di_water.fcs"
+    fixture = ROOT / "RosettaX/assets/sample-files/cross_device/sony_id7000_experiment_2_beads.fcs"
     shutil.copyfile(fixture, tmp_path / "renamed.FCS")
     (tmp_path / fixture.name).write_bytes(b"unreviewed contents")
     result = subprocess.run(

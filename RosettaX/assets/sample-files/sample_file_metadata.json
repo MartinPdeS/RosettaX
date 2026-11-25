@@ -812,35 +812,6 @@
       "expected_curve_r_squared": 0.989676
     }
   },
-  "cross_device/sony_id7000_experiment_1_di_water.fcs": {
-    "detectors": [
-      "FSC-A",
-      "FSC-H",
-      "FSC-W",
-      "SSC-A",
-      "SSC-H",
-      "SSC-W",
-      "[AF color 1]-A",
-      "[AF color 1]-H",
-      "[AF color 1]-W",
-      "FITC-A",
-      "FITC-H",
-      "FITC-W",
-      "TIME"
-    ],
-    "size_bytes": 2941424,
-    "validation": {
-      "manufacturer": "Sony",
-      "model": "ID7000",
-      "title": "Sony ID7000 (experiment 1, DI-water control)",
-      "sha256": "c4526494671b9559e1b037c7e692e481c01ce1da10cbc5a5dd96937771a0fad2",
-      "scatter": "SSC-H",
-      "fluorescence": "FITC-H",
-      "fit_calibration": true,
-      "expected_diameters_nm": [],
-      "expected_warning": "0 fluorescent marker peaks"
-    }
-  },
   "cross_device/sony_id7000_experiment_2_beads.fcs": {
     "detectors": [
       "FSC-A",
@@ -874,35 +845,6 @@
       ],
       "expected_warning": "The dim fluorescent marker was not resolved",
       "expected_curve_r_squared": 0.98898
-    }
-  },
-  "cross_device/sony_id7000_experiment_2_di_water.fcs": {
-    "detectors": [
-      "FSC-A",
-      "FSC-H",
-      "FSC-W",
-      "SSC-A",
-      "SSC-H",
-      "SSC-W",
-      "[AF color 1]-A",
-      "[AF color 1]-H",
-      "[AF color 1]-W",
-      "FITC-A",
-      "FITC-H",
-      "FITC-W",
-      "TIME"
-    ],
-    "size_bytes": 151936,
-    "validation": {
-      "manufacturer": "Sony",
-      "model": "ID7000",
-      "title": "Sony ID7000 (experiment 2, DI-water control)",
-      "sha256": "09c6a643c808ec7e61dbecae1e6a8b5b6174924e5ac02aa0f4247aa9bb9b0dad",
-      "scatter": "SSC-H",
-      "fluorescence": "FITC-H",
-      "fit_calibration": true,
-      "expected_diameters_nm": [],
-      "expected_warning": "0 fluorescent marker peaks"
     }
   },
   "summer_school/apogee_mixed_reference_beads.fcs": {

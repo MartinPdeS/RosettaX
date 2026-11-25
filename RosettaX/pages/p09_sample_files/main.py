@@ -4,7 +4,10 @@ from dash import html
 from pathlib import PurePosixPath
 from RosettaX.utils import directories, styling, ui_forms
 from RosettaX.utils.upload_limits import format_upload_size
-from RosettaX.workflow.validation_recordings import load_sample_metadata
+from RosettaX.workflow.validation_recordings import (
+    load_sample_metadata,
+    representative_recordings,
+)
 
 SAMPLE_FILES_BASE_URL = (
     "https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/"
@@ -79,13 +82,13 @@ class SampleFilesPage:
         )
 
     def _build_validation_downloads(self) -> html.Div:
-        """List the cross-device Rosetta bead downloads."""
+        """List one cross-device Rosetta bead download per cytometer model."""
         return html.Div(
             [
                 dbc.Alert(
                     [
                         html.P(
-                            "These acquisitions include CAL003 and METVES bead recordings and two Sony ID7000 bead runs with paired DI-water controls. "
+                            "Each cytometer model has one representative recording from the cross-device validation suite. "
                             "Downloads retain the channels used for scatter and green fluorescence analysis. "
                             "Acquisition settings can vary by instrument and run.",
                             className="mb-0",
@@ -98,16 +101,15 @@ class SampleFilesPage:
                     [
                         dbc.Col(
                             self._build_download_card(
-                                title=record["title"],
+                                title=SAMPLE_FILE_METADATA[filename]["validation"]["title"],
                                 subtitle="",
-                                color_name=BRAND_COLORS.get(record["manufacturer"], "blue"),
+                                color_name=BRAND_COLORS.get(SAMPLE_FILE_METADATA[filename]["validation"]["manufacturer"], "blue"),
                                 items=[{"download": filename}],
                             ),
                             md=6,
                             xl=4,
                         )
-                        for filename, metadata in SAMPLE_FILE_METADATA.items()
-                        if (record := metadata.get("validation"))
+                        for filename in representative_recordings(metadata=SAMPLE_FILE_METADATA)
                     ],
                     className="g-2",
                 ),

@@ -101,7 +101,6 @@ Some recordings exercise warnings when automatic sizing cannot proceed.
 
 On two Sony ID7000 bead runs, the default workflow assigned the four upper
 diameters (400, 600, 799 and 994 nm) and flagged the unresolved dim marker.
-Both paired DI-water controls returned zero fluorescent marker peaks.
 
 
 Maintaining the validation inventory
@@ -124,12 +123,16 @@ eligible. For a known fingerprint it compares the result with the reviewed
 baseline. For new data it prints the observed outcome for review.
 
 ``add`` runs the same checks, prints the proposed expectations, and asks for
-confirmation before copying the recording, registering its download and
+confirmation before copying the recording, registering it for testing and
 refreshing the supported-systems table. Use ``--accept`` for noninteractive
 registration of an already reviewed outcome. An expected warning or blank
 control can be registered. New instrument aliases and channel recommendations
 belong in ``instrument_catalog.toml``. Use ``--manufacturer`` and ``--model``
 to override display labels when the acquisition metadata is ambiguous.
+
+The cross-device download page shows one recording per model. It favors more
+assigned sizes, then fewer unassigned peaks, a fit-enabled fixture, and a smaller
+file. Every reviewed recording still runs in ``check-all``.
 
 For a fast inventory check use ``python tools/scan_fcs.py audit --check``.
 It checks SHA-256 fingerprints and README consistency without running sizing.

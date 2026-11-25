@@ -19,6 +19,26 @@ def reviewed_recordings() -> dict:
     }
 
 
+def representative_recordings(*, metadata: dict) -> list[str]:
+    """Select one reviewed download per manufacturer and model.
+
+    Prefer more assigned bead sizes, fewer unassigned peaks, an enabled curve
+    fit, then a smaller download. The relative path breaks remaining ties.
+    """
+    best = {}
+    for path, sample in metadata.items():
+        record = sample.get("validation")
+        if not record:
+            continue
+        sizes = record["expected_diameters_nm"]
+        assigned = sum(bool(size) for size in sizes)
+        rank = (-assigned, len(sizes) - assigned, not record["fit_calibration"], sample["size_bytes"], path)
+        model = (record["manufacturer"], record["model"])
+        if model not in best or rank < best[model]:
+            best[model] = rank
+    return [best[model][-1] for model in sorted(best)]
+
+
 def supported_cytometers() -> dict[str, list[str]]:
     """Return the reviewed instrument models grouped by manufacturer for display."""
     brands: dict[str, set[str]] = {}

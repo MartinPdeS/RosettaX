@@ -563,46 +563,18 @@ class Test_DocumentationDeepDivePages:
         validation_layout, summer_school_layout = (tab.children for tab in tabs.children)
         text_nodes = _collect_text(validation_layout)
         hrefs = _collect_component_hrefs(validation_layout)
-        for instrument in (
-            "Sony ID7000 (experiment 1, beads)",
-            "Sony ID7000 (experiment 1, DI-water control)",
-            "Sony ID7000 (experiment 2, beads)",
-            "Sony ID7000 (experiment 2, DI-water control)",
-            "Apogee A60-Micro (2022-01-31)",
-            "BD FACSymphony A1 (2022-02-11)",
-            "BD FACSymphony A1 (2022-02-18)",
-            "Miltenyi MACSQuant (2022-05-13)",
-            "BD FACSymphony A1 (2022-11-16)",
-            "Beckman Coulter CytoFLEX S (2023-01-05)",
-            "BD FACSCalibur (2023-02-08)",
-            "Beckman Coulter CytoFLEX S (METVES 23W1)",
-            "Beckman Coulter CytoFLEX S (METVES 16P1)",
-            "Beckman Coulter CytoFLEX LX (METVES 14N1)",
-            "Beckman Coulter CytoFLEX LX (METVES 05E1)",
-            "Cytek Aurora (METVES 23W2)",
-            "BD FACSLyric (METVES 20T1)",
-            "Apogee Micro-PLUS (METVES 06F2)",
-            "Beckman Coulter CytoFLEX S (METVES 05E2)",
-            "Apogee A50-Micro (METVES 19S1)",
-            "Cytek Aurora (METVES 11K2)",
-            "Apogee A60 Micro-PLUS (METVES 04D1)",
-            "BD FACSymphony A1 (METVES 25Y2)",
-            "Apogee Micro-PLUS (METVES 07G1)",
-            "BD FACSCelesta SORP (METVES 09I1)",
-            "Beckman Coulter CytoFLEX S (METVES 06F1)",
-            "Beckman Coulter MoFlo Astrios (METVES 21U1)",
-            "Apogee Micro-PLUS (METVES 07G2)",
-            "Cytek Aurora (METVES 12L1)",
-            "Cytek Northern Lights (METVES 22V2)",
-            "BD FACSymphony A1 (METVES 25Y1)",
-            "Apogee A60-Micro (METVES 22V1)",
-            "Cytek Aurora (METVES 18R1)",
-            "Beckman Coulter CytoFLEX LX (METVES 16P2)",
-            "BD FACSymphony A5 (FCS identifies LSRFortessa) (METVES 08H1)",
-        ):
-            assert instrument in text_nodes
-        filenames = [name for name, metadata in sample_files_main.SAMPLE_FILE_METADATA.items() if "validation" in metadata]
-        assert hrefs == {f"/assets/sample-files/{filename}" for filename in filenames}
+        metadata_by_path = sample_files_main.SAMPLE_FILE_METADATA
+        reviewed_models = {
+            (record["manufacturer"], record["model"])
+            for sample in metadata_by_path.values() if (record := sample.get("validation"))
+        }
+        filenames = [href.removeprefix("/assets/sample-files/") for href in hrefs]
+        shown = [metadata_by_path[name]["validation"] for name in filenames]
+        assert len(filenames) == len(reviewed_models)
+        assert {(record["manufacturer"], record["model"]) for record in shown} == reviewed_models
+        assert all(record["title"] in text_nodes for record in shown)
+        assert "cross_device/sony_id7000_experiment_2_beads.fcs" in filenames
+        assert "cross_device/sony_id7000_experiment_1_beads.fcs" in metadata_by_path
         for filename in filenames:
             sample_path = sample_files_main.SAMPLE_FILES_DIRECTORY / filename
             metadata = sample_files_main.SAMPLE_FILE_METADATA[filename]
