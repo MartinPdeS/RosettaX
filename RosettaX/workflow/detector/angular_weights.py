@@ -67,6 +67,9 @@ def resolve_detector_angular_weights(
 
         if not preset:
             return None
+        weighting = preset.get("detector_angular_weighting")
+        if current_medium_refractive_index is not None and isinstance(weighting, dict) and weighting.get("mode") == "mirror-angle-range":
+            preset = {**preset, "medium_refractive_index": float(current_medium_refractive_index)}
 
     sampling_size = resolve_sampling_size(
         preset,
@@ -443,6 +446,17 @@ def _resolve_detector_angular_weighting(
 
     if not weighting_mode:
         return None
+
+    if weighting_mode == "mirror-angle-range":
+        # In the RosettaX mesh frame the beam is +x and the objective tilts
+        # toward +z. A straight mirror edge cuts the projected x-z angle.
+        coordinates = _build_profile_coordinate_array(preset=preset, sampling_size=sampling_size)
+        angles = np.rad2deg(np.arctan2(coordinates[:, 2], coordinates[:, 0]))
+        lower = angular_weighting.get("minimum_angle_degree", -180.0)
+        upper = angular_weighting.get("maximum_angle_degree", 180.0)
+        if not -180.0 <= lower < upper <= 180.0:
+            raise ValueError("Mirror boundaries must increase within [-180, 180] degrees.")
+        return ((angles >= lower) & (angles < upper)).astype(np.complex128)
 
     if weighting_mode == "split":
         return _resolve_split_angular_weighting(

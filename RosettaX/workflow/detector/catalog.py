@@ -69,3 +69,23 @@ def match_instrument_rule(
         elif score == best_score:
             best_rule = None
     return best_rule
+
+
+def match_recording_instrument(*, instrument_name: str, channel_names: list[str]) -> dict[str, Any] | None:
+    """Resolve the catalog model, including a MALS-equipped variant for recordings with that channel."""
+    instruments = load_instrument_catalog()["instruments"]
+    rules = [dict(instrument, catalog_key=key) for key, instrument in instruments.items()]
+    match = match_instrument_rule(instrument_name=instrument_name, rules=rules)
+    if match and match.get("mals_variant") and any(scatter_region(channel_name=name) == "mals" for name in channel_names):
+        key = match["mals_variant"]
+        return dict(instruments[key], catalog_key=key)
+    return match
+
+
+def scatter_region(*, channel_name: str) -> str | None:
+    """Identify a labeled SALS, LALS, or MALS region in an FCS parameter name."""
+    token = "".join(character for character in channel_name.casefold() if character.isalnum())
+    for region, label in (("sals", "smallangle"), ("lals", "largeangle"), ("mals", "mediumangle")):
+        if region in token or label in token:
+            return region
+    return None

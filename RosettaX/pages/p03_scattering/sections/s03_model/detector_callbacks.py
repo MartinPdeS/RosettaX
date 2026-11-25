@@ -6,7 +6,7 @@ from . import services
 from .models import DetectorGeometryValues
 from dataclasses import replace
 from RosettaX.utils import casting
-from RosettaX.workflow.detector import load_detector_configuration_preset_catalog
+from RosettaX.workflow.detector import load_detector_configuration_preset, load_detector_configuration_preset_catalog
 from RosettaX.workflow.detector.configuration import infer_detector_preset_from_metadata
 from typing import TYPE_CHECKING, Any
 
@@ -178,6 +178,8 @@ def register_detector_configuration_callbacks(section: Model) -> None:
         type_value: Any,
         current_preset_name: Any,
     ) -> Any:
+        if not type_value and current_preset_name and load_detector_configuration_preset(current_preset_name).get("archived"):
+            return dash.no_update
         resolved_preset_name = type_value or ""
         return (
             dash.no_update

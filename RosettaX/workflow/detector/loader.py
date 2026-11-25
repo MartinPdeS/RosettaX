@@ -99,10 +99,10 @@ class DetectorPresetLoader:
 
         return detector_presets
 
-    def _load_presets_from_instrument_catalog(self, *, path: Path) -> dict[str, dict[str, Any]]:
+    def _load_presets_from_instrument_catalog(self, *, path: Path, table: str = "instruments") -> dict[str, dict[str, Any]]:
         """Normalize optical presets embedded in the instrument catalog."""
         presets = {}
-        for instrument in load_instrument_catalog(path=path)["instruments"].values():
+        for instrument in load_instrument_catalog(path=path).get(table, {}).values():
             defaults = {
                 preset_key: instrument[instrument_key]
                 for preset_key, instrument_key in (
@@ -118,6 +118,8 @@ class DetectorPresetLoader:
                     raise ValueError(f"Duplicate detector preset name: {name}")
                 preset = {**defaults, **definition}
                 preset["name"] = preset.pop("preset_name")
+                if table == "archived_instruments":
+                    preset["archived"] = True
                 presets[name] = self._normalize_detector_preset(
                     detector_preset=preset, detector_preset_path=path,
                 )
@@ -335,7 +337,13 @@ class DetectorPresetLoader:
 
         detector_presets = self.load_presets()
 
-        return detector_presets.get(str(preset_name), {})
+        if str(preset_name) in detector_presets:
+            return detector_presets[str(preset_name)]
+
+        if self.preset_path.suffix == ".toml" and self.preset_path.is_file():
+            archived = self._load_presets_from_instrument_catalog(path=self.preset_path, table="archived_instruments")
+            return archived.get(str(preset_name), {})
+        return {}
 
     def _load_detector_preset_from_file(
         self,
@@ -509,11 +517,8 @@ def _normalize_standard_scatter_angles(
         "LALS": "SSC",
     }.get(channel_name, channel_name)
 
-    # Kairos scatter channels are partitions of one lens, so their channel names
-    # must not trigger the generic 0°/90° FSC/SSC orientation defaults.
-    if "kairos" in _clean_preset_text(
-        normalized_detector_preset.get("instrument"),
-    ).lower():
+    # Partitioned channels inherit the shared objective orientation.
+    if normalized_detector_preset.get("detector_angular_weighting") and channel_name in {"SALS", "LALS", "MALS"}:
         return normalized_detector_preset
 
     if normalized_scatter_channel_name == "FSC":

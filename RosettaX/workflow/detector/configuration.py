@@ -5,6 +5,8 @@ from .catalog import (
     load_instrument_catalog,
     load_instrument_rules,
     match_instrument_rule,
+    match_recording_instrument,
+    scatter_region,
 )
 from .loader import get_default_detector_preset_loader
 from RosettaX.utils.fcs_metadata import FCSMetadata
@@ -143,7 +145,7 @@ def resolve_runtime_detector_preset(
     if not preset_name_string:
         return None
 
-    if preset_name_string in allowed_preset_names:
+    if preset_name_string in allowed_preset_names or _DETECTOR_PRESET_LOADER.load_preset(preset_name_string):
         return preset_name_string
 
     return None
@@ -317,18 +319,13 @@ def infer_detector_preset_from_metadata(
     if not instrument_name or not selected_detector_channel_string:
         return None
 
-    # The three Kairos channels must not share the generic side-scatter family.
-    if "kairos" in normalize_lookup_token(instrument_name):
-        normalized_channel = normalize_lookup_token(selected_detector_channel_string)
-        for channel_name, channel_aliases in (
-            ("SALS", ("sals", "smallangle")),
-            ("MALS", ("mals", "mediumangle")),
-            ("LALS", ("lals", "largeangle")),
-        ):
-            if any(alias in normalized_channel for alias in channel_aliases):
-                preset_name = f"Apogee Kairos {channel_name}"
-                return preset_name if _DETECTOR_PRESET_LOADER.load_preset(preset_name) else None
-        return None
+    instrument = selected_instrument or match_recording_instrument(
+        instrument_name=instrument_name,
+        channel_names=[selected_detector_channel_string, *(metadata.column_names if metadata else [])],
+    )
+    if instrument and "sals" in instrument.get("detectors", {}):
+        region = scatter_region(channel_name=selected_detector_channel_string)
+        return instrument["detectors"].get(region, {}).get("preset_name")
 
     best_preset_name: str | None = None
     best_score = 0

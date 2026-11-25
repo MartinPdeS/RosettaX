@@ -42,141 +42,299 @@ blocker_bar_numerical_aperture = 0.0
 detector_phi_angle_degree = 90.0
 detector_gamma_angle_degree = 0.0
 
-[instruments.apogee_a60_micro]
-manufacturer = "Apogee"
-model = "A60 - Micro"
-instrument_aliases = ["apogee", "Apogee A60-Micro"]
-
-[instruments.apogee_a60_micro.rosetta_channels]
-scattering = ["405LALS(Peak)"]
-green_fluorescence = ["405Grn(Peak)"]
-
-[instruments.apogee_a60_micro.detectors.forward]
-preset_name = "Apogee - Forward"
-detector_figure = "detector_figures/apogee_a60_forward.png"
-detector_figure_label = "A60-Micro Forward"
-channel = "Weighted"
-alias = ["apogee"]
-description = "Apogee forward detector modeled as a proportional forward partition of a large phi=28 degree collection lens."
-detector_type = "photodiode"
-wavelength_nm = 405.0
-detector_numerical_aperture = 1.0
-detector_cache_numerical_aperture = 0.0
-detector_sampling = 1000
-blocker_bar_numerical_aperture = 0.1
-detector_phi_angle_degree = 28.0
-detector_gamma_angle_degree = 0.0
-
-[instruments.apogee_a60_micro.detectors.forward.detector_angular_weighting]
-mode = "split-separation-angle"
-metric = "local-top-bottom"
-keep = "negative"
-separation_angle_degree = 10.0
-
-[instruments.apogee_a60_micro.detectors.side]
-preset_name = "Apogee - Side"
-detector_figure = "detector_figures/apogee_a60_side.png"
-detector_figure_label = "A60-Micro Side"
-channel = "Weighted"
-alias = ["apogee"]
-description = "Apogee side detector modeled as a proportional side partition of a large phi=28 degree collection lens."
-detector_type = "photodiode"
-wavelength_nm = 405.0
-detector_numerical_aperture = 1.0
-detector_cache_numerical_aperture = 0.0
-detector_sampling = 1000
-blocker_bar_numerical_aperture = 0.1
-detector_phi_angle_degree = 28
-detector_gamma_angle_degree = 0.0
-
-[instruments.apogee_a60_micro.detectors.side.detector_angular_weighting]
-mode = "split-separation-angle"
-metric = "local-top-bottom"
-keep = "positive"
-separation_angle_degree = 10.0
+# FCM_configurations.xlsx, Sheet1 rows 4–6. Nominal shared boundaries are the
+# midpoints of 10–15 degrees (overlapping first-edge ranges) and 50–70 degrees.
+# A full-width rectangular bar spans the lens. Width/diameter = 0.09
+# (range 0.04–0.14), giving a projected half-width NA of 1.3 * 0.09.
 
 [instruments.apogee_a50_micro]
 manufacturer = "Apogee"
-model = "A50-Micro"
-instrument_aliases = ["a50-micro"]
+model = "A50-Micro Standard"
+instrument_aliases = ["A50-Micro Standard", "Apogee A50-Micro Standard", "a50-micro", "A50-Micro"]
+mals_variant = "apogee_a50_micro_modified"
 
 [instruments.apogee_a50_micro.rosetta_channels]
 scattering = ["405-LALS(Peak)"]
 green_fluorescence = ["405-Grn(Peak)"]
 
+[instruments.apogee_a50_micro.detectors.sals]
+preset_name = "Apogee A50-Micro Standard SALS"
+channel = "SALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a50_micro.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_a50_micro.detectors.lals]
+preset_name = "Apogee A50-Micro Standard LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a50_micro.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+
+[instruments.apogee_a50_micro_modified]
+manufacturer = "Apogee"
+model = "A50-Micro Modified"
+instrument_aliases = ["A50-Micro Modified", "Apogee A50-Micro Modified"]
+
+[instruments.apogee_a50_micro_modified.rosetta_channels]
+scattering = ["405-LALS(Peak)"]
+green_fluorescence = ["405-Grn(Peak)"]
+
+[instruments.apogee_a50_micro_modified.detectors.sals]
+preset_name = "Apogee A50-Micro Modified SALS"
+channel = "SALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a50_micro_modified.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_a50_micro_modified.detectors.lals]
+preset_name = "Apogee A50-Micro Modified LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a50_micro_modified.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+maximum_angle_degree = 60.0
+
+[instruments.apogee_a50_micro_modified.detectors.mals]
+preset_name = "Apogee A50-Micro Modified MALS"
+channel = "MALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a50_micro_modified.detectors.mals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 60.0
+
+[instruments.apogee_a60_micro]
+manufacturer = "Apogee"
+model = "A60-Micro Standard"
+instrument_aliases = ["A60-Micro Standard", "Apogee A60-Micro Standard", "apogee", "Apogee A60-Micro", "A60-Micro"]
+mals_variant = "apogee_a60_micro_modified"
+
+[instruments.apogee_a60_micro.rosetta_channels]
+scattering = ["405LALS(Peak)"]
+green_fluorescence = ["405Grn(Peak)"]
+
+[instruments.apogee_a60_micro.detectors.sals]
+preset_name = "Apogee A60-Micro Standard SALS"
+channel = "SALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+detector_figure = "detector_figures/apogee_a60_forward.png"
+detector_figure_label = "A60-Micro Standard SALS"
+
+[instruments.apogee_a60_micro.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_a60_micro.detectors.lals]
+preset_name = "Apogee A60-Micro Standard LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+detector_figure = "detector_figures/apogee_a60_side.png"
+detector_figure_label = "A60-Micro Standard LALS"
+
+[instruments.apogee_a60_micro.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+
+[instruments.apogee_a60_micro_modified]
+manufacturer = "Apogee"
+model = "A60-Micro Modified"
+instrument_aliases = ["A60-Micro Modified", "Apogee A60-Micro Modified"]
+
+[instruments.apogee_a60_micro_modified.rosetta_channels]
+scattering = ["405LALS(Peak)"]
+green_fluorescence = ["405Grn(Peak)"]
+
+[instruments.apogee_a60_micro_modified.detectors.sals]
+preset_name = "Apogee A60-Micro Modified SALS"
+channel = "SALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro_modified.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_a60_micro_modified.detectors.lals]
+preset_name = "Apogee A60-Micro Modified LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro_modified.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+maximum_angle_degree = 60.0
+
+[instruments.apogee_a60_micro_modified.detectors.mals]
+preset_name = "Apogee A60-Micro Modified MALS"
+channel = "MALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_a60_micro_modified.detectors.mals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 60.0
+
 [instruments.apogee_microplus]
 manufacturer = "Apogee"
-model = "Micro-PLUS"
-instrument_aliases = ["micro-plus", "apogee microplus"]
+model = "MicroPLUS Standard"
+instrument_aliases = ["MicroPLUS Standard", "Apogee MicroPLUS Standard", "micro-plus", "apogee microplus", "MicroPLUS"]
+mals_variant = "apogee_microplus_modified"
 
 [instruments.apogee_microplus.rosetta_channels]
 scattering = ["LALS(Peak)", "405-LALS(Peak)"]
 green_fluorescence = ["405-Grn(Peak)", "405Grn(Peak)", "488Grn(Peak)"]
 
-[instruments.apogee_kairos]
-manufacturer = "Apogee"
-model = "A60 MicroPLUS - Kairos"
-instrument_aliases = ["apogee kairos", "kairos", "Apogee A60 MicroPLUS - Kairos"]
-
-[instruments.apogee_kairos.detectors.lals]
-preset_name = "Apogee Kairos LALS"
-channel = "LALS"
-alias = ["apogee kairos", "kairos"]
-description = "Kairos LALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
-detector_type = "photodiode"
-wavelength_nm = 405.0
-detector_numerical_aperture = 1.0
-detector_cache_numerical_aperture = 0.0
-detector_sampling = 1000
-blocker_bar_numerical_aperture = 0.1
-detector_phi_angle_degree = 28.0
-detector_gamma_angle_degree = 0.0
-
-[instruments.apogee_kairos.detectors.lals.detector_angular_weighting]
-mode = "split-separation-angle"
-metric = "local-top-bottom"
-keep = "positive"
-separation_angle_degree = 41.0
-
-[instruments.apogee_kairos.detectors.mals]
-preset_name = "Apogee Kairos MALS"
-channel = "MALS"
-alias = ["apogee kairos", "kairos"]
-description = "Kairos MALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
-detector_type = "photodiode"
-wavelength_nm = 405.0
-detector_numerical_aperture = 1.0
-detector_cache_numerical_aperture = 0.0
-detector_sampling = 1000
-blocker_bar_numerical_aperture = 0.1
-detector_phi_angle_degree = 28.0
-detector_gamma_angle_degree = 0.0
-
-[instruments.apogee_kairos.detectors.mals.detector_angular_weighting]
-mode = "separation-angle-range"
-metric = "local-top-bottom"
-minimum_angle_degree = 10.0
-maximum_angle_degree = 41.0
-
-[instruments.apogee_kairos.detectors.sals]
-preset_name = "Apogee Kairos SALS"
+[instruments.apogee_microplus.detectors.sals]
+preset_name = "Apogee MicroPLUS Standard SALS"
 channel = "SALS"
-alias = ["apogee kairos", "kairos"]
-description = "Kairos SALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
-detector_type = "photodiode"
 wavelength_nm = 405.0
-detector_numerical_aperture = 1.0
+detector_numerical_aperture = 1.3
 detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
 detector_sampling = 1000
-blocker_bar_numerical_aperture = 0.1
-detector_phi_angle_degree = 28.0
+detector_phi_angle_degree = 28.8
 detector_gamma_angle_degree = 0.0
 
-[instruments.apogee_kairos.detectors.sals.detector_angular_weighting]
-mode = "split-separation-angle"
-metric = "local-top-bottom"
-keep = "negative"
-separation_angle_degree = 10.0
+[instruments.apogee_microplus.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_microplus.detectors.lals]
+preset_name = "Apogee MicroPLUS Standard LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_microplus.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+
+[instruments.apogee_microplus_modified]
+manufacturer = "Apogee"
+model = "MicroPLUS Modified"
+instrument_aliases = ["MicroPLUS Modified", "Apogee MicroPLUS Modified", "apogee kairos", "kairos", "Apogee A60 MicroPLUS - Kairos"]
+
+[instruments.apogee_microplus_modified.rosetta_channels]
+scattering = ["LALS(Peak)", "405-LALS(Peak)"]
+green_fluorescence = ["405-Grn(Peak)", "405Grn(Peak)", "488Grn(Peak)"]
+
+[instruments.apogee_microplus_modified.detectors.sals]
+preset_name = "Apogee MicroPLUS Modified SALS"
+channel = "SALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_microplus_modified.detectors.sals.detector_angular_weighting]
+mode = "mirror-angle-range"
+maximum_angle_degree = 12.5
+
+[instruments.apogee_microplus_modified.detectors.lals]
+preset_name = "Apogee MicroPLUS Modified LALS"
+channel = "LALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_microplus_modified.detectors.lals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 12.5
+maximum_angle_degree = 60.0
+
+[instruments.apogee_microplus_modified.detectors.mals]
+preset_name = "Apogee MicroPLUS Modified MALS"
+channel = "MALS"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+blocker_bar_numerical_aperture = 0.117
+detector_sampling = 1000
+detector_phi_angle_degree = 28.8
+detector_gamma_angle_degree = 0.0
+
+[instruments.apogee_microplus_modified.detectors.mals.detector_angular_weighting]
+mode = "mirror-angle-range"
+minimum_angle_degree = 60.0
 
 [instruments.bd_facscalibur]
 manufacturer = "BD Biosciences"
@@ -187,14 +345,38 @@ instrument_aliases = ["facscalibur"]
 scattering = ["SSC-H"]
 green_fluorescence = ["FL1-H"]
 
+[instruments.bd_facscalibur.detectors.ssc]
+preset_name = "BD FACSCalibur SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 13."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
 [instruments.bd_facscanto_i]
 manufacturer = "BD Biosciences"
 model = "FACSCanto I"
-instrument_aliases = ["FACSCanto I (FACSCanto)", "FACSCanto I"]
+instrument_aliases = ["FACSCanto I (FACSCanto)", "FACSCanto I", "FACSCanto", "BD FACSCanto"]
 
 [instruments.bd_facscanto_i.rosetta_channels]
 scattering = ["SSC-H"]
 green_fluorescence = ["FITC-H"]
+
+[instruments.bd_facscanto_i.detectors.ssc]
+preset_name = "BD FACSCanto I SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 14."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
 
 [instruments.bd_facscanto_ii]
 manufacturer = "BD Biosciences"
@@ -271,7 +453,7 @@ detector_gamma_angle_degree = 0.0
 [instruments.bd_facscelesta_sorp]
 manufacturer = "BD Biosciences"
 model = "FACSCelesta SORP"
-instrument_aliases = ["facscelesta"]
+instrument_aliases = ["facscelesta sorp"]
 
 [instruments.bd_facscelesta_sorp.rosetta_channels]
 scattering = ["SSC-H"]
@@ -309,6 +491,18 @@ instrument_aliases = ["lsrfortessa"]
 scattering = ["SSC-H"]
 green_fluorescence = ["BB515-H"]
 
+[instruments.bd_lsrfortessa.detectors.ssc]
+preset_name = "BD LSRFortessa SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 23."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
 [instruments.bd_lsrii]
 manufacturer = "BD Biosciences"
 model = "LSR II"
@@ -317,6 +511,18 @@ instrument_aliases = ["lsr ii"]
 [instruments.bd_lsrii.rosetta_channels]
 scattering = ["SSC-H"]
 green_fluorescence = ["B535/30-H"]
+
+[instruments.bd_lsrii.detectors.ssc]
+preset_name = "BD LSR II SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 22."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
 
 [instruments.beckman_coulter_cytoflex]
 manufacturer = "Beckman Coulter Life Sciences"
@@ -349,10 +555,10 @@ detector_figure = "detector_figures/beckman_cyttofelx_ssc.png"
 detector_figure_label = "CytoFLEX SSC"
 channel = "SSC"
 alias = ["beckman coulter cytoflex", "cytoflex", "cytoflex s"]
-description = "Side scatter detector preset for CytoFLEX style modeling. CytoFLEX instruments emphasize high sensitivity optical collection; the numerical aperture values here are effective modeling assumptions."
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 8."
 detector_type = "avalanche_photodiode"
-wavelength_nm = 488.0
-detector_numerical_aperture = 0.55
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.3
 detector_cache_numerical_aperture = 0.0
 detector_sampling = 1000
 blocker_bar_numerical_aperture = 0.0
@@ -389,7 +595,7 @@ green_fluorescence = ["FL12-Height"]
 [instruments.cytek_aurora]
 manufacturer = "Cytek Biosciences"
 model = "Aurora"
-instrument_aliases = ["cytek aurora", "aurora", "aurora 3l", "aurora 5l", "northern lights"]
+instrument_aliases = ["cytek aurora", "aurora", "aurora 3l", "aurora 5l"]
 
 [instruments.cytek_aurora.detector_channels]
 default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
@@ -422,10 +628,10 @@ preset_name = "Cytek Aurora SSC"
 detector_figure = "detector_figures/cytek_aurora_ssc.png"
 detector_figure_label = "Aurora SSC"
 channel = "SSC"
-description = "Side scatter detector preset for Cytek Aurora style modeling. These values are effective geometry assumptions for RosettaX, chosen to support consistent calibration workflows rather than exact vendor reconstruction."
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 24."
 detector_type = "PMT"
 wavelength_nm = 405.0
-detector_numerical_aperture = 1.3
+detector_numerical_aperture = 1.2
 detector_cache_numerical_aperture = 0.0
 detector_sampling = 900
 blocker_bar_numerical_aperture = 0.0
@@ -453,6 +659,18 @@ instrument_aliases = ["macsquant analyzer 16"]
 [instruments.miltenyi_macsquant_analyzer_16.rosetta_channels]
 scattering = ["SSC-H"]
 green_fluorescence = ["FL6-H"]
+
+[instruments.miltenyi_macsquant_analyzer_16.detectors.ssc]
+preset_name = "Miltenyi MACSQuant Analyzer 16 SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 28."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
 
 [instruments.nanofcm_nanoanalyzer]
 manufacturer = "nanoFCM"
@@ -526,10 +744,10 @@ preset_name = "Sony ID7000 SSC"
 detector_figure = "detector_figures/sony_id7000_ssc.png"
 detector_figure_label = "ID7000 SSC"
 channel = "SSC"
-description = "Side scatter detector preset for Sony ID7000 style modeling. These parameters are packaged as effective RosettaX assumptions so the instrument family can be selected and documented consistently."
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 29."
 detector_type = "PMT"
-wavelength_nm = 488.0
-detector_numerical_aperture = 1.0
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
 detector_cache_numerical_aperture = 0.0
 detector_sampling = 900
 blocker_bar_numerical_aperture = 0.0
@@ -605,10 +823,285 @@ preset_name = "Thermo Fisher Attune NxT SSC"
 detector_figure = "detector_figures/thermofisher_attune_ssc.png"
 detector_figure_label = "Attune NxT SSC"
 channel = "SSC"
-description = "Side scatter detector preset for Thermo Fisher Attune NxT style modeling. These values are effective RosettaX modeling assumptions suitable for documenting and reproducing one chosen geometry in calibration work."
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 7."
 detector_type = "PMT"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.agilent_novocyte_opteon]
+manufacturer = "Agilent"
+model = "NovoCyte Opteon"
+instrument_aliases = ["NovoCyte Opteon", "Agilent NovoCyte Opteon"]
+
+[instruments.agilent_novocyte_opteon.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.agilent_novocyte_opteon.detectors.ssc]
+preset_name = "Agilent NovoCyte Opteon SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 2."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.agilent_novocyte_quanteon]
+manufacturer = "Agilent"
+model = "NovoCyte Quanteon"
+instrument_aliases = ["NovoCyte Quanteon", "Agilent NovoCyte Quanteon"]
+
+[instruments.agilent_novocyte_quanteon.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.agilent_novocyte_quanteon.detectors.ssc]
+preset_name = "Agilent NovoCyte Quanteon SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 3."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.beckman_coulter_gallios]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "Gallios"
+instrument_aliases = ["Gallios", "Beckman Coulter Gallios"]
+
+[instruments.beckman_coulter_gallios.detectors.ssc]
+preset_name = "Beckman Coulter Gallios SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 9."
 wavelength_nm = 488.0
-detector_numerical_aperture = 1.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.beckman_coulter_navios]
+manufacturer = "Beckman Coulter Life Sciences"
+model = "Navios"
+instrument_aliases = ["Navios", "Beckman Coulter Navios"]
+
+[instruments.beckman_coulter_navios.detectors.ssc]
+preset_name = "Beckman Coulter Navios SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 10."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.3
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facsaria]
+manufacturer = "BD Biosciences"
+model = "FACSAria"
+instrument_aliases = ["FACSAria", "BD FACSAria"]
+
+[instruments.bd_facsaria.detectors.ssc]
+preset_name = "BD FACSAria SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 11."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facsaria_ii]
+manufacturer = "BD Biosciences"
+model = "FACSAria II"
+instrument_aliases = ["FACSAria II", "BD FACSAria II"]
+
+[instruments.bd_facsaria_ii.detectors.ssc]
+preset_name = "BD FACSAria II SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 12."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facscelesta]
+manufacturer = "BD Biosciences"
+model = "FACSCelesta"
+instrument_aliases = ["FACSCelesta", "BD FACSCelesta"]
+
+[instruments.bd_facscelesta.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["B530/30-A"]
+
+[instruments.bd_facscelesta.detectors.ssc]
+preset_name = "BD FACSCelesta SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 16."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facsmelody]
+manufacturer = "BD Biosciences"
+model = "FACSMelody"
+instrument_aliases = ["FACSMelody", "BD FACSMelody"]
+
+[instruments.bd_facsmelody.detectors.ssc]
+preset_name = "BD FACSMelody SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 18."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facsverse]
+manufacturer = "BD Biosciences"
+model = "FACSVerse"
+instrument_aliases = ["FACSVerse", "BD FACSVerse"]
+
+[instruments.bd_facsverse.detectors.ssc]
+preset_name = "BD FACSVerse SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 19."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_facsymphony]
+manufacturer = "BD Biosciences"
+model = "FACSymphony"
+instrument_aliases = ["FACSymphony", "BD FACSymphony", "FACSSymphony", "BD FACSSymphony"]
+
+[instruments.bd_facsymphony.detectors.ssc]
+preset_name = "BD FACSymphony SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 20."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.bd_lsr]
+manufacturer = "BD Biosciences"
+model = "LSR"
+instrument_aliases = ["LSR", "BD LSR"]
+
+[instruments.bd_lsr.detectors.ssc]
+preset_name = "BD LSR SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 21."
+wavelength_nm = 488.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.cytek_northern_lights]
+manufacturer = "Cytek Biosciences"
+model = "Northern Lights"
+instrument_aliases = ["Northern Lights", "Cytek Northern Lights"]
+
+[instruments.cytek_northern_lights.detector_channels]
+default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
+forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
+
+[instruments.cytek_northern_lights.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["B2-H", "B2-A"]
+
+[instruments.cytek_northern_lights.detectors.ssc]
+preset_name = "Cytek Northern Lights SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 25."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.cytek_imagestream_60x]
+manufacturer = "Cytek Biosciences"
+model = "ImageStream 60x"
+instrument_aliases = ["ImageStream 60x", "Cytek ImageStream 60x"]
+
+[instruments.cytek_imagestream_60x.detectors.ssc]
+preset_name = "Cytek ImageStream 60x SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 26."
+wavelength_nm = 405.0
+detector_numerical_aperture = 0.9
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.cytek_cellstream_60x]
+manufacturer = "Cytek Biosciences"
+model = "CellStream 60x"
+instrument_aliases = ["CellStream 60x", "Cytek CellStream 60x"]
+
+[instruments.cytek_cellstream_60x.detectors.ssc]
+preset_name = "Cytek CellStream 60x SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 27."
+wavelength_nm = 785.0
+detector_numerical_aperture = 0.9
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 900
+blocker_bar_numerical_aperture = 0.0
+detector_phi_angle_degree = 90.0
+detector_gamma_angle_degree = 0.0
+
+[instruments.stratedigm_s1000ex]
+manufacturer = "Stratedigm"
+model = "S1000EX"
+instrument_aliases = ["S1000EX", "Stratedigm S1000EX"]
+
+[instruments.stratedigm_s1000ex.detectors.ssc]
+preset_name = "Stratedigm S1000EX SSC"
+channel = "SSC"
+description = "Side-scatter numerical aperture, objective angle, and default wavelength follow FCM_configurations.xlsx, Sheet1 row 30."
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.2
 detector_cache_numerical_aperture = 0.0
 detector_sampling = 900
 blocker_bar_numerical_aperture = 0.0
@@ -630,3 +1123,115 @@ green_fluorescence = ["green_fluorescence", "fluorescence", "green", "fitc", "fl
 forward = ["fsc", "forward", "lals"]
 primary = ["ssc", "sals", "side", "scatter", "blu", "fsc"]
 scattering = ["ssc", "sals", "side", "scatter", "blu", "fsc"]
+
+# Archived geometries used only when reopening a saved preset by name.
+[archived_instruments.apogee_a60_micro]
+manufacturer = "Apogee"
+model = "A60 - Micro"
+instrument_aliases = ["apogee", "Apogee A60-Micro"]
+
+
+[archived_instruments.apogee_a60_micro.detectors.forward]
+preset_name = "Apogee - Forward"
+channel = "Weighted"
+alias = ["apogee"]
+description = "Apogee forward detector modeled as a proportional forward partition of a large phi=28 degree collection lens."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[archived_instruments.apogee_a60_micro.detectors.forward.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "negative"
+separation_angle_degree = 10.0
+
+[archived_instruments.apogee_a60_micro.detectors.side]
+preset_name = "Apogee - Side"
+channel = "Weighted"
+alias = ["apogee"]
+description = "Apogee side detector modeled as a proportional side partition of a large phi=28 degree collection lens."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28
+detector_gamma_angle_degree = 0.0
+
+[archived_instruments.apogee_a60_micro.detectors.side.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "positive"
+separation_angle_degree = 10.0
+
+[archived_instruments.apogee_kairos]
+manufacturer = "Apogee"
+model = "A60 MicroPLUS - Kairos"
+instrument_aliases = ["apogee kairos", "kairos", "Apogee A60 MicroPLUS - Kairos"]
+
+[archived_instruments.apogee_kairos.detectors.lals]
+preset_name = "Apogee Kairos LALS"
+channel = "LALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos LALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[archived_instruments.apogee_kairos.detectors.lals.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "positive"
+separation_angle_degree = 41.0
+
+[archived_instruments.apogee_kairos.detectors.mals]
+preset_name = "Apogee Kairos MALS"
+channel = "MALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos MALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[archived_instruments.apogee_kairos.detectors.mals.detector_angular_weighting]
+mode = "separation-angle-range"
+metric = "local-top-bottom"
+minimum_angle_degree = 10.0
+maximum_angle_degree = 41.0
+
+[archived_instruments.apogee_kairos.detectors.sals]
+preset_name = "Apogee Kairos SALS"
+channel = "SALS"
+alias = ["apogee kairos", "kairos"]
+description = "Kairos SALS modeled as a region of the shared A60 lens, with separation angles at 10 and 41 degrees."
+detector_type = "photodiode"
+wavelength_nm = 405.0
+detector_numerical_aperture = 1.0
+detector_cache_numerical_aperture = 0.0
+detector_sampling = 1000
+blocker_bar_numerical_aperture = 0.1
+detector_phi_angle_degree = 28.0
+detector_gamma_angle_degree = 0.0
+
+[archived_instruments.apogee_kairos.detectors.sals.detector_angular_weighting]
+mode = "split-separation-angle"
+metric = "local-top-bottom"
+keep = "negative"
+separation_angle_degree = 10.0

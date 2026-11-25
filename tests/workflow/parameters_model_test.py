@@ -75,6 +75,41 @@ def test_kairos_presets_partition_shared_a60_lens():
     assert all(np.count_nonzero(region) > 0 for region in regions)
 
 
+@pytest.mark.parametrize("model", ["A50-Micro", "A60-Micro", "MicroPLUS"])
+@pytest.mark.parametrize("sampling", [1000, 4079])
+def test_workbook_apogee_regions_partition_visible_aperture(*, model, sampling):
+    """Every visible ray reaches one channel, with only standard LALS split by the extra mirror."""
+    loader = DetectorPresetLoader()
+    visible = resolve_detector_angular_weights(
+        preset_name="Generic detector", detector_sampling=sampling, current_detector_numerical_aperture=1.3,
+        current_blocker_bar_numerical_aperture=0.117, current_detector_phi_angle_degree=28.8,
+    ).real
+    coordinates = build_pymiesim_photodiode_mesh_coordinates(
+        detector_numerical_aperture=1.3, medium_refractive_index=1.333, detector_phi_angle_degree=28.8,
+        detector_gamma_angle_degree=0.0, detector_sampling=sampling,
+    )
+    # Signed distances from straight mirror planes give an independent angle oracle.
+    above = {angle: coordinates[:, 2] * np.cos(np.deg2rad(angle)) >= coordinates[:, 0] * np.sin(np.deg2rad(angle))
+             for angle in (12.5, 60.0)}
+    for layout, channels in (("Standard", ("SALS", "LALS")), ("Modified", ("SALS", "LALS", "MALS"))):
+        masks = {}
+        for channel in channels:
+            name = f"Apogee {model} {layout} {channel}"
+            preset = loader.load_preset(name)
+            assert (preset["wavelength_nm"], preset["detector_numerical_aperture"], preset["detector_phi_angle_degree"]) == (405, 1.3, 28.8)
+            masks[channel] = resolve_detector_angular_weights(preset_name=name, detector_sampling=sampling).real
+            assert np.any(masks[channel])
+        assert np.array_equal(masks["SALS"], visible * ~above[12.5])
+        if layout == "Modified":
+            assert np.array_equal(masks["MALS"], visible * above[60.0])
+        assert np.array_equal(sum(masks.values()), visible)
+        if layout == "Standard":
+            standard = masks
+        else:
+            assert np.array_equal(standard["SALS"], masks["SALS"])
+            assert np.array_equal(standard["LALS"], masks["LALS"] + masks["MALS"])
+
+
 def test_instrument_catalog_references_packaged_detector_figures():
     """Verify the catalog links each packaged detector figure to a preset."""
     loader = DetectorPresetLoader()
@@ -116,18 +151,23 @@ class Test_DetectorPresetLoaderCatalog:
         )
 
         assert bd_options == [
-            {
-                "label": "FACSCanto II",
-                "value": "FACSCanto II",
-            },
-            {
-                "label": "FACSLyric",
-                "value": "FACSLyric",
-            },
-            {
-                "label": "FACSymphony A1",
-                "value": "FACSymphony A1",
-            },
+            {"label": model, "value": model}
+            for model in (
+                "FACSAria",
+                "FACSAria II",
+                "FACSCalibur",
+                "FACSCanto I",
+                "FACSCanto II",
+                "FACSCelesta",
+                "FACSLyric",
+                "FACSMelody",
+                "FACSVerse",
+                "FACSymphony",
+                "FACSymphony A1",
+                "LSR",
+                "LSR II",
+                "LSRFortessa",
+            )
         ]
 
     def test_loader_builds_type_options_for_one_brand_and_model(self):
@@ -171,40 +211,23 @@ class Test_DetectorPresetLoaderCatalog:
         """Check loader builds trimmed model labels for apogee brand."""
         loader = DetectorPresetLoader()
 
-        assert loader.load_model_options("Apogee") == [
-            {
-                "label": "A60 - Micro",
-                "value": "A60 - Micro",
-            },
-            {
-                "label": "A60 MicroPLUS - Kairos",
-                "value": "A60 MicroPLUS - Kairos",
-            },
-        ]
-
-        assert loader.load_type_options(
-            brand="Apogee",
-            model="A60 - Micro",
-        ) == [
-            {
-                "label": "Forward",
-                "value": "Apogee - Forward",
-            },
-            {
-                "label": "Side",
-                "value": "Apogee - Side",
-            },
-        ]
+        for model in ("A50-Micro", "A60-Micro", "MicroPLUS"):
+            for layout, channels in (("Standard", ["SALS", "LALS"]), ("Modified", ["SALS", "LALS", "MALS"])):
+                options = loader.load_type_options(brand="Apogee", model=f"{model} {layout}")
+                assert {option["label"] for option in options} == set(channels)
 
     def test_loader_builds_model_options_for_cytek_brand(self):
         """Check loader builds model options for cytek brand."""
         loader = DetectorPresetLoader()
 
         assert loader.load_model_options("Cytek Biosciences") == [
-            {
-                "label": "Aurora",
-                "value": "Aurora",
-            },
+            {"label": model, "value": model}
+            for model in (
+                "Aurora",
+                "CellStream 60x",
+                "ImageStream 60x",
+                "Northern Lights",
+            )
         ]
 
         assert loader.load_type_options(
@@ -335,13 +358,32 @@ class Test_DetectorPresetLoaderCatalog:
 
         # Verify all known detectors are loaded
         expected_detector_names = {
+            "Agilent NovoCyte Opteon SSC",
+            "Agilent NovoCyte Quanteon SSC",
+            "Beckman Coulter Gallios SSC",
+            "Beckman Coulter Navios SSC",
+            "BD FACSAria SSC",
+            "BD FACSAria II SSC",
+            "BD FACSCalibur SSC",
+            "BD FACSCanto I SSC",
+            "BD FACSCelesta SSC",
+            "BD FACSMelody SSC",
+            "BD FACSVerse SSC",
+            "BD FACSymphony SSC",
+            "BD LSR SSC",
+            "BD LSR II SSC",
+            "BD LSRFortessa SSC",
+            "Cytek Northern Lights SSC",
+            "Cytek ImageStream 60x SSC",
+            "Cytek CellStream 60x SSC",
+            "Miltenyi MACSQuant Analyzer 16 SSC",
+            "Stratedigm S1000EX SSC",
             "Agilent NovoCyte FSC",
             "Agilent NovoCyte SSC",
-            "Apogee - Forward",
-            "Apogee - Side",
-            "Apogee Kairos SALS",
-            "Apogee Kairos MALS",
-            "Apogee Kairos LALS",
+            *(f"Apogee {model} {layout} {channel}"
+              for model in ("A50-Micro", "A60-Micro", "MicroPLUS")
+              for layout in ("Standard", "Modified")
+              for channel in (("SALS", "LALS") if layout == "Standard" else ("SALS", "LALS", "MALS"))),
             "BD FACSCanto II FSC",
             "BD FACSCanto II SSC",
             "BD FACSLyric FSC",
@@ -372,15 +414,6 @@ class Test_DetectorPresetLoaderCatalog:
         for preset_name, preset in presets.items():
             for field in required_fields:
                 assert field in preset, f"Preset '{preset_name}' missing required field '{field}'"
-
-        # Spot check: Verify specific preset content integrity
-        apogee_forward = presets.get("Apogee - Forward")
-        assert apogee_forward is not None
-        assert apogee_forward["manufacturer"] == "Apogee"
-        assert apogee_forward["detector_numerical_aperture"] == 1.0
-        assert apogee_forward["detector_angular_weighting"]["mode"] == "split-separation-angle"
-        assert apogee_forward["detector_angular_weighting"]["separation_angle_degree"] == 10.0
-
 
 class Test_ScattererPresetDefaults:
     """Regression checks for scatterer preset defaults."""
@@ -866,7 +899,7 @@ class Test_compute_model_for_rows:
         }
         assert apogee_side_preset['alias'] == ['apogee']
         assert preset_path == loader.preset_path.resolve()
-        assert apogee_side_preset['detector_figure'] == 'detector_figures/apogee_a60_side.png'
+        assert 'Apogee - Side' not in loader.load_presets()
 
     @patch('RosettaX.workflow.detector.configuration._DETECTOR_PRESET_LOADER.load_preset')
     def test_resolve_detector_angular_weights_applies_cache_and_blocker_geometry(self, mock_load_preset):

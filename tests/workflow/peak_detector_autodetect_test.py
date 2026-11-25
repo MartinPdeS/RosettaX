@@ -405,11 +405,18 @@ class Test_DetectorAutoDetect:
             }
         ) == "ssc"
 
-    @pytest.mark.parametrize(("channel", "expected"), [("405SALS(Area)", "Apogee Kairos SALS"), ("405MALS(Area)", "Apogee Kairos MALS"), ("405LALS(Area)", "Apogee Kairos LALS"), ("SSC-A", None)])
-    def test_kairos_detects_individual_scatter_regions(self, channel, expected) -> None:
-        """Each Kairos channel resolves to its own lens region."""
-        metadata = build_metadata(instrument_name="Apogee Kairos", column_names=[channel])
-        assert detector_configuration.infer_detector_preset_from_metadata(metadata=metadata, selected_detector_channel=channel) == expected
+    @pytest.mark.parametrize(("columns", "selected", "key", "expected"), [
+        (["405LALS(Peak)"], "405LALS(Peak)", None, "Apogee A50-Micro Standard LALS"),
+        (["405LALS(Peak)", "405MALS(Peak)"], "405LALS(Peak)", None, "Apogee A50-Micro Modified LALS"),
+        (["405LALS(Peak)"], "405LALS(Peak)", "apogee_a50_micro_modified", "Apogee A50-Micro Modified LALS"),
+        (["405MALS(Peak)"], "405MALS(Peak)", "apogee_a50_micro", None),
+    ])
+    def test_apogee_layout_selection(self, *, columns, selected, key, expected):
+        """Resolve the full channel list while honoring a manually selected layout."""
+        metadata = build_metadata(instrument_name="Apogee A50-Micro", column_names=columns)
+        assert detector_configuration.infer_detector_preset_from_metadata(
+            metadata=metadata, selected_detector_channel=selected, instrument_catalog_key=key,
+        ) == expected
 
     def test_resolve_detector_angular_weights_uses_preset_sampling_when_missing(
         self,
@@ -714,8 +721,7 @@ def test_rosetta_ignores_general_rules_when_catalog_channels_are_unset():
 
 
 def test_catalog_distinguishes_apogee_kairos_from_a60():
-    """Prefer the specific instrument rule and expose omitted roles as unknown."""
+    """Recognize the historical FCS label as the modified MicroPLUS model."""
     metadata = build_metadata(instrument_name="Apogee A60 MicroPLUS - Kairos", column_names=[])
     rule = detectors.resolve_detector_auto_detect_rule(metadata=metadata)
-    assert "Kairos" in rule["name"]
-    assert rule["rosetta_channels"] == {"scattering": None, "green_fluorescence": None}
+    assert rule["name"] == "Apogee MicroPLUS Modified"

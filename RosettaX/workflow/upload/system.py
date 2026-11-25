@@ -5,7 +5,7 @@ from dash import dcc, html
 from RosettaX.utils.reader import FCSFile
 from RosettaX.workflow.detector.catalog import (
     load_instrument_catalog,
-    match_instrument_rule,
+    match_recording_instrument,
 )
 from RosettaX.workflow.peak.core.detectors import extract_instrument_name_from_metadata
 
@@ -46,14 +46,14 @@ def register_system_detection(*, ids) -> None:
             return dash.no_update, dash.no_update, dash.no_update
         try:
             with FCSFile(file_path) as recording:
-                instrument_name = extract_instrument_name_from_metadata(metadata=recording.get_metadata())
+                metadata = recording.get_metadata()
+                match = match_recording_instrument(
+                    instrument_name=extract_instrument_name_from_metadata(metadata=metadata),
+                    channel_names=metadata.column_names,
+                )
         except (OSError, ValueError):
-            instrument_name = ""
-        rules = [
-            dict(instrument, catalog_key=key)
-            for key, instrument in load_instrument_catalog()["instruments"].items()
-        ]
-        match = match_instrument_rule(instrument_name=instrument_name, rules=rules)
+            match = None
         if match:
-            return match["catalog_key"], file_path, ""
+            status = "Standard layout assumed. Select Modified if this instrument has MALS." if match.get("mals_variant") else ""
+            return match["catalog_key"], file_path, status
         return "", file_path, "No unique instrument match. Choose the model or leave it as Unknown."
