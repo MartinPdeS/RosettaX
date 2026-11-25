@@ -119,7 +119,8 @@ From a source checkout with the test dependencies installed, use:
 ``check-all`` reports one line per recording with pass/fail, cytometer model, scatter and
 fluorescence channels used for sizing, observed bead diameters in nm, and the scattering calibration-curve R². For fit-enabled recordings with an
 optical preset, the curve uses the assigned standards (at least two), including
-partial sizing results. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
+partial sizing results. A recording with fewer than two assigned peaks fails validation,
+even when its observed warning matches the regression baseline. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
 selection and sizing on the supplied file, including a calibration fit when
 eligible. For a known fingerprint it compares the result with the reviewed
 baseline. For new data it prints the observed outcome for review.
@@ -127,8 +128,7 @@ baseline. For new data it prints the observed outcome for review.
 ``add`` runs the same checks, prints the proposed expectations, and asks for
 confirmation before copying the recording, registering it for testing and
 refreshing the supported-systems table. Use ``--accept`` for noninteractive
-registration of an already reviewed outcome. An expected warning or blank
-control can be registered. New instrument aliases and channel recommendations
+registration of an already reviewed outcome. Registration requires at least two assigned peaks. New instrument aliases and channel recommendations
 belong in ``instrument_catalog.toml``. Use ``--manufacturer`` and ``--model``
 to override display labels when the acquisition metadata is ambiguous.
 

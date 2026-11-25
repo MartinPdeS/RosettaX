@@ -197,6 +197,11 @@ def register_recording(*, source: Path, record: dict, columns: list[str]) -> Non
     print(f"Added {key}")
 
 
+def assignment_failure(*, diameters: list) -> str:
+    """Return the validation failure reason for a recording with too few assigned sizes."""
+    return "fewer than 2 assigned peaks" if sum(bool(size) for size in diameters) < 2 else ""
+
+
 def check_file(*, args: argparse.Namespace) -> int:
     """Exercise automatic channel selection and sizing, then compare or review the outcome."""
     from RosettaX.workflow.peak.core.detectors import (
@@ -236,6 +241,10 @@ def check_file(*, args: argparse.Namespace) -> int:
     diameters = [row["particle_diameter_nm"] for row in result["rows"]]
     print(f"{path.name} ({instrument})\nChannels: {scatter}, {fluorescence}\nDiameters (nm): {diameters}\n{result['status']}")
     print(f"Calibration R²: {result['r_squared']}" if result["r_squared"] is not None else f"Calibration R²: {result['fit_note']}.")
+    failure = assignment_failure(diameters=diameters)
+    if failure:
+        print(f"FAIL: {failure}")
+        return 1
     if not record:
         brand = (match or {}).get("manufacturer", "")
         model = (match or {}).get("model", instrument)
@@ -292,6 +301,9 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
                 result[field] = properties[field]
         if "diameters_nm" in properties:
             diameters = json.loads(properties["diameters_nm"])
+            failure = assignment_failure(diameters=diameters)
+            if failure:
+                result["issues"].append(failure)
             size_labels = []
             for diameter in diameters:
                 if isinstance(diameter, float) and diameter.is_integer():
@@ -312,7 +324,7 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
     for filename, result in results.items():
         issues = result["issues"]
         failures += bool(issues)
-        notes = "; ".join(filter(None, [result["fit_note"], *issues]))
+        notes = "; ".join(dict.fromkeys(filter(None, [result["fit_note"], *issues])))
         rows.append(("FAIL" if issues else "PASS", filename, result.get("model", "—"),
                      result.get("scatter", "—"), result.get("fluorescence", "—"),
                      result["sizes"], result["fit"], notes))
@@ -334,9 +346,13 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
                  "Scatter and fluorescence are the FCS channels used for bead sizing. "
                  "R² is the scattering calibration-curve fit for the assigned bead sizes.", ""]
         size_column = headers.index("Sizes (nm)")
+        notes_column = headers.index("Notes")
         for row in table:
             cells = [cell.replace("\\", "\\\\").replace("|", "\\|") for cell in row]
             cells[size_column] = cells[size_column].replace(" ", "&nbsp;")
+            # Keep short reasons together so Markdown renderers give Notes enough room.
+            if len(row[notes_column]) <= 32:
+                cells[notes_column] = cells[notes_column].replace(" ", "&nbsp;")
             lines.append("| " + " | ".join(cells) + " |")
         lines.extend(["", "\n\n".join(footer), ""])
         markdown.write_text("\n".join(lines), encoding="utf-8")

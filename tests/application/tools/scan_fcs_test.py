@@ -93,7 +93,31 @@ def test_check_all_reports_observations_on_one_line_per_recording(*, monkeypatch
     assert beads.index("147, ?, 296") == water.index("none") == header.index("Sizes")
     assert beads.endswith("0.973210")
     assert beads.index("0.973210") + 7 == water.rindex("—") == header.index("²")
-    assert water[header.index("Notes"):] == "no fit; unexpected channel"
+    assert water[header.index("Notes"):] == "no fit; unexpected channel; fewer than 2 assigned peaks"
     assert beads.startswith("PASS") and water.startswith("FAIL")
     assert legend == "? = detected peak with no assigned diameter"
     assert summary == "1/2 recordings passed (4 checks)."
+
+@pytest.mark.parametrize("diameters, expected_status", [
+    ([], "FAIL"), (["", 147, ""], "FAIL"), ([147, "", 296], "PASS"),
+])
+def test_check_all_requires_two_assigned_peaks(*, tmp_path, monkeypatch, capsys, diameters, expected_status):
+    """Apply the peak threshold even when all regression expectations pass."""
+    specification = importlib.util.spec_from_file_location("scan_fcs", ROOT / "tools/scan_fcs.py")
+    scanner = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(scanner)
+
+    def run_fixture_suite(command, **kwargs):
+        report_path = next(value.split("=", 1)[1] for value in command if value.startswith("--junitxml="))
+        Path(report_path).write_text(f"""<testsuite><testcase><properties>
+          <property name="recording" value="beads.fcs"/>
+          <property name="diameters_nm" value='{json.dumps(diameters)}'/>
+          <property name="r_squared" value="null"/>
+        </properties></testcase></testsuite>""")
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(scanner.subprocess, "run", run_fixture_suite)
+    markdown = tmp_path / "results.md"
+    assert scanner.run_all_checks(markdown=markdown) == int(expected_status == "FAIL")
+    assert capsys.readouterr().out.splitlines()[1].startswith(expected_status)
+    assert f"| {expected_status} | beads.fcs |" in markdown.read_text()
