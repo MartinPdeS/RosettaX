@@ -345,14 +345,13 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
         lines = ["# Cross-device FCS validation", "",
                  "Scatter and fluorescence are the FCS channels used for bead sizing. "
                  "R² is the scattering calibration-curve fit for the assigned bead sizes.", ""]
-        size_column = headers.index("Sizes (nm)")
-        notes_column = headers.index("Notes")
+        # GitHub Markdown supports nonbreaking entities in cells. Keep detector
+        # names and dates together at punctuation as well as at spaces.
+        no_wrap = str.maketrans({" ": "&nbsp;", "-": "-&#8288;", "/": "/&#8288;"})
         for row in table:
             cells = [cell.replace("\\", "\\\\").replace("|", "\\|") for cell in row]
-            cells[size_column] = cells[size_column].replace(" ", "&nbsp;")
-            # Keep short reasons together so Markdown renderers give Notes enough room.
-            if len(row[notes_column]) <= 32:
-                cells[notes_column] = cells[notes_column].replace(" ", "&nbsp;")
+            if row is not table[1]:
+                cells = [cell.translate(no_wrap) for cell in cells]
             lines.append("| " + " | ".join(cells) + " |")
         lines.extend(["", "\n\n".join(footer), ""])
         markdown.write_text("\n".join(lines), encoding="utf-8")

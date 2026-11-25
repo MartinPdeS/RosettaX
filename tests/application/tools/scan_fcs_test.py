@@ -85,8 +85,9 @@ def test_check_all_reports_observations_on_one_line_per_recording(*, monkeypatch
     monkeypatch.setattr(scanner.subprocess, "run", run_fixture_suite)
     markdown = tmp_path / "results.md"
     assert scanner.run_all_checks(markdown=markdown) == 1
-    assert "| PASS | beads.fcs | Sony ID7000 | SSC-H | FITC-H | 147,&nbsp;?,&nbsp;296 | 0.973210 |" in markdown.read_text()
+    assert "| PASS | beads.fcs | Sony&nbsp;ID7000 | SSC-&#8288;H | FITC-&#8288;H | 147,&nbsp;?,&nbsp;296 | 0.973210 |" in markdown.read_text()
     assert "| FAIL | water.fcs |" in markdown.read_text()
+    assert "no&nbsp;fit;&nbsp;unexpected&nbsp;channel;&nbsp;fewer&nbsp;than&nbsp;2&nbsp;assigned&nbsp;peaks" in markdown.read_text()
     header, beads, water, legend, summary = capsys.readouterr().out.splitlines()
     assert header.split() == ["Status", "Recording", "Model", "Scatter", "Fluorescence", "Sizes", "(nm)", "R²", "Notes"]
     assert beads.index("beads.fcs") == water.index("water.fcs") == header.index("Recording")
