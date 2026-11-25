@@ -257,6 +257,12 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
                 fluorescence = replace(fluorescence, baseline_upper_gate=None, baseline_lower_gate=None)
             return self._build_stop_result(
                 issue=fluorescence.issue,
+                summary=(
+                    f"{len(fluorescence.marker_peaks)} fluorescent markers remained after baseline removal; "
+                    "1 or 2 required for sizing."
+                    if fluorescence.issue in {RosettaDetectionIssue.MARKER_MISSING, RosettaDetectionIssue.MARKER_AMBIGUOUS}
+                    else fluorescence.stop_status
+                ),
                 event_counts=events.event_counts(),
                 status=(
                     f"{fluorescence.stop_status} Green channel: {green_fluorescence_column}. "
@@ -377,6 +383,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         *,
         status: str,
         issue: RosettaDetectionIssue | None = None,
+        summary: str = "",
         event_counts: dict[str, Any] | None = None,
         fluorescence_analysis: dict[str, Any] | None = None,
         debug_diagnostics: dict[str, Any] | None = None,
@@ -396,6 +403,7 @@ class FluorescenceGuidedScatterPeakProcess(BasePeakProcess):
         marker_positions = list(fluorescence_marker_positions or [])
         if issue is not None:
             payload["rosetta_detection_issue"] = issue.value
+        payload["rosetta_detection_summary"] = summary or status
         if event_counts is not None:
             payload["rosetta_event_counts"] = event_counts
         if gate_interval is not None:

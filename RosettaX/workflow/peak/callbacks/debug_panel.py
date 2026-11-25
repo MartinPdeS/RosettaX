@@ -34,6 +34,8 @@ def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = No
     unassigned_count = max(0, measured_count - assigned_count)
     needs_confirmation = isinstance(sizing, dict) and sizing.get("needs_confirmation")
 
+    diagnosis = sizing.get("summary") if isinstance(sizing, dict) else ""
+    diagnosis = diagnosis or peak_lines_payload.get("rosetta_detection_summary")
     failed = isinstance(sizing, dict) and sizing.get("state") == "failed"
     if ready:
         title, tone = "Rosetta ready", "preview"
@@ -54,6 +56,11 @@ def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = No
         summary = "Calibration table updated."
         if needs_confirmation:
             summary += " The assigned diameters are provisional."
+
+    show_failure = bool(diagnosis and assigned_count < 2 and not preview)
+    if show_failure:
+        title = f"Sizing failed · {assigned_count} {'diameter' if assigned_count == 1 else 'diameters'} assigned"
+        tone = "error"
 
     excluded_count = len(peak_lines_payload.get("saturation_guard_excluded_positions") or [])
     if peak_lines_payload.get("rosetta_lowest_peak_exclusion"):
@@ -92,6 +99,7 @@ def build_rosetta_result_panel(*, status: str = "", peak_lines_payload: Any = No
             html.Div(
                 [
                     html.H6(title, className="peak-result-title", title=title),
+                    *([html.P(diagnosis, className="mb-0")] if show_failure else []),
                 ],
                 role="alert" if tone == "error" else "status",
             ),
@@ -216,8 +224,13 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
             for guide in plotted_guides
             if guide["kind"] == "non_fluorescent"
         }
+        cutoff = peak_lines_payload.get("saturation_guard_threshold")
         exclusion_reasons = {
-            position: "Excluded because it falls beyond the scatter saturation guard."
+            position: (
+                f"{_format_position(value=position)} exceeds the scatter saturation guard "
+                f"of {_format_position(value=cutoff)} a.u." if cutoff is not None
+                else "Excluded because it falls beyond the scatter saturation guard."
+            )
             for position in peak_lines_payload.get("saturation_guard_excluded_positions", [])
         }
         lowest_peak = peak_lines_payload.get("rosetta_lowest_peak_exclusion")
@@ -230,7 +243,7 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
         sizing = peak_lines_payload.get("rosetta_sizing") or {}
         unsized_reasons = {item["position"]: item["reason"] for item in sizing.get("unsized_peaks", [])}
         failure_reason = {
-            "unreliable_markers": "The available marker anchors could not establish a unique bead order.",
+            "unreliable_markers": "Peak accepted. Diameter unresolved; see the sizing summary.",
             "conflicting_markers": "The fluorescent markers give conflicting scatter order.",
             "size_range_exceeded": "The detected peaks exceed the available bead sizes.",
         }.get(sizing.get("failure_code"))
@@ -261,7 +274,7 @@ def build_rosetta_debug_panel(*, peak_lines_payload: dict[str, Any], status: str
         sections.append(html.P("No additional fit details were recorded."))
 
     return html.Details(
-        [html.Summary("Fit details"), html.Div(sections, className="peak-result-details-content")],
+        [html.Summary("Show evidence" if peak_lines_payload.get("rosetta_detection_summary") or (peak_lines_payload.get("rosetta_sizing") or {}).get("summary") else "Fit details"), html.Div(sections, className="peak-result-details-content")],
         className="peak-result-details",
     )
 

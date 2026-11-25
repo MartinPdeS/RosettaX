@@ -373,6 +373,7 @@ def _build_warning_graph_payload(*, peak_lines_payload: Any, show_detected_peaks
         "y_lower_gate",
         "y_upper_gate",
         "rosetta_detection_issue",
+        "rosetta_detection_summary",
         "rosetta_event_counts",
         "rosetta_gate_interval",
     )

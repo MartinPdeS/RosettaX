@@ -243,7 +243,7 @@ def check_file(*, args: argparse.Namespace) -> int:
     print(f"Calibration R²: {result['r_squared']}" if result["r_squared"] is not None else f"Calibration R²: {result['fit_note']}.")
     failure = assignment_failure(diameters=diameters)
     if failure:
-        print(f"FAIL: {failure}")
+        print(f"FAIL: {result.get('sizing_summary') or failure}")
         return 1
     if not record:
         brand = (match or {}).get("manufacturer", "")
@@ -303,7 +303,7 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
             diameters = json.loads(properties["diameters_nm"])
             failure = assignment_failure(diameters=diameters)
             if failure:
-                result["issues"].append(failure)
+                result["issues"].append(properties.get("sizing_summary") or failure)
             size_labels = []
             for diameter in diameters:
                 if isinstance(diameter, float) and diameter.is_integer():
@@ -313,6 +313,8 @@ def run_all_checks(*, markdown: Path | None = None) -> int:
             r_squared = json.loads(properties["r_squared"])
             result["fit"] = "—" if r_squared is None else f"{r_squared:.6f}"
             result["fit_note"] = (properties.get("fit_note") or "no fit") if r_squared is None else ""
+            if failure and properties.get("sizing_summary") and result["fit_note"] == failure:
+                result["fit_note"] = ""
         for issue in case:
             if issue.tag in {"failure", "error", "skipped"}:
                 message = issue.get("message") or issue.tag

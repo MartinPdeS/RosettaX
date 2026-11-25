@@ -79,6 +79,8 @@ def test_check_all_reports_observations_on_one_line_per_recording(*, monkeypatch
             <failure message="unexpected channel"/></testcase>
           <testcase><properties><property name="recording" value="water.fcs"/>
             <property name="diameters_nm" value="[]"/><property name="r_squared" value="null"/>
+            <property name="sizing_summary" value="0 markers after baseline removal"/>
+            <property name="fit_note" value="fewer than 2 assigned peaks"/>
           </properties></testcase></testsuite>""")
         return subprocess.CompletedProcess(command, 1, stdout="")
 
@@ -87,14 +89,14 @@ def test_check_all_reports_observations_on_one_line_per_recording(*, monkeypatch
     assert scanner.run_all_checks(markdown=markdown) == 1
     assert "| PASS | beads.fcs | Sony&nbsp;ID7000 | SSC-&#8288;H | FITC-&#8288;H | 147,&nbsp;?,&nbsp;296 | 0.973210 |" in markdown.read_text()
     assert "| FAIL | water.fcs |" in markdown.read_text()
-    assert "no&nbsp;fit;&nbsp;unexpected&nbsp;channel;&nbsp;fewer&nbsp;than&nbsp;2&nbsp;assigned&nbsp;peaks" in markdown.read_text()
+    assert "unexpected&nbsp;channel;&nbsp;0&nbsp;markers&nbsp;after&nbsp;baseline&nbsp;removal" in markdown.read_text()
     header, beads, water, legend, summary = capsys.readouterr().out.splitlines()
     assert header.split() == ["Status", "Recording", "Model", "Scatter", "Fluorescence", "Sizes", "(nm)", "R²", "Notes"]
     assert beads.index("beads.fcs") == water.index("water.fcs") == header.index("Recording")
     assert beads.index("147, ?, 296") == water.index("none") == header.index("Sizes")
     assert beads.endswith("0.973210")
     assert beads.index("0.973210") + 7 == water.rindex("—") == header.index("²")
-    assert water[header.index("Notes"):] == "no fit; unexpected channel; fewer than 2 assigned peaks"
+    assert water[header.index("Notes"):] == "unexpected channel; 0 markers after baseline removal"
     assert beads.startswith("PASS") and water.startswith("FAIL")
     assert legend == "? = detected peak with no assigned diameter"
     assert summary == "1/2 recordings passed (4 checks)."

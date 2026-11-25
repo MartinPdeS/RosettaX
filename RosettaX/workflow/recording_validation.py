@@ -122,6 +122,10 @@ def run_real_sample(
         "gate_interval": result.peak_lines_payload.get("rosetta_gate_interval"),
         "r_squared": r_squared,
         "fit_note": fit_note,
+        "sizing_summary": (
+            result.peak_lines_payload.get("rosetta_sizing", {}).get("summary")
+            or result.peak_lines_payload.get("rosetta_detection_summary", "")
+        ),
     }
 
 

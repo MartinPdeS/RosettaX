@@ -150,6 +150,17 @@ class Test_PeakMutationStatus:
         assert panel.children[1].children[-1].children[0].children == "Fluorescence valley"
 
 
+    def test_failed_assignment_shows_reason_above_collapsed_evidence(self) -> None:
+        """Expose the failed sizing rule before opening the candidate tables."""
+        diagnosis = "1 usable marker; 3 scatter peaks above it, 4 required."
+        panel = build_rosetta_result_panel(
+            peak_lines_payload={"rosetta_sizing": {"summary": diagnosis, "measured_row_count": 8}},
+        )
+        heading, explanation = panel.children[0].children
+        assert heading.children == "Sizing failed · 0 diameters assigned"
+        assert explanation.children == diagnosis
+        assert panel.children[2].children[0].children == "Show evidence"
+
     def test_rosetta_ready_keeps_all_metric_slots_visible(self) -> None:
         """Reserve four visible metric slots before the first run."""
         panel = build_rosetta_result_panel()

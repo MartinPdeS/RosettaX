@@ -178,6 +178,12 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             rows=rows,
             state=state,
             detail="No sizes assigned:" if unresolved and state is RosettaAssignmentState.UNRESOLVED else "",
+            summary=(
+                "Scatter peaks found/expected: " + ", ".join(
+                    f"{len(positions)}/{len(diameters)} {label}" for label, positions, diameters in regions
+                ) + "."
+                if unresolved else ""
+            ),
             notices=tuple(notices),
             rejection_reasons=tuple(unresolved),
             clipped_marker_nm=bounded_marker,
@@ -318,16 +324,21 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             float(item["x"]) for item in metadata if item.get("kind") == "non_fluorescent"
         })
         positions_above = [position for position in scatter_positions if position > marker_position]
-        if (
-            (
-                anchors[0]["marker_role"] == "Bright marker"
-                or len(marker_diagnostics) == 1
+        upper_sizes = (400, 600, 799, 994)
+        if anchors[0]["marker_role"] != "Bright marker" and len(marker_diagnostics) != 1:
+            fallback_failure = "Only the dim marker was usable; the bright marker gate yielded no usable marker."
+        elif marker_position in scatter_positions:
+            fallback_failure = "The marker coincides with a scatter peak, so its position cannot establish the upper bead order."
+        elif any("scatter_boundary" in item for item in marker_diagnostics):
+            fallback_failure = "A marker lies at the scatter limit, so the single-marker sizing rule cannot be used."
+        elif len(positions_above) != len(upper_sizes):
+            fallback_failure = (
+                f"1 usable marker at {marker_position:.4g} a.u.; "
+                f"{len(positions_above)} scatter peaks above it, {len(upper_sizes)} required "
+                f"for {', '.join(map(str, upper_sizes))} nm."
             )
-            and marker_position not in scatter_positions
-            and not any("scatter_boundary" in item for item in marker_diagnostics)
-            and len(positions_above) == 4
-        ):
-            assignments = dict(zip(positions_above, (400, 600, 799, 994), strict=False))
+        else:
+            assignments = dict(zip(positions_above, upper_sizes, strict=True))
             rows = [
                 dict(row, particle_diameter_nm=assignments[row["measured_peak_position"]])
                 for row in rows if row["measured_peak_position"] in assignments
@@ -350,10 +361,8 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
                 detail="The dim fluorescent marker was not resolved. Sizes below the assumed 380 nm bright marker were excluded.",
             )
         status = (
-            f"Found one usable marker at {marker_position:.4g} a.u. and retained {len(rows)} measured scatter peaks. "
-            "Diameters are blank because the missing marker's position or scatter limit could not establish a unique bead order. "
-            "Detected peaks remain available in the graph and table. "
-            "Compute model can compare size assignments after detector configuration."
+            f"Diameters are blank. The accepted marker is at {marker_position:.4g} a.u. scatter. "
+            f"Retained {len(rows)} measured scatter peaks; {len(positions_above)} were detected above the marker before the saturation guard."
         )
         failed_marker = next((item for item in marker_diagnostics if not item.get("validated")), None)
         if failed_marker and "scatter_boundary" in failed_marker:
@@ -371,7 +380,7 @@ class MixtureRosettaScatterPeakProcess(RosettaMixSizeAssignmentProcess):
             replace(result, peak_lines_payload=dict(payload, labels=labels)),
             RosettaSizeAssignment(
                 rows=rows, state=RosettaAssignmentState.UNRESOLVED,
-                failure_code="unreliable_markers", rejection_reasons=(status,),
+                failure_code="unreliable_markers", rejection_reasons=(status,), summary=fallback_failure,
             ),
         )
 

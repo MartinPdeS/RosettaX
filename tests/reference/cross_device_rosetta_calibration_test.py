@@ -92,5 +92,6 @@ def test_rosetta_bead_positions_sizes_and_scattering_fit(
         ("diameters_nm", json.dumps([row["particle_diameter_nm"] for row in result["rows"]])),
         ("r_squared", json.dumps(result["r_squared"])),
         ("fit_note", result["fit_note"]),
+        ("sizing_summary", result["sizing_summary"]),
     ])
     check_outcome(result=result, record=record, fixture_name=filename)

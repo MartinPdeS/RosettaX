@@ -120,7 +120,9 @@ From a source checkout with the test dependencies installed, use:
 fluorescence channels used for sizing, observed bead diameters in nm, and the scattering calibration-curve R². For fit-enabled recordings with an
 optical preset, the curve uses the assigned standards (at least two), including
 partial sizing results. A recording with fewer than two assigned peaks fails validation,
-even when its observed warning matches the regression baseline. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
+even when its observed warning matches the regression baseline. The Notes column
+shows the sizing rule that stopped the run. In the app, open **Show evidence**
+under the sizing summary to inspect marker fits, thresholds, and individual peak decisions. A curve fitted to a subset describes only those standards. ``check`` runs automatic channel
 selection and sizing on the supplied file, including a calibration fit when
 eligible. For a known fingerprint it compares the result with the reviewed
 baseline. For new data it prints the observed outcome for review.

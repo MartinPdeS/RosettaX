@@ -42,6 +42,7 @@ class RosettaSizeAssignment:
     rows: list[dict[str, Any]] = field(default_factory=list)
     state: RosettaAssignmentState = RosettaAssignmentState.ASSIGNED
     detail: str = ""
+    summary: str = ""
     notices: tuple[str, ...] = ()
     rejection_reasons: tuple[str, ...] = ()
     needs_confirmation: bool = False
@@ -62,6 +63,7 @@ class RosettaSizeAssignment:
         """Serialize the sizing state for the graph, UI, and regression tests."""
         return {
             "state": self.state.value,
+            "summary": self.summary or next(iter(self.rejection_reasons), self.detail),
             "assigned_row_count": sum(bool(row.get("particle_diameter_nm")) for row in self.rows),
             "measured_row_count": len(self.rows),
             "needs_confirmation": self.needs_confirmation,
