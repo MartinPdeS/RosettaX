@@ -724,6 +724,10 @@ instrument_aliases = ["sony id7000", "id7000", "sony spectral analyzer"]
 default = ["SSC-A", "SSC-H", "SSC Area", "SSC"]
 forward = ["FSC-A", "FSC-H", "FSC Area", "FSC"]
 
+[instruments.sony_id7000.rosetta_channels]
+scattering = ["SSC-H"]
+green_fluorescence = ["FITC-H"]
+
 [instruments.sony_id7000.detectors.fsc]
 preset_name = "Sony ID7000 FSC"
 detector_figure = "detector_figures/sony_id7000_fsc.png"

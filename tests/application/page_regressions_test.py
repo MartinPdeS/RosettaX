@@ -564,6 +564,10 @@ class Test_DocumentationDeepDivePages:
         text_nodes = _collect_text(validation_layout)
         hrefs = _collect_component_hrefs(validation_layout)
         for instrument in (
+            "Sony ID7000 (experiment 1, beads)",
+            "Sony ID7000 (experiment 1, DI-water control)",
+            "Sony ID7000 (experiment 2, beads)",
+            "Sony ID7000 (experiment 2, DI-water control)",
             "Apogee A60-Micro (2022-01-31)",
             "BD FACSymphony A1 (2022-02-11)",
             "BD FACSymphony A1 (2022-02-18)",
@@ -598,6 +602,10 @@ class Test_DocumentationDeepDivePages:
         ):
             assert instrument in text_nodes
         filenames = (
+            "cross_device/sony_id7000_experiment_1_beads.fcs",
+            "cross_device/sony_id7000_experiment_1_di_water.fcs",
+            "cross_device/sony_id7000_experiment_2_beads.fcs",
+            "cross_device/sony_id7000_experiment_2_di_water.fcs",
             "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs",
             "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs",
             "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs",
@@ -674,6 +682,7 @@ class Test_DocumentationDeepDivePages:
 
         assert "Supported Flow Cytometers" in text_nodes
         assert "FACSCanto II" not in text_nodes
+        assert "/documentation/supported-cytometers/sony-id7000" in hrefs
         assert "FACSymphony A5" in text_nodes
         assert "/documentation/supported-cytometers/bd-facsymphony-a1" in hrefs
         assert f"mailto:{page.contact_email}" in hrefs

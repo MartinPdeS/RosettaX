@@ -94,8 +94,14 @@ Some recordings exercise warnings when automatic sizing cannot proceed.
      - Aurora, Northern Lights
    * - Miltenyi Biotec
      - MACSQuant Analyzer 16
+   * - Sony
+     - ID7000
 
 .. supported-cytometers-end
+
+On two Sony ID7000 bead runs, the default workflow assigned the four upper
+diameters (400, 600, 799 and 994 nm) and flagged the unresolved dim marker.
+Both paired DI-water controls returned zero fluorescent marker peaks.
 
 
 Features

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Integration tests for Rosetta detection and scattering calibration on the bundled CAL003 and METVES acquisitions."""
+"""Integration tests for Rosetta detection and scattering calibration on bundled cross-device FCS recordings."""
 
 if __name__ == "__main__":
     import pytest
@@ -29,6 +29,10 @@ SAMPLE_DIRECTORY = REPOSITORY_ROOT / "RosettaX" / "assets" / "sample-files" / "c
 
 # Scatter and green fluorescence are the channels used by the Rosetta script.
 SAMPLES = [
+    ("sony_id7000_experiment_1_beads.fcs", "SSC-H", "FITC-H"),
+    ("sony_id7000_experiment_1_di_water.fcs", "SSC-H", "FITC-H"),
+    ("sony_id7000_experiment_2_beads.fcs", "SSC-H", "FITC-H"),
+    ("sony_id7000_experiment_2_di_water.fcs", "SSC-H", "FITC-H"),
     ("apogee_a60_micro_cal003_2022-01-31.fcs", "405LALS(Peak)", "405Grn(Peak)"),
     ("bd_facsymphony_a1_cal003_2022-02-11.fcs", "SSC-H", "B530/30-A"),
     ("bd_facsymphony_a1_cal003_2022-02-18.fcs", "SSC-H", "B530/30-A"),
@@ -246,6 +250,10 @@ def run_sample_in_subprocess(**sample) -> dict:
 # Expected behavior at the default settings. These outcomes check the workflow
 # against fixed recordings and are not independent bead identity annotations.
 EXPECTED_OUTCOMES = {
+    "sony_id7000_experiment_1_beads.fcs": ("The dim fluorescent marker was not resolved", [400, 600, 799, 994]),
+    "sony_id7000_experiment_1_di_water.fcs": ("0 fluorescent marker peaks", []),
+    "sony_id7000_experiment_2_beads.fcs": ("The dim fluorescent marker was not resolved", [400, 600, 799, 994]),
+    "sony_id7000_experiment_2_di_water.fcs": ("0 fluorescent marker peaks", []),
     'apogee_a60_micro_cal003_2022-01-31.fcs': ('Partial result: Found', [70, 100, 125, 147, 203, 296]),
     'bd_facsymphony_a1_cal003_2022-02-11.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),
     'bd_facsymphony_a1_cal003_2022-02-18.fcs': ('The dim fluorescent marker was not resolved', [400, 600, 799, 994]),

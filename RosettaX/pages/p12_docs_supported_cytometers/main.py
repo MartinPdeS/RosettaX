@@ -22,6 +22,7 @@ SUPPORTED_CYTOMETERS = {
     "Beckman Coulter": ("CytoFLEX S", "CytoFLEX LX", "MoFlo Astrios"),
     "Cytek": ("Aurora", "Northern Lights"),
     "Miltenyi Biotec": ("MACSQuant Analyzer 16",),
+    "Sony": ("ID7000",),
 }
 
 SUPPORTED_PRESET_MODELS = {
@@ -29,6 +30,7 @@ SUPPORTED_PRESET_MODELS = {
     ("BD Biosciences", "FACSLyric"),
     ("BD Biosciences", "FACSymphony A1"),
     ("Cytek Biosciences", "Aurora"),
+    ("Sony Biosciences", "ID7000"),
 }
 SUPPORTED_DETECTOR_PRESETS = {
     name: preset

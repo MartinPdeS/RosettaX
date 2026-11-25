@@ -249,6 +249,78 @@
     ],
     "size_bytes": 6144856
   },
+  "cross_device/sony_id7000_experiment_1_beads.fcs": {
+    "detectors": [
+      "FSC-A",
+      "FSC-H",
+      "FSC-W",
+      "SSC-A",
+      "SSC-H",
+      "SSC-W",
+      "[AF color 1]-A",
+      "[AF color 1]-H",
+      "[AF color 1]-W",
+      "FITC-A",
+      "FITC-H",
+      "FITC-W",
+      "TIME"
+    ],
+    "size_bytes": 17212408
+  },
+  "cross_device/sony_id7000_experiment_1_di_water.fcs": {
+    "detectors": [
+      "FSC-A",
+      "FSC-H",
+      "FSC-W",
+      "SSC-A",
+      "SSC-H",
+      "SSC-W",
+      "[AF color 1]-A",
+      "[AF color 1]-H",
+      "[AF color 1]-W",
+      "FITC-A",
+      "FITC-H",
+      "FITC-W",
+      "TIME"
+    ],
+    "size_bytes": 2941424
+  },
+  "cross_device/sony_id7000_experiment_2_beads.fcs": {
+    "detectors": [
+      "FSC-A",
+      "FSC-H",
+      "FSC-W",
+      "SSC-A",
+      "SSC-H",
+      "SSC-W",
+      "[AF color 1]-A",
+      "[AF color 1]-H",
+      "[AF color 1]-W",
+      "FITC-A",
+      "FITC-H",
+      "FITC-W",
+      "TIME"
+    ],
+    "size_bytes": 3105796
+  },
+  "cross_device/sony_id7000_experiment_2_di_water.fcs": {
+    "detectors": [
+      "FSC-A",
+      "FSC-H",
+      "FSC-W",
+      "SSC-A",
+      "SSC-H",
+      "SSC-W",
+      "[AF color 1]-A",
+      "[AF color 1]-H",
+      "[AF color 1]-W",
+      "FITC-A",
+      "FITC-H",
+      "FITC-W",
+      "TIME"
+    ],
+    "size_bytes": 151936
+  },
   "summer_school/apogee_mixed_reference_beads.fcs": {
     "detectors": [
       "405SALS(Peak)",

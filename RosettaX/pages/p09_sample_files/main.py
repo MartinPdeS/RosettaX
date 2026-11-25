@@ -85,7 +85,7 @@ class SampleFilesPage:
                 dbc.Alert(
                     [
                         html.P(
-                            "These Rosetta bead acquisitions come from the CAL003 and METVES collections. "
+                            "These acquisitions include CAL003 and METVES bead recordings and two Sony ID7000 bead runs with paired DI-water controls. "
                             "Downloads retain the channels used for scatter and green fluorescence analysis. "
                             "Acquisition settings can vary by instrument and run.",
                             className="mb-0",
@@ -107,6 +107,10 @@ class SampleFilesPage:
                             xl=4,
                         )
                         for instrument, color_name, filename in (
+                            ("Sony ID7000 (experiment 1, beads)", "blue", "cross_device/sony_id7000_experiment_1_beads.fcs"),
+                            ("Sony ID7000 (experiment 1, DI-water control)", "blue", "cross_device/sony_id7000_experiment_1_di_water.fcs"),
+                            ("Sony ID7000 (experiment 2, beads)", "blue", "cross_device/sony_id7000_experiment_2_beads.fcs"),
+                            ("Sony ID7000 (experiment 2, DI-water control)", "blue", "cross_device/sony_id7000_experiment_2_di_water.fcs"),
                             ("Apogee A60-Micro (2022-01-31)", "green", "cross_device/apogee_a60_micro_cal003_2022-01-31.fcs"),
                             ("BD FACSymphony A1 (2022-02-11)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-11.fcs"),
                             ("BD FACSymphony A1 (2022-02-18)", "blue", "cross_device/bd_facsymphony_a1_cal003_2022-02-18.fcs"),
