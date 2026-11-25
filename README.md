@@ -30,7 +30,7 @@
 | RosettaX/pages/p07\_documentation/components.py                             |       17 |        2 |        0 |        0 |     88.24% |  123, 150 |
 | RosettaX/pages/p10\_visualization/services.py                               |      238 |       39 |       54 |       19 |     78.77% |68, 75, 88, 106, 232, 247-250, 269, 353-364, 383-384, 406-\>411, 411-\>414, 414-\>417, 502, 528, 567, 577-582, 759-\>758, 780-\>787, 782-\>781, 819, 837-838, 861-862, 885-886, 915, 933, 942, 968-969, 978 |
 | RosettaX/pages/p21\_fcs\_slicer/services.py                                 |       46 |        4 |       10 |        3 |     87.50% |36, 85, 101-102 |
-| RosettaX/pages/p22\_admin/services.py                                       |       75 |       10 |        4 |        1 |     86.08% |48, 66-68, 72-74, 158, 208-209 |
+| RosettaX/pages/p22\_admin/services.py                                       |       74 |       10 |        4 |        1 |     85.90% |48, 66-68, 72-74, 158, 201-202 |
 | RosettaX/pages/p24\_fcs\_merge/services.py                                  |       31 |        2 |        6 |        1 |     91.89% |    19, 32 |
 | RosettaX/ui/workflow\_cards.py                                              |       15 |        5 |        6 |        2 |     57.14% | 26, 38-51 |
 | RosettaX/ui/workflow\_header.py                                             |       94 |        5 |       24 |        4 |     92.37% |115, 154, 211, 280, 282 |
@@ -159,7 +159,7 @@
 | RosettaX/workflow/upload/models.py                                          |       25 |        2 |        0 |        0 |     92.00% |    65, 86 |
 | RosettaX/workflow/upload/services.py                                        |      240 |       66 |       92 |       16 |     69.28% |71-86, 127, 137, 286, 293-295, 303, 306, 329, 331, 337-\>341, 356-\>358, 377, 404, 425, 431-\>434, 464, 524, 550-551, 558-561, 577-602, 621-693 |
 | RosettaX/workflow/upload/system.py                                          |       28 |       17 |        6 |        0 |     32.35% |     34-59 |
-| **TOTAL**                                                                   | **18332** | **5531** | **6254** | **1279** | **65.48%** |           |
+| **TOTAL**                                                                   | **18331** | **5531** | **6254** | **1279** | **65.47%** |           |
 
 22 files skipped due to complete coverage.
 
