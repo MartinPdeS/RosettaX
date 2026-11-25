@@ -13,7 +13,7 @@
       "sha256": "05ad44a3a881daf0231d5129f6eac4e3752c52a53524940492115b103b182a2f",
       "scatter": "405-LALS(Peak)",
       "fluorescence": "405-Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -67,7 +67,7 @@
       "sha256": "7eacc67273030d6151fdac574d3ed62cfec71b0c874d28bc9c227a6cc0a94eed",
       "scatter": "405LALS(Peak)",
       "fluorescence": "405Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         70,
         100,
@@ -94,7 +94,7 @@
       "sha256": "665f8aa0ff3166c2e914427ee9bbcd253e5d3e87152543fd06fdf3709fd6896f",
       "scatter": "LALS(Peak)",
       "fluorescence": "405-Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         400,
@@ -119,7 +119,7 @@
       "sha256": "7f324c12f3f7233b867e29b69153df83d600e2a04c273e936eaeb0dab945961d",
       "scatter": "LALS(Peak)",
       "fluorescence": "405-Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -144,7 +144,7 @@
       "sha256": "cb138a7f1d6a8bdc2b9ba627693be01540925165686ad32241f599fa106050d3",
       "scatter": "405-LALS(Peak)",
       "fluorescence": "405-Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -171,7 +171,7 @@
       "sha256": "bc8e5b9c914b42d8af7773785caa93299e14c059676fa1bd3a2ee7d5644e65e4",
       "scatter": "LALS(Peak)",
       "fluorescence": "488Grn(Peak)",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -218,7 +218,7 @@
       "sha256": "93cb4800239bca901f4d931e4c3d93edb305f1d03b563872cb549d683b0878c9",
       "scatter": "SSC-H",
       "fluorescence": "B530/30-A",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -242,7 +242,7 @@
       "sha256": "585ab85fa3c625877a75069e1378c75baf3858bbc09924df14b13cfd5ebc2f50",
       "scatter": "SSC-H",
       "fluorescence": "FITC-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -341,7 +341,7 @@
       "sha256": "0afa933a81f0ecd0f3d67da50786cda22191207ecd12b25e254548764b41a3d2",
       "scatter": "SSC-H",
       "fluorescence": "BB515-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -365,7 +365,7 @@
       "sha256": "774890eeee4de89e9c2ccea2473d97a0de8e256e53f7a44ed4169c0591cf7565",
       "scatter": "SSC-H",
       "fluorescence": "BB515-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -389,7 +389,7 @@
       "sha256": "776586e9d138bb064955e7f4bdbe05a408ac359becc7bc59bc165cbee3442143",
       "scatter": "SSC-H",
       "fluorescence": "BB515-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         147,
@@ -416,7 +416,7 @@
       "sha256": "56b91d7c9a824e68f50b48d4e8b8c9f9da6c652755593eeea7d60d032a23ce35",
       "scatter": "FL12-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         147,
@@ -444,7 +444,7 @@
       "sha256": "d24df9b58fe500bf20df15c157b3199e7c9d9353918a938fc81f8f0c08ab0afe",
       "scatter": "SSC_1-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -467,7 +467,7 @@
       "sha256": "e7813b0ee3fa52662a59724f051d2b00266220e44b55c3c675cfbe2320883805",
       "scatter": "SSC_1-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         147,
         203,
@@ -523,7 +523,7 @@
       "sha256": "c1866ccb77cb8a774cfca5a1029c8e1543571eee4301cff91f2faf0dfcf93fc1",
       "scatter": "SSC_1-H",
       "fluorescence": "FL5-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -547,7 +547,7 @@
       "sha256": "a9f5cf0da001e40e7fb505ddbf83fd77a0dd79434e18b8b5298d476522410811",
       "scatter": "SSC_1-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -571,7 +571,7 @@
       "sha256": "59171448af9f2cdc2f609fc4776d37563818001240458e891c4c3912a7cacc49",
       "scatter": "SSC_1-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -595,7 +595,7 @@
       "sha256": "cb7bb7d695039cba69ee8567d6a4be4cd16b207cb6f69843427107f8ccf08638",
       "scatter": "SSC_1-H",
       "fluorescence": "FL1-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         147,
@@ -621,7 +621,7 @@
       "sha256": "3917e2dd040651860c70c5a0291f36525187c57f0f36be13ae2b84d30cd4af6c",
       "scatter": "SSC1-Height",
       "fluorescence": "FL12-Height",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -645,7 +645,7 @@
       "sha256": "094910c7d9863df7fb429e9881e61312c8fd3138a1117457caa41959e2177ab4",
       "scatter": "SSC-H",
       "fluorescence": "B2-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -670,7 +670,7 @@
       "sha256": "36bf40fa3c886240e0ef75b09509101bffb81ff8b71253e956793367046c65cf",
       "scatter": "SSC-H",
       "fluorescence": "B2-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -694,7 +694,7 @@
       "sha256": "c3f197a4c8084f0cbe9134db79b075eadb89484becf6b4db0a39cdf546f79176",
       "scatter": "SSC-H",
       "fluorescence": "B2-A",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         400,
         600,
@@ -718,7 +718,7 @@
       "sha256": "a729a745c04bf434f432cb985e05db2a0788c98856695a849809a15f590ac556",
       "scatter": "SSC-H",
       "fluorescence": "B2-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
@@ -743,7 +743,7 @@
       "sha256": "d15b88e74876f3aecec82d8e7b637b3e0a1fb5c2e517b4654daee489d6e32fc5",
       "scatter": "SSC-H",
       "fluorescence": "B2-H",
-      "fit_calibration": false,
+      "fit_calibration": true,
       "expected_diameters_nm": [
         "",
         "",
