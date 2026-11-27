@@ -1,6 +1,11 @@
 RosettaX
 ========
 
+.. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/HEAD/RosettaX/assets/logo/logo_light.svg
+   :alt: RosettaX logo
+
+|mps-python| |mps-pypi| |mps-downloads| |mps-docs| |mps-ci| |mps-coverage| |mps-conda| |mps-conda-downloads| |mps-conda-release|
+
 Interactive fluorescence and scattering calibration workflows for flow cytometry.
 
 RosettaX provides local graphical workflows for fluorescence and scattering
@@ -15,8 +20,6 @@ modeling, detector settings, calibration references, and downstream analysis.
 
 Launch the local application with ``rosettax``. The Python example below fits a
 fluorescence calibration from four illustrative bead-reference pairs.
-
-.. figure:: RosettaX/assets/logo/logo_light.svg
 
 Installation
 ------------
@@ -223,6 +226,10 @@ Supported cytometers
 
 These models have FCS recordings in the Rosetta cross-device validation suite.
 Some recordings exercise warnings when automatic sizing cannot proceed.
+
+.. image:: https://img.shields.io/badge/FCS_validation-view_report-blue
+   :alt: Cross-device FCS validation report
+   :target: VALIDATION.md
 
 .. supported-cytometers-start
 
@@ -605,6 +612,10 @@ direction can be discussed before implementation.
 Citation
 --------
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19846629.svg
+   :alt: Cite RosettaX on Zenodo
+   :target: https://doi.org/10.5281/zenodo.19846629
+
 If you use RosettaX in scientific work, please cite its Zenodo concept DOI:
 ``10.5281/zenodo.19846629``. It always resolves to the latest published Zenodo
 release.
@@ -643,80 +654,38 @@ See the repository ``LICENSE`` file for the full license text.
 Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
 
+.. |mps-python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
+   :alt: Supported Python versions
+   :target: https://pypi.org/project/rosettax/
 
-.. |validation-report| image:: https://img.shields.io/badge/FCS_validation-view_report-blue
-   :alt: View the cross-device FCS validation report
-   :target: VALIDATION.md
-
-.. |zenodo| image:: https://zenodo.org/badge/19846629.svg
-   :alt: Cite RosettaX on Zenodo
-   :target: https://doi.org/10.5281/zenodo.19846629
-
-
-.. |python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
-   :alt: Python
-   :target: https://www.python.org/
-
-.. |docs| image:: https://github.com/martinpdes/rosettax/actions/workflows/deploy_documentation.yml/badge.svg
-   :target: https://martinpdes.github.io/RosettaX/
-   :alt: Documentation Status
-
-.. |PyPi| image:: https://badge.fury.io/py/RosettaX.svg
+.. |mps-pypi| image:: https://img.shields.io/pypi/v/rosettax.svg
    :alt: PyPI version
-   :target: https://pypi.org/project/RosettaX/
+   :target: https://pypi.org/project/rosettax/
 
-.. |PyPi_download| image:: https://img.shields.io/pypi/dm/rosettax.svg
-   :alt: PyPI downloads
+.. |mps-downloads| image:: https://img.shields.io/pypi/dm/rosettax.svg
+   :alt: Monthly PyPI downloads
    :target: https://pypistats.org/packages/rosettax
 
-.. |ci/cd| image:: https://github.com/martinpdes/rosettax/actions/workflows/deploy_coverage.yml/badge.svg
-   :target: https://martinpdes.github.io/RosettaX/actions
-   :alt: Test Status
+.. |mps-docs| image:: https://github.com/MartinPdeS/RosettaX/actions/workflows/deploy_documentation.yml/badge.svg
+   :alt: Documentation
+   :target: https://martinpdes.github.io/RosettaX/
 
-.. |anaconda_download| image:: https://anaconda.org/martinpdes/rosettax/badges/downloads.svg
-   :alt: Anaconda downloads
-   :target: https://anaconda.org/martinpdes/rosettax
+.. |mps-ci| image:: https://github.com/MartinPdeS/RosettaX/actions/workflows/deploy_coverage.yml/badge.svg
+   :alt: Continuous integration
+   :target: https://github.com/MartinPdeS/RosettaX/actions/workflows/deploy_coverage.yml
 
-.. |anaconda| image:: https://anaconda.org/martinpdes/rosettax/badges/version.svg
-   :alt: Anaconda version
-   :target: https://anaconda.org/martinpdes/rosettax
-
-.. |anaconda_date| image:: https://anaconda.org/martinpdes/rosettax/badges/latest_release_relative_date.svg
-   :alt: Latest Anaconda release date
-   :target: https://anaconda.org/martinpdes/rosettax
-
-.. |coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
+.. |mps-coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
    :alt: Test coverage
    :target: https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html
 
-Project links
--------------
+.. |mps-conda| image:: https://anaconda.org/martinpdes/rosettax/badges/version.svg
+   :alt: Anaconda version
+   :target: https://anaconda.org/martinpdes/rosettax
 
-.. list-table::
-   :widths: 35 65
-   :header-rows: 1
+.. |mps-conda-downloads| image:: https://anaconda.org/martinpdes/rosettax/badges/downloads.svg
+   :alt: Anaconda downloads
+   :target: https://anaconda.org/martinpdes/rosettax
 
-   * - Badge
-     - Status
-   * - Python versions
-     - |python|
-   * - Documentation
-     - |docs|
-   * - Continuous integration
-     - |ci/cd|
-   * - Cross-device validation
-     - |validation-report|
-   * - Test coverage
-     - |coverage|
-   * - PyPI package
-     - |PyPi|
-   * - PyPI downloads
-     - |PyPi_download|
-   * - Anaconda package
-     - |anaconda|
-   * - Anaconda downloads
-     - |anaconda_download|
-   * - Latest Anaconda release
-     - |anaconda_date|
-   * - Citation
-     - |zenodo|
+.. |mps-conda-release| image:: https://anaconda.org/martinpdes/rosettax/badges/latest_release_relative_date.svg
+   :alt: Latest Anaconda release
+   :target: https://anaconda.org/martinpdes/rosettax
