@@ -14,28 +14,10 @@ introduction: |
   fluorescence calibration from four illustrative bead-reference pairs.
 quickstart: docs/examples/fluorescence_calibration.py
 sections:
-  - title: Installation options
+  - title: Deployment
     content: |
-      RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, 3.13, and 3.14;
-      the pinned PyMieSim 6.0.4 release provides wheels for these versions.
-
-      Anaconda
-      ~~~~~~~~
-
-      .. code-block:: bash
-
-         conda install -c martinpdes rosettax
-
-
-      From Source
-      ~~~~~~~~~~~
-
-      .. code-block:: bash
-
-         git clone https://github.com/MartinPdeS/RosettaX.git
-         cd RosettaX
-         pip install -e .
-
+      CI checks Python 3.11, 3.12, 3.13, and 3.14. The pinned PyMieSim 6.0.4
+      release provides wheels for these versions.
 
       Docker
       ~~~~~~
