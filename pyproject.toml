@@ -115,7 +115,7 @@ bundling = [
 
 # Keep the unreleased README pilot out of distribution metadata.
 [dependency-groups]
-readme = ["martinpdes-maintenance @ git+https://github.com/MartinPdeS/MartinPdeS-maintenance.git@d3b32c00ad0fc4b6a452cf424016378006c5f59d"]
+readme = ["martinpdes-maintenance @ git+https://github.com/MartinPdeS/MartinPdeS-maintenance.git@af10cca99170e7e03225da3ca62f319213295582"]
 
 [tool.mps-maintenance]
 version-file = "RosettaX/_version.py"

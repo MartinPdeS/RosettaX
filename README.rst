@@ -72,7 +72,8 @@ For an editable source installation:
 Documentation
 -------------
 
-Read the `RosettaX documentation <https://martinpdes.github.io/RosettaX/>`__.
+Use the `RosettaX documentation <https://martinpdes.github.io/RosettaX/>`__ to work through
+examples and look up the inputs and return values of individual functions.
 
 Supported cytometers
 --------------------
@@ -113,10 +114,15 @@ The Zenodo record provides the citation in BibTeX and other formats.
 Contributing
 ------------
 
-See the `contributing guide <https://github.com/MartinPdeS/RosettaX/blob/HEAD/CONTRIBUTING.md>`__.
+Bug reports, worked examples, and documentation corrections are welcome.
+To set up a development checkout and run the tests, follow the `contributing guide <https://github.com/MartinPdeS/RosettaX/blob/HEAD/CONTRIBUTING.md>`__.
 
 Contact
 -------
+
+For questions about using RosettaX in your research, get in touch below.
+If a calculation gives an unexpected result, include the package version
+and a small example that reproduces it.
 
 * `Martin Poinsinet de Sivry-Houle <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`__
 
