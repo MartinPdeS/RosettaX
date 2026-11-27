@@ -3,8 +3,10 @@ RosettaX
 
 .. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/HEAD/RosettaX/assets/logo/logo_light.svg
    :alt: RosettaX logo
+   :width: 100%
 
 .. list-table::
+   :width: 100%
    :widths: 35 65
    :header-rows: 1
 
