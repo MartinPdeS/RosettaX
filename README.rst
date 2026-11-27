@@ -1,42 +1,9 @@
 RosettaX
 ========
 
-.. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/master/RosettaX/assets/logo/logo_light.svg
-   :alt: RosettaX logo
+Interactive fluorescence and scattering calibration workflows for flow cytometry.
 
-.. list-table::
-   :widths: 35 65
-   :header-rows: 1
-
-   * - Badge
-     - Status
-   * - Python versions
-     - |python|
-   * - Documentation
-     - |docs|
-   * - Continuous integration
-     - |ci/cd|
-   * - Cross-device validation
-     - |validation-report|
-   * - Test coverage
-     - |coverage|
-   * - PyPI package
-     - |PyPi|
-   * - PyPI downloads
-     - |PyPi_download|
-   * - Anaconda package
-     - |anaconda|
-   * - Anaconda downloads
-     - |anaconda_download|
-   * - Latest Anaconda release
-     - |anaconda_date|
-   * - Citation
-     - |zenodo|
-
-
-RosettaX is an interactive calibration application for flow cytometry.
-
-It provides local graphical workflows for fluorescence and scattering
+RosettaX provides local graphical workflows for fluorescence and scattering
 calibration, combining FCS data loading, histogram inspection, peak
 identification, calibration fitting, runtime profile management, and reusable
 calibration export in a single interface.
@@ -46,9 +13,189 @@ repeatable, and easier to maintain across experiments. The application is
 designed as a practical bridge between experimental cytometry data, optical
 modeling, detector settings, calibration references, and downstream analysis.
 
+Launch the local application with ``rosettax``. The Python example below fits a
+fluorescence calibration from four illustrative bead-reference pairs.
+
+.. figure:: RosettaX/assets/logo/logo_light.svg
+
+Installation
+------------
+
+.. code-block:: console
+
+   $ python -m pip install RosettaX
+
+Quick start
+-----------
+
+.. code-block:: python
+
+   r"""
+   Fit a fluorescence calibration
+   ==============================
+
+   This example mirrors the fluorescence calibration step in RosettaX. A measured
+   peak from each bead population is paired with its assigned reference intensity.
+   RosettaX fits those approved pairs in log10 space:
+
+   .. math::
+
+      \log_{10}(\mathrm{reference}) = m\log_{10}(\mathrm{measured}) + b.
+
+   The resulting relation is a power law. In the application, obtain the measured
+   values from the peak-identification step, confirm the pairing in the reference
+   table, and save the resulting calibration JSON.
+   """
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from RosettaX.pages.p02_fluorescence.sections.s04_calibration.services import (
+       fit_log10_calibration,
+   )
+
+
+   # These values are illustrative only. Replace neither the values nor the
+   # resulting coefficients in a real calibration; derive them from your approved
+   # bead table in the RosettaX interface.
+   measured_intensity_au = np.array([240.0, 1_050.0, 4_800.0, 22_000.0])
+   reference_intensity_mesf = np.array([600.0, 2_700.0, 12_700.0, 59_000.0])
+
+   fit = fit_log10_calibration(
+       intensity_au=measured_intensity_au,
+       intensity_calibrated_units=reference_intensity_mesf,
+   )
+
+   print(f"Slope: {fit.slope:.4f}")
+   print(f"Intercept: {fit.intercept:.4f}")
+   print(f"R²: {fit.r_squared:.4f}")
+   print(
+       "Calibration relation: "
+       f"MESF = {fit.prefactor:.4g} × measured intensity^{fit.slope:.4f}"
+   )
+
+
+   # Use a dense positive range so that the fitted power law is displayed as a
+   # straight line on logarithmic axes.
+   measured_range = np.geomspace(
+       measured_intensity_au.min() / 1.5,
+       measured_intensity_au.max() * 1.5,
+       200,
+   )
+   predicted_mesf = fit.prefactor * measured_range**fit.slope
+
+   figure, axis = plt.subplots(figsize=(7, 4.5))
+   axis.scatter(
+       measured_intensity_au,
+       reference_intensity_mesf,
+       color="#0f766e",
+       label="Approved bead-reference pairs",
+       zorder=3,
+   )
+   axis.plot(
+       measured_range,
+       predicted_mesf,
+       color="#115e59",
+       label=f"Power-law fit (R² = {fit.r_squared:.4f})",
+   )
+   axis.set(
+       xscale="log",
+       yscale="log",
+       xlabel="Measured peak intensity [a.u.]",
+       ylabel="Assigned fluorescence intensity [MESF]",
+       title="Illustrative fluorescence calibration",
+   )
+   axis.grid(True, which="both", alpha=0.25)
+   axis.legend()
+   figure.tight_layout()
+
+Installation options
+--------------------
+
+RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, 3.13, and 3.14;
+the pinned PyMieSim 6.0.4 release provides wheels for these versions.
+
+Anaconda
+~~~~~~~~
+
+.. code-block:: bash
+
+   conda install -c martinpdes rosettax
+
+
+From Source
+~~~~~~~~~~~
+
+.. code-block:: bash
+
+   git clone https://github.com/MartinPdeS/RosettaX.git
+   cd RosettaX
+   pip install -e .
+
+
+Docker
+~~~~~~
+
+With Docker and Docker Compose installed, run from the repository checkout:
+
+.. code-block:: bash
+
+   docker compose up --build
+
+Open http://localhost:8050 in your browser. The container uses Python 3.13 and
+Gunicorn, runs as a non-root user, and publishes the application on the local
+machine only. Compose targets ``linux/amd64`` because PyMieSim 6.0.4 provides
+x86-64 Linux wheels; Docker uses emulation on Apple Silicon.
+
+Uploads, server-side calibration files, and usage records are stored in the
+``rosettax-data`` named volume and survive container recreation. User-created
+profiles remain in browser storage; downloaded FCS files, calibration JSON,
+and PDF reports are saved by your browser.
+
+To use a different port or maximum upload size:
+
+.. code-block:: bash
+
+   ROSETTAX_PORT=8051 ROSETTAX_MAX_UPLOAD_SIZE=512MB docker compose up --build
+
+Stop the application with Ctrl+C, or run ``docker compose down`` after starting
+it with ``docker compose up --build --detach``. ``docker compose down`` retains
+the data volume; adding ``--volumes`` deletes the stored application data.
+
+For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
+directory for server-side calibration files. Without that setting, RosettaX
+keeps its existing calibration directory beside the package.
+
+``ROSETTAX_UPLOAD_DIRECTORY`` selects a writable directory for uploaded FCS
+and calibration files. It defaults to ``~/.rosettax/uploads``.
+
+The native CLI and the bundled loopback-only Compose setup allow local Settings
+editing. The Gunicorn WSGI entry point defaults to hosted mode. For an HTTPS
+deployment, keep ``ROSETTAX_HOSTED=true`` and set a strong
+``ROSETTAX_ADMIN_TOKEN`` in the server environment. Sign in at
+``/admin/login`` to access both ``/admin`` and ``/settings`` for 30 minutes.
+Settings edits are saved to the administrator's browser. To change the presets
+offered to public users, update the packaged profiles and redeploy.
+
+
+Render
+~~~~~~
+
+For a native Python web service on Render, set the Build Command to:
+
+.. code-block:: bash
+
+   bash tools/render_build.sh
+
+The script installs the package using its explicit project version and checks
+that the installed version matches the project metadata. Git history is not
+needed for installation.
+Keep your existing Start Command and redeploy after changing the Build Command.
+The home page displays the installed software version, with a checked-in version
+fallback for source checkouts and standalone bundles.
 
 Overview
-********
+--------
 
 Flow cytometry calibration is often distributed across several disconnected
 tools: instrument software, notebooks, scripts, spreadsheets, manually selected
@@ -71,9 +218,8 @@ The scattering workflow connects measured cytometry signals with optical
 parameters such as particle size, refractive index, detector configuration, and
 scattering intensity.
 
-
 Supported cytometers
-********************
+--------------------
 
 These models have FCS recordings in the Rosetta cross-device validation suite.
 Some recordings exercise warnings when automatic sizing cannot proceed.
@@ -106,7 +252,7 @@ diameters (400, 600, 799 and 994 nm) and flagged the unresolved dim marker.
 
 
 Maintaining the validation inventory
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 From a source checkout with the test dependencies installed, use:
 
@@ -141,9 +287,8 @@ file. Every reviewed recording still runs in ``check-all``.
 For a fast inventory check use ``python tools/scan_fcs.py audit --check``.
 It checks SHA-256 fingerprints and README consistency without running sizing.
 
-
 Features
-********
+--------
 
 RosettaX currently provides:
 
@@ -159,9 +304,8 @@ RosettaX currently provides:
 * support for default and custom parameter configurations
 * local graphical application behavior suitable for repeated calibration work
 
-
 Why RosettaX
-************
+------------
 
 RosettaX is intended to reduce the amount of manual and implicit work involved
 in flow cytometry calibration.
@@ -185,9 +329,8 @@ steps:
 This makes the calibration process easier to document, compare, repeat, and
 adapt to new experiments.
 
-
 Typical Workflow
-****************
+----------------
 
 A typical RosettaX session follows these steps:
 
@@ -272,9 +415,8 @@ profile remains in effect. Calibration reference tables show cell-specific
 feedback for invalid numeric entries. The scattering table expands to show all rows.
 Blank cells remain available for completing a table in stages.
 
-
 Scientific Scope
-****************
+----------------
 
 RosettaX is intended for research and development workflows involving flow
 cytometry calibration. It focuses on calibration analysis and calibration file
@@ -290,9 +432,8 @@ index, collection geometry, detector configuration, and scattering intensity.
 This makes it suitable for workflows where optical interpretation and
 instrument calibration need to remain linked.
 
-
 Data Handling
-*************
+-------------
 
 RosettaX runs locally.
 
@@ -301,9 +442,8 @@ results, or generated configuration files to a remote service. Data remain on
 the machine running the software unless the user explicitly moves, uploads, or
 shares them outside the application.
 
-
 Project Status
-**************
+--------------
 
 RosettaX is currently in alpha development.
 
@@ -322,103 +462,8 @@ Current development priorities include:
 * refining the graphical interface
 * improving packaging and release workflows
 
-
-Installation
-************
-
-RosettaX requires Python 3.11 or later. CI checks Python 3.11, 3.12, 3.13, and 3.14;
-the pinned PyMieSim 6.0.4 release provides wheels for these versions.
-
-PyPI
-====
-
-.. code-block:: bash
-
-   pip install RosettaX
-
-
-Anaconda
-========
-
-.. code-block:: bash
-
-   conda install -c martinpdes rosettax
-
-
-From Source
-===========
-
-.. code-block:: bash
-
-   git clone https://github.com/MartinPdeS/RosettaX.git
-   cd RosettaX
-   pip install -e .
-
-
-Docker
-======
-
-With Docker and Docker Compose installed, run from the repository checkout:
-
-.. code-block:: bash
-
-   docker compose up --build
-
-Open http://localhost:8050 in your browser. The container uses Python 3.13 and
-Gunicorn, runs as a non-root user, and publishes the application on the local
-machine only. Compose targets ``linux/amd64`` because PyMieSim 6.0.4 provides
-x86-64 Linux wheels; Docker uses emulation on Apple Silicon.
-
-Uploads, server-side calibration files, and usage records are stored in the
-``rosettax-data`` named volume and survive container recreation. User-created
-profiles remain in browser storage; downloaded FCS files, calibration JSON,
-and PDF reports are saved by your browser.
-
-To use a different port or maximum upload size:
-
-.. code-block:: bash
-
-   ROSETTAX_PORT=8051 ROSETTAX_MAX_UPLOAD_SIZE=512MB docker compose up --build
-
-Stop the application with Ctrl+C, or run ``docker compose down`` after starting
-it with ``docker compose up --build --detach``. ``docker compose down`` retains
-the data volume; adding ``--volumes`` deletes the stored application data.
-
-For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
-directory for server-side calibration files. Without that setting, RosettaX
-keeps its existing calibration directory beside the package.
-
-``ROSETTAX_UPLOAD_DIRECTORY`` selects a writable directory for uploaded FCS
-and calibration files. It defaults to ``~/.rosettax/uploads``.
-
-The native CLI and the bundled loopback-only Compose setup allow local Settings
-editing. The Gunicorn WSGI entry point defaults to hosted mode. For an HTTPS
-deployment, keep ``ROSETTAX_HOSTED=true`` and set a strong
-``ROSETTAX_ADMIN_TOKEN`` in the server environment. Sign in at
-``/admin/login`` to access both ``/admin`` and ``/settings`` for 30 minutes.
-Settings edits are saved to the administrator's browser. To change the presets
-offered to public users, update the packaged profiles and redeploy.
-
-
-Render
-======
-
-For a native Python web service on Render, set the Build Command to:
-
-.. code-block:: bash
-
-   bash tools/render_build.sh
-
-The script installs the package using its explicit project version and checks
-that the installed version matches the project metadata. Git history is not
-needed for installation.
-Keep your existing Start Command and redeploy after changing the Build Command.
-The home page displays the installed software version, with a checked-in version
-fallback for source checkouts and standalone bundles.
-
-
 Usage
-*****
+-----
 
 After installation, launch RosettaX with:
 
@@ -441,9 +486,8 @@ The application opens a browser based interface served from the local machine.
 It is intended for local calibration workflows and does not require a remote
 server.
 
-
 Documentation
-*************
+-------------
 
 The documentation is available here:
 
@@ -456,9 +500,8 @@ The documentation is expected to evolve with the application. At this stage, the
 README provides the high level overview, while the full documentation contains
 more detailed usage information.
 
-
 Development
-***********
+-----------
 
 Install the project in editable mode with development dependencies:
 
@@ -541,9 +584,8 @@ The repository includes configuration for testing, coverage, documentation, and
 continuous integration. These tools are intended to support reproducible
 development as the project matures.
 
-
 Contributing
-************
+------------
 
 Contributions are welcome.
 
@@ -560,9 +602,8 @@ Useful contributions include:
 For substantial changes, please open an issue first so that the intended
 direction can be discussed before implementation.
 
-
 Citation
-********
+--------
 
 If you use RosettaX in scientific work, please cite its Zenodo concept DOI:
 ``10.5281/zenodo.19846629``. It always resolves to the latest published Zenodo
@@ -582,9 +623,8 @@ release.
 The current citation and all archived versions are available at
 https://zenodo.org/records/19846629.
 
-
 Contact
-*******
+-------
 
 RosettaX is developed by `Martin Poinsinet de Sivry Houle <https://github.com/MartinPdeS>`_.
 
@@ -592,9 +632,8 @@ For collaboration, questions, or feedback:
 
 `martin.poinsinet.de.sivry@gmail.com <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`_
 
-
 License
-*******
+-------
 
 RosettaX is distributed under the GNU Affero General Public License v3.0 or
 later.
@@ -649,3 +688,35 @@ be discussed with the author.
 .. |coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
    :alt: Test coverage
    :target: https://htmlpreview.github.io/?https://github.com/MartinPdeS/RosettaX/blob/python-coverage-comment-action-data/htmlcov/index.html
+
+Project links
+-------------
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - Badge
+     - Status
+   * - Python versions
+     - |python|
+   * - Documentation
+     - |docs|
+   * - Continuous integration
+     - |ci/cd|
+   * - Cross-device validation
+     - |validation-report|
+   * - Test coverage
+     - |coverage|
+   * - PyPI package
+     - |PyPi|
+   * - PyPI downloads
+     - |PyPi_download|
+   * - Anaconda package
+     - |anaconda|
+   * - Anaconda downloads
+     - |anaconda_download|
+   * - Latest Anaconda release
+     - |anaconda_date|
+   * - Citation
+     - |zenodo|

@@ -23,6 +23,10 @@ endif
 	mac-bundle windows-bundle linux-bundle bundle-zip \
 	mac-release windows-release linux-release release tag major minor patch clean lint test test-scattering-fcs browser-smoke
 
+.PHONY: readme
+readme:
+	$(PYTHON) -m martinpdes_maintenance.cli readme
+
 lint:
 	$(PYTHON) -m ruff check RosettaX tests
 

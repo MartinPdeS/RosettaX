@@ -112,6 +112,10 @@ bundling = [
     "pyinstaller >=6.14,<7",
 ]
 
+# Keep the unreleased README pilot out of distribution metadata.
+[dependency-groups]
+readme = ["martinpdes-maintenance @ git+https://github.com/MartinPdeS/MartinPdeS-maintenance.git@252d95c12e960f3f6b091894d5a1fb576fb65c61"]
+
 [tool.mps-maintenance]
 version-file = "RosettaX/_version.py"
 version-method = "literal"

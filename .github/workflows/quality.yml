@@ -18,7 +18,9 @@ jobs:
         with:
           python-version: "3.13"
           install-command: >-
-            python -m pip install "ruff>=0.6,<1"
+            python -m pip install --group readme "ruff>=0.6,<1"
+      - name: Check generated README
+        run: mps-maintenance readme --check
       - name: Check reviewed FCS files and README inventory
         run: python tools/scan_fcs.py audit --check
       - run: make lint PYTHON=python

@@ -47,18 +47,37 @@ def test_registration_rolls_back_and_can_be_retried(*, tmp_path, monkeypatch):
     monkeypatch.setattr(scanner, "ROOT", tmp_path)
     monkeypatch.setattr(scanner, "SAMPLE_DIRECTORY", samples)
     monkeypatch.setattr(validation_recordings, "SAMPLE_DIRECTORY", samples)
-    readme = tmp_path / "README.rst"
+    readme = tmp_path / "readme.yml"
     readme.write_text("unmarked README")
     with pytest.raises(ValueError, match="marker pair"):
         scanner.register_recording(source=source, record=record, columns=["SSC-H"])
     assert registry.read_text() == "{}"
     assert not (destination / source.name).exists()
 
-    readme.write_text(".. supported-cytometers-start\n.. supported-cytometers-end\n")
+    config = "introduction: |\n  .. supported-cytometers-start\n  .. supported-cytometers-end\n"
+    readme.write_text(config)
+    calls = []
+
+    def generate(command, *, cwd, check):
+        """Record generation and simulate a rejected input on the first attempt."""
+        calls.append(command)
+        assert cwd == tmp_path and check
+        assert "  .. list-table::" in readme.read_text()
+        if len(calls) == 1:
+            raise subprocess.CalledProcessError(1, command)
+
+    monkeypatch.setattr(scanner.subprocess, "run", generate)
+    with pytest.raises(ValueError, match="README generation failed"):
+        scanner.register_recording(source=source, record=record, columns=["SSC-H"])
+    assert readme.read_text() == config
+    assert registry.read_text() == "{}"
+    assert not (destination / source.name).exists()
+
     scanner.register_recording(source=source, record=record, columns=["SSC-H"])
     assert json.loads(registry.read_text())["cross_device/example.fcs"]["validation"] == record
     assert (destination / source.name).read_bytes() == source.read_bytes()
     assert "ID7000" in readme.read_text()
+    assert calls == [[sys.executable, "-m", "martinpdes_maintenance.cli", "readme"]] * 2
 
 
 def test_check_all_reports_observations_on_one_line_per_recording(*, monkeypatch, capsys, tmp_path):

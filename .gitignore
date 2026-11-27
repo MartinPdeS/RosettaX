@@ -24,6 +24,7 @@
 !meta.yaml
 !pyproject.toml
 !README.rst
+!/readme.yml
 !/VALIDATION.md
 !AGENTS.md
 !notebook.ipynb

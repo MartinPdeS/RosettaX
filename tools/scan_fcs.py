@@ -5,12 +5,14 @@ import hashlib
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from textwrap import indent
 from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,15 +28,40 @@ def readme_with_systems(*, source: str) -> str:
     """Replace the marked README table with the instrument list from reviewed recordings."""
     start = ".. supported-cytometers-start"
     end = ".. supported-cytometers-end"
-    if source.count(start) != 1 or source.count(end) != 1:
-        raise ValueError("Expected exactly one supported-cytometers marker pair in README.rst")
-    before, section = source.split(start)
-    _, after = section.split(end)
+    # The same RST markers appear indented in the YAML literal and flush left in README.rst.
+    marker = re.search(rf"^( *){re.escape(start)}$", source, re.MULTILINE)
+    if marker is None or source.count(start) != 1 or source.count(end) != 1:
+        raise ValueError("Expected exactly one supported-cytometers marker pair")
+    padding = marker[1]
+    before, section = source.split(padding + start)
+    if "\n" + padding + end not in section:
+        raise ValueError("Expected matching indentation for supported-cytometers markers")
+    _, after = section.split("\n" + padding + end)
     rows = [".. list-table::", "   :header-rows: 1", "   :widths: 28 72", "",
             "   * - Manufacturer", "     - Cytometer models"]
     for brand, models in supported_cytometers().items():
         rows.extend([f"   * - {brand}", f"     - {', '.join(models)}"])
-    return before + start + "\n\n" + "\n".join(rows) + "\n\n" + end + after
+    table = indent(start + "\n\n" + "\n".join(rows) + "\n\n" + end, padding)
+    return before + table + after
+
+
+def refresh_readme_inventory() -> None:
+    """Update the YAML inventory and regenerate the README, rolling back on failure."""
+    config = ROOT / "readme.yml"
+    original = config.read_text(encoding="utf-8")
+    updated = readme_with_systems(source=original)
+    if original != updated:
+        replace_text(path=config, text=updated)
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "martinpdes_maintenance.cli", "readme"], cwd=ROOT, check=True,
+        )
+    except BaseException as error:
+        if original != updated:
+            replace_text(path=config, text=original)
+        if isinstance(error, subprocess.CalledProcessError):
+            raise ValueError("README generation failed. Install the readme dependency group and check readme.yml.") from error
+        raise
 
 
 def acquisition_metadata(*, path: Path) -> tuple[str, list[str], dict | None]:
@@ -120,14 +147,14 @@ def audit_inventory(*, args: argparse.Namespace) -> int:
             failed = True
     print(", ".join(f"{count} {status.lower()}" for status, count in sorted(counts.items())) or "No FCS files found.")
     if not args.path:
-        readme = ROOT / "README.rst"
-        source = readme.read_text(encoding="utf-8")
-        updated = readme_with_systems(source=source)
-        if args.update_readme and not failed and source != updated:
-            readme.write_text(updated, encoding="utf-8")
-        elif source != updated:
-            print("README table is stale. Run tools/scan_fcs.py --update-readme.", file=sys.stderr)
-            failed = True
+        if args.update_readme and not failed:
+            refresh_readme_inventory()
+        else:
+            for filename in ("readme.yml", "README.rst"):
+                source = (ROOT / filename).read_text(encoding="utf-8")
+                if readme_with_systems(source=source) != source:
+                    print(f"{filename} inventory is stale. Run tools/scan_fcs.py audit --update-readme.", file=sys.stderr)
+                    failed = True
     return int((args.check or args.update_readme) and (failed or not paths))
 
 
@@ -156,7 +183,6 @@ def register_recording(*, source: Path, record: dict, columns: list[str]) -> Non
     registry = SAMPLE_DIRECTORY / "sample_file_metadata.json"
     destination = SAMPLE_DIRECTORY / "cross_device" / source.name
     key = destination.relative_to(SAMPLE_DIRECTORY).as_posix()
-    readme = ROOT / "README.rst"
     lock = registry.with_suffix(".lock")
     try:
         handle = lock.open("x")
@@ -179,12 +205,9 @@ def register_recording(*, source: Path, record: dict, columns: list[str]) -> Non
             if file_digest(path=destination) != record["sha256"]:
                 raise ValueError(f"{destination.name} differs from the tested contents.")
             metadata[key] = {"detectors": columns, "size_bytes": destination.stat().st_size, "validation": record}
-            original_readme = readme.read_text(encoding="utf-8")
             replace_text(path=registry, text=json.dumps(metadata, indent=2, ensure_ascii=False) + "\n")
             published = True
-            updated = readme_with_systems(source=original_readme)
-            if original_readme != updated:
-                replace_text(path=readme, text=updated)
+            refresh_readme_inventory()
         except BaseException:
             if published:
                 replace_text(path=registry, text=original)

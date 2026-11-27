@@ -14,6 +14,23 @@ commands use semantic versioning: `make release patch`, `make release minor`,
 or `make release major` creates and pushes the release commit and exact tag.
 Use `make tag VERSION=vX.Y.Z` for a local-only release tag.
 
+## Updating the README
+
+Edit `readme.yml` for scientific prose, links and extra sections. The summary
+comes from `[project].description` in `pyproject.toml`. Edit the referenced
+Python example to change the quick start. Install the pinned generator with
+pip 25.1 or later in your development environment:
+
+```sh
+python -m pip install --group readme
+make readme PYTHON=python
+git diff -- README.rst
+mps-maintenance readme --check
+```
+
+Commit the inputs and generated `README.rst` together. The FCS inventory
+registration and refresh commands also use this generator.
+
 ## Release compatibility policy
 
 RosettaX supports the Python versions and operating systems covered by the
