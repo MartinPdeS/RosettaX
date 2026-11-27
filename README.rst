@@ -4,7 +4,32 @@ RosettaX
 .. image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/HEAD/RosettaX/assets/logo/logo_light.svg
    :alt: RosettaX logo
 
-|mps-python| |mps-pypi| |mps-downloads| |mps-docs| |mps-ci| |mps-coverage| |mps-conda| |mps-conda-downloads| |mps-conda-release|
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - Badge
+     - Status
+   * - Python versions
+     - |mps-python|
+   * - Documentation
+     - |mps-docs|
+   * - Continuous integration
+     - |mps-ci|
+   * - Test coverage
+     - |mps-coverage|
+   * - PyPI package
+     - |mps-pypi|
+   * - PyPI downloads
+     - |mps-downloads|
+   * - Anaconda package
+     - |mps-conda|
+   * - Anaconda downloads
+     - |mps-conda-downloads|
+   * - Latest Anaconda release
+     - |mps-conda-release|
+   * - Zenodo DOI
+     - |mps-zenodo|
 
 Interactive fluorescence and scattering calibration workflows for flow cytometry.
 
@@ -80,10 +105,6 @@ exercise warning behavior when too few peaks resolve for automatic sizing.
 Citation
 --------
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19846629.svg
-   :alt: Cite RosettaX on Zenodo
-   :target: https://doi.org/10.5281/zenodo.19846629
-
 Cite RosettaX using DOI `10.5281/zenodo.19846629 <https://doi.org/10.5281/zenodo.19846629>`__.
 The Zenodo record provides the citation in BibTeX and other formats.
 
@@ -144,3 +165,7 @@ be discussed with the author.
 .. |mps-conda-release| image:: https://anaconda.org/martinpdes/rosettax/badges/latest_release_relative_date.svg
    :alt: Latest Anaconda release
    :target: https://anaconda.org/martinpdes/rosettax
+
+.. |mps-zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19846629.svg
+   :alt: Cite RosettaX on Zenodo
+   :target: https://doi.org/10.5281/zenodo.19846629
