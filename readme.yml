@@ -442,22 +442,6 @@ sections:
       The repository includes configuration for testing, coverage, documentation, and
       continuous integration. These tools are intended to support reproducible
       development as the project matures.
-  - title: Contributing
-    content: |
-      Contributions are welcome.
-
-      Useful contributions include:
-
-      * bug reports
-      * workflow suggestions
-      * documentation improvements
-      * test cases
-      * calibration examples
-      * user interface improvements
-      * support for additional calibration workflows
-
-      For substantial changes, please open an issue first so that the intended
-      direction can be discussed before implementation.
   - title: Citation
     content: |
       .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19846629.svg

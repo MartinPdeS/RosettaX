@@ -583,24 +583,6 @@ The repository includes configuration for testing, coverage, documentation, and
 continuous integration. These tools are intended to support reproducible
 development as the project matures.
 
-Contributing
-------------
-
-Contributions are welcome.
-
-Useful contributions include:
-
-* bug reports
-* workflow suggestions
-* documentation improvements
-* test cases
-* calibration examples
-* user interface improvements
-* support for additional calibration workflows
-
-For substantial changes, please open an issue first so that the intended
-direction can be discussed before implementation.
-
 Citation
 --------
 
@@ -636,6 +618,11 @@ See the repository ``LICENSE`` file for the full license text.
 
 Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
+
+Contributing
+------------
+
+See the `contributing guide <https://github.com/MartinPdeS/RosettaX/blob/HEAD/CONTRIBUTING.md>`__.
 
 Contact
 -------

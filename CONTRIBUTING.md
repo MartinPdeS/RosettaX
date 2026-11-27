@@ -1,5 +1,20 @@
 # Contributing to RosettaX
 
+Contributions are welcome.
+
+Useful contributions include:
+
+* bug reports
+* workflow suggestions
+* documentation improvements
+* test cases
+* calibration examples
+* user interface improvements
+* support for additional calibration workflows
+
+For substantial changes, please open an issue first so that the intended
+direction can be discussed before implementation.
+
 RosettaX contributions should keep fluorescence and scattering calibration
 workflows clearly separated. Add behaviour-first tests for changes, preserve
 packaged resource loading, and document physical assumptions and units.
