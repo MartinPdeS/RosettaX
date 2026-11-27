@@ -128,6 +128,11 @@ Quick start
    axis.legend()
    figure.tight_layout()
 
+Documentation
+-------------
+
+Read the `RosettaX documentation <https://martinpdes.github.io/RosettaX/>`__.
+
 Deployment
 ----------
 
@@ -447,6 +452,9 @@ results, or generated configuration files to a remote service. Data remain on
 the machine running the software unless the user explicitly moves, uploads, or
 shares them outside the application.
 
+See the `privacy policy <https://martinpdes.github.io/RosettaX/privacy.html>`_
+for file storage, usage information, and external service requests.
+
 Project Status
 --------------
 
@@ -490,20 +498,6 @@ Common CLI options:
 The application opens a browser based interface served from the local machine.
 It is intended for local calibration workflows and does not require a remote
 server.
-
-Documentation
--------------
-
-The documentation is available here:
-
-`RosettaX documentation <https://martinpdes.github.io/RosettaX/>`_
-
-See the `privacy policy <https://martinpdes.github.io/RosettaX/privacy.html>`_
-for file storage, usage information, and external service requests.
-
-The documentation is expected to evolve with the application. At this stage, the
-README provides the high level overview, while the full documentation contains
-more detailed usage information.
 
 Development
 -----------
