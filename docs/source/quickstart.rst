@@ -105,3 +105,68 @@ Notes:
 * Release artifacts are built in GitHub Actions and attached to version tags.
 * If you are validating a build for regulated or shared environments, use the
   release checksums and provenance from the release page before distributing.
+
+
+Deployment
+----------
+
+Docker
+~~~~~~
+
+With Docker and Docker Compose installed, run from the repository checkout:
+
+.. code-block:: bash
+
+   docker compose up --build
+
+Open http://localhost:8050 in your browser. The container uses Python 3.13 and
+Gunicorn, runs as a non-root user, and publishes the application on the local
+machine only. Compose targets ``linux/amd64`` because PyMieSim 6.0.4 provides
+x86-64 Linux wheels; Docker uses emulation on Apple Silicon.
+
+Uploads, server-side calibration files, and usage records are stored in the
+``rosettax-data`` named volume and survive container recreation. User-created
+profiles remain in browser storage; downloaded FCS files, calibration JSON,
+and PDF reports are saved by your browser.
+
+To use a different port or maximum upload size:
+
+.. code-block:: bash
+
+   ROSETTAX_PORT=8051 ROSETTAX_MAX_UPLOAD_SIZE=512MB docker compose up --build
+
+Stop the application with Ctrl+C, or run ``docker compose down`` after starting
+it with ``docker compose up --build --detach``. ``docker compose down`` retains
+the data volume; adding ``--volumes`` deletes the stored application data.
+
+For a native deployment, ``ROSETTAX_CALIBRATION_DIRECTORY`` can select a writable
+directory for server-side calibration files. Without that setting, RosettaX
+keeps its existing calibration directory beside the package.
+
+``ROSETTAX_UPLOAD_DIRECTORY`` selects a writable directory for uploaded FCS
+and calibration files. It defaults to ``~/.rosettax/uploads``.
+
+The native CLI and the bundled loopback-only Compose setup allow local Settings
+editing. The Gunicorn WSGI entry point defaults to hosted mode. For an HTTPS
+deployment, keep ``ROSETTAX_HOSTED=true`` and set a strong
+``ROSETTAX_ADMIN_TOKEN`` in the server environment. Sign in at
+``/admin/login`` to access both ``/admin`` and ``/settings`` for 30 minutes.
+Settings edits are saved to the administrator's browser. To change the presets
+offered to public users, update the packaged profiles and redeploy.
+
+
+Render
+~~~~~~
+
+For a native Python web service on Render, set the Build Command to:
+
+.. code-block:: bash
+
+   bash tools/render_build.sh
+
+The script installs the package using its explicit project version and checks
+that the installed version matches the project metadata. Git history is not
+needed for installation.
+Keep your existing Start Command and redeploy after changing the Build Command.
+The home page displays the installed software version, with a checked-in version
+fallback for source checkouts and standalone bundles.

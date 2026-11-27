@@ -32,8 +32,8 @@ Use `make tag VERSION=vX.Y.Z` for a local-only release tag.
 ## Updating the README
 
 Edit `readme.yml` for scientific prose, links and extra sections. The summary
-comes from `[project].description` in `pyproject.toml`. Edit the referenced
-Python example to change the quick start. Install the pinned generator with
+comes from `[project].description` in `pyproject.toml`. The quick-start guide and its worked examples live
+under `docs/`. Install the pinned generator with
 pip 25.1 or later in your development environment:
 
 ```sh
@@ -45,6 +45,22 @@ mps-maintenance readme --check
 
 Commit the inputs and generated `README.rst` together. The FCS inventory
 registration and refresh commands also use this generator.
+
+## Checking calibration recordings
+
+From a checkout with the test dependencies installed, run:
+
+```sh
+python tools/scan_fcs.py check path/to/recording.fcs
+python tools/scan_fcs.py check-all --markdown VALIDATION.md
+python tools/scan_fcs.py audit --check
+```
+
+Review the assigned diameters and fit before registering a recording with
+`python tools/scan_fcs.py add path/to/recording.fcs --title "Sony ID7000 bead run"`.
+Registration requires at least two assigned peaks and refreshes the supported
+cytometer table. The audit checks fingerprints and table consistency without
+rerunning sizing.
 
 ## Release compatibility policy
 
