@@ -13,6 +13,9 @@ introduction: |
   Launch the local application with ``rosettax``. The Python example below fits a
   fluorescence calibration from four illustrative bead-reference pairs.
 quickstart: docs/examples/fluorescence_calibration.py
+license_note: |
+  Commercial licensing, support, validation, or custom deployment agreements may
+  be discussed with the author.
 sections:
   - title: Deployment
     content: |
@@ -442,35 +445,3 @@ sections:
       The repository includes configuration for testing, coverage, documentation, and
       continuous integration. These tools are intended to support reproducible
       development as the project matures.
-  - title: Citation
-    content: |
-      .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19846629.svg
-         :alt: Cite RosettaX on Zenodo
-         :target: https://doi.org/10.5281/zenodo.19846629
-
-      If you use RosettaX in scientific work, please cite its Zenodo concept DOI:
-      ``10.5281/zenodo.19846629``. It always resolves to the latest published Zenodo
-      release.
-
-      .. code-block:: bibtex
-
-         @software{rosettax,
-           author = {Poinsinet de Sivry-Houle, Martin},
-           title = {RosettaX},
-           year = {2026},
-           publisher = {Zenodo},
-           doi = {10.5281/zenodo.19846629},
-           url = {https://doi.org/10.5281/zenodo.19846629}
-         }
-
-      The current citation and all archived versions are available at
-      https://zenodo.org/records/19846629.
-  - title: License
-    content: |
-      RosettaX is distributed under the GNU Affero General Public License v3.0 or
-      later.
-
-      See the repository ``LICENSE`` file for the full license text.
-
-      Commercial licensing, support, validation, or custom deployment agreements may
-      be discussed with the author.

@@ -590,34 +590,8 @@ Citation
    :alt: Cite RosettaX on Zenodo
    :target: https://doi.org/10.5281/zenodo.19846629
 
-If you use RosettaX in scientific work, please cite its Zenodo concept DOI:
-``10.5281/zenodo.19846629``. It always resolves to the latest published Zenodo
-release.
-
-.. code-block:: bibtex
-
-   @software{rosettax,
-     author = {Poinsinet de Sivry-Houle, Martin},
-     title = {RosettaX},
-     year = {2026},
-     publisher = {Zenodo},
-     doi = {10.5281/zenodo.19846629},
-     url = {https://doi.org/10.5281/zenodo.19846629}
-   }
-
-The current citation and all archived versions are available at
-https://zenodo.org/records/19846629.
-
-License
--------
-
-RosettaX is distributed under the GNU Affero General Public License v3.0 or
-later.
-
-See the repository ``LICENSE`` file for the full license text.
-
-Commercial licensing, support, validation, or custom deployment agreements may
-be discussed with the author.
+Cite RosettaX using DOI `10.5281/zenodo.19846629 <https://doi.org/10.5281/zenodo.19846629>`__.
+The Zenodo record provides the citation in BibTeX and other formats.
 
 Contributing
 ------------
@@ -630,6 +604,16 @@ Contact
 * `Martin Poinsinet de Sivry-Houle <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`__
 
 `Project contact page <https://github.com/MartinPdeS>`__.
+
+License
+-------
+
+RosettaX is distributed under ``AGPL-3.0-or-later``.
+
+See the `license text <https://github.com/MartinPdeS/RosettaX/blob/HEAD/LICENSE>`__.
+
+Commercial licensing, support, validation, or custom deployment agreements may
+be discussed with the author.
 
 .. |mps-python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
    :alt: Supported Python versions
