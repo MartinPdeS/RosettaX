@@ -16,20 +16,12 @@ RosettaX
      - |mps-python|
    * - Documentation
      - |mps-docs|
-   * - Continuous integration
-     - |mps-ci|
-   * - Test coverage
-     - |mps-coverage|
-   * - PyPI package
-     - |mps-pypi|
-   * - PyPI downloads
-     - |mps-downloads|
-   * - Anaconda package
-     - |mps-conda|
-   * - Anaconda downloads
-     - |mps-conda-downloads|
-   * - Latest Anaconda release
-     - |mps-conda-release|
+   * - Tests
+     - |mps-ci| |mps-coverage|
+   * - PyPI
+     - |mps-pypi| |mps-downloads|
+   * - Conda
+     - |mps-conda| |mps-conda-downloads| |mps-conda-release|
    * - Zenodo DOI
      - |mps-zenodo|
 
@@ -120,20 +112,13 @@ To set up a development checkout and run the tests, follow the `contributing gui
 Contact
 -------
 
-For questions about using RosettaX in your research, get in touch below.
-If a calculation gives an unexpected result, include the package version
-and a small example that reproduces it.
-
-* `Martin Poinsinet de Sivry-Houle <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`__
-
-`Project contact page <https://github.com/MartinPdeS>`__.
+For questions, contact `Martin Poinsinet de Sivry-Houle <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`__.
+Send questions through the `project contact page <https://github.com/MartinPdeS>`__.
 
 License
 -------
 
-RosettaX is distributed under ``AGPL-3.0-or-later``.
-
-See the `license text <https://github.com/MartinPdeS/RosettaX/blob/HEAD/LICENSE>`__.
+RosettaX is licensed under `AGPL-3.0-or-later <https://github.com/MartinPdeS/RosettaX/blob/HEAD/LICENSE>`__.
 
 Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
@@ -154,9 +139,9 @@ be discussed with the author.
    :alt: Documentation
    :target: https://martinpdes.github.io/RosettaX/
 
-.. |mps-ci| image:: https://github.com/MartinPdeS/RosettaX/actions/workflows/deploy_coverage.yml/badge.svg
-   :alt: Continuous integration
-   :target: https://github.com/MartinPdeS/RosettaX/actions/workflows/deploy_coverage.yml
+.. |mps-ci| image:: https://github.com/MartinPdeS/RosettaX/actions/workflows/unit-tests.yml/badge.svg
+   :alt: Tests
+   :target: https://github.com/MartinPdeS/RosettaX/actions/workflows/unit-tests.yml
 
 .. |mps-coverage| image:: https://raw.githubusercontent.com/MartinPdeS/RosettaX/python-coverage-comment-action-data/badge.svg
    :alt: Test coverage
