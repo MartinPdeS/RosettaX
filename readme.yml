@@ -481,13 +481,6 @@ sections:
 
       The current citation and all archived versions are available at
       https://zenodo.org/records/19846629.
-  - title: Contact
-    content: |
-      RosettaX is developed by `Martin Poinsinet de Sivry Houle <https://github.com/MartinPdeS>`_.
-
-      For collaboration, questions, or feedback:
-
-      `martin.poinsinet.de.sivry@gmail.com <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`_
   - title: License
     content: |
       RosettaX is distributed under the GNU Affero General Public License v3.0 or

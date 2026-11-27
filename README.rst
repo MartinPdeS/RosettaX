@@ -626,15 +626,6 @@ release.
 The current citation and all archived versions are available at
 https://zenodo.org/records/19846629.
 
-Contact
--------
-
-RosettaX is developed by `Martin Poinsinet de Sivry Houle <https://github.com/MartinPdeS>`_.
-
-For collaboration, questions, or feedback:
-
-`martin.poinsinet.de.sivry@gmail.com <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`_
-
 License
 -------
 
@@ -645,6 +636,13 @@ See the repository ``LICENSE`` file for the full license text.
 
 Commercial licensing, support, validation, or custom deployment agreements may
 be discussed with the author.
+
+Contact
+-------
+
+* `Martin Poinsinet de Sivry-Houle <mailto:martin.poinsinet.de.sivry@gmail.com?subject=RosettaX>`__
+
+`Project contact page <https://github.com/MartinPdeS>`__.
 
 .. |mps-python| image:: https://img.shields.io/pypi/pyversions/rosettax.svg
    :alt: Supported Python versions

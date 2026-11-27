@@ -53,6 +53,7 @@ dependencies = [
 rosettax = "RosettaX.__main__:main"
 
 [project.urls]
+Contact = "https://github.com/MartinPdeS"
 Homepage = "https://github.com/MartinPdeS/RosettaX"
 Documentation = "https://martinpdes.github.io/RosettaX/"
 Repository = "https://github.com/MartinPdeS/RosettaX.git"
@@ -114,7 +115,7 @@ bundling = [
 
 # Keep the unreleased README pilot out of distribution metadata.
 [dependency-groups]
-readme = ["martinpdes-maintenance @ git+https://github.com/MartinPdeS/MartinPdeS-maintenance.git@442c00e8fa3638446ff675fae85e764755e2a6f1"]
+readme = ["martinpdes-maintenance @ git+https://github.com/MartinPdeS/MartinPdeS-maintenance.git@6127d9854651fbb81922ad52f84b10058d7e891a"]
 
 [tool.mps-maintenance]
 version-file = "RosettaX/_version.py"
